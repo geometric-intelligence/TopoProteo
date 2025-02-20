@@ -75,7 +75,7 @@ class LoadManager:
                         cls.is_encoder_class(obj)
                         and obj.__module__ == module.__name__
                     ):
-                        losses[name] = obj  # noqa: PERF403
+                        losses[name] = obj
 
             except ImportError as e:
                 print(f"Could not import module {module_name}: {e}")

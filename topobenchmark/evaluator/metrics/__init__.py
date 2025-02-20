@@ -75,7 +75,7 @@ class LoadManager:
                         cls.is_metric_class(obj)
                         and obj.__module__ == module.__name__
                     ):
-                        metrics[name] = obj  # noqa: PERF403
+                        metrics[name] = obj
 
             except ImportError as e:
                 print(f"Could not import module {module_name}: {e}")
