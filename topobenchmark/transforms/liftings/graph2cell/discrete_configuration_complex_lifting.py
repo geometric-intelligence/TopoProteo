@@ -49,7 +49,9 @@ class DiscreteConfigurationComplexLifting(Graph2CellLifting):
         self.feature_aggregation = feature_aggregation
         super().__init__(preserve_edge_attr=preserve_edge_attr, **kwargs)
 
-    def forward(self, data: torch_geometric.data.Data) -> torch_geometric.data.Data:
+    def forward(
+        self, data: torch_geometric.data.Data
+    ) -> torch_geometric.data.Data:
         r"""Applies the full lifting (topology + features) to the input data.
 
         Parameters
@@ -112,6 +114,11 @@ class DiscreteConfigurationComplexLifting(Graph2CellLifting):
             cc.add_cell(cell_vertices, rank=2, **attrs)
 
         return self._get_lifted_topology(cc, G)
+
+
+def edge_cycle_to_vertex_cycle(edge_cycle: list[list | tuple]):
+    """Takes a cycle represented by a list of edges and returns a vertex representation: [(1, 2), (0, 1), (1, 2)] -> [1, 2, 3]."""
+    return [e[0] for e in nx.find_cycle(nx.Graph(edge_cycle))]
 
 
 def generate_configuration_class(
@@ -215,7 +222,10 @@ def generate_configuration_class(
                 return
 
             # We always orient edges (min -> max) to maintain uniqueness of configuration tuples
-            new_edge = (min(vertex_agent, neighbor), max(vertex_agent, neighbor))
+            new_edge = (
+                min(vertex_agent, neighbor),
+                max(vertex_agent, neighbor),
+            )
 
             # Remove the vertex at index and replace it with new edge
             new_configuration_tuple = (

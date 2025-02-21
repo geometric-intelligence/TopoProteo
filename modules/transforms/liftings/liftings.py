@@ -1,84 +1,19 @@
-from abc import abstractmethod
+"""This module implements the abstract classes for lifting graphs."""
 
 import networkx as nx
 import torch_geometric
 from torch_geometric.utils.undirected import is_undirected, to_undirected
 
-from topobenchmark.transforms.data_manipulations.manipulations import (
-    IdentityTransform,
-)
-from topobenchmark.transforms.feature_liftings.feature_liftings import (
-    ElementwiseMean,
-    ProjectionSum,
-)
-
-# Implemented Feature Liftings
-FEATURE_LIFTINGS = {
-    "ProjectionSum": ProjectionSum,
-    "ElementwiseMean": ElementwiseMean,
-    None: IdentityTransform,
-}
-
-
-class AbstractLifting(torch_geometric.transforms.BaseTransform):
-    r"""Abstract class for topological liftings.
-
-    Parameters
-    ----------
-    feature_lifting : str, optional
-        The feature lifting method to be used. Default is 'projection'.
-    **kwargs : optional
-        Additional arguments for the class.
-    """
-
-    def __init__(self, feature_lifting=None, **kwargs):
-        super().__init__()
-        self.feature_lifting = FEATURE_LIFTINGS[feature_lifting]()
-
-    @abstractmethod
-    def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a graph to higher-order topological domains.
-
-        Parameters
-        ----------
-        data : torch_geometric.data.Data
-            The input data to be lifted.
-
-        Returns
-        -------
-        dict
-            The lifted topology.
-        """
-        raise NotImplementedError
-
-    def forward(
-        self, data: torch_geometric.data.Data
-    ) -> torch_geometric.data.Data:
-        r"""Applies the full lifting (topology + features) to the input data.
-
-        Parameters
-        ----------
-        data : torch_geometric.data.Data
-            The input data to be lifted.
-
-        Returns
-        -------
-        torch_geometric.data.Data
-            The lifted data.
-        """
-        initial_data = data.to_dict()
-        lifted_topology = self.lift_topology(data)
-        lifted_topology = self.feature_lifting(lifted_topology)
-        return torch_geometric.data.Data(**initial_data, **lifted_topology)
+from topobenchmark.transforms.liftings import AbstractLifting
 
 
 class GraphLifting(AbstractLifting):
-    r"""Abstract class for lifting graph topologies to other (topological) domains.
+    r"""Abstract class for lifting graph topologies to other domains.
 
     Parameters
     ----------
     feature_lifting : str, optional
-        The feature lifting method to be used. Default is 'projection'.
+        The feature lifting method to be used. Default is 'ProjectionSum'.
     preserve_edge_attr : bool, optional
         Whether to preserve edge attributes. Default is False.
     **kwargs : optional
@@ -95,7 +30,7 @@ class GraphLifting(AbstractLifting):
         self.preserve_edge_attr = preserve_edge_attr
 
     def _data_has_edge_attr(self, data: torch_geometric.data.Data) -> bool:
-        r"""Checks if the input data object has edge attributes.
+        r"""Check if the input data object has edge attributes.
 
         Parameters
         ----------
@@ -112,7 +47,7 @@ class GraphLifting(AbstractLifting):
     def _generate_graph_from_data(
         self, data: torch_geometric.data.Data
     ) -> nx.Graph:
-        r"""Generates a NetworkX graph from the input data object.
+        r"""Generate a NetworkX graph from the input data object.
 
         Parameters
         ----------
@@ -150,7 +85,7 @@ class GraphLifting(AbstractLifting):
         else:
             # If edge_attr is not present, return list list of edges
             edges = [
-                (i.item(), j.item())
+                (i.item(), j.item(), {})
                 for i, j in zip(
                     data.edge_index[0], data.edge_index[1], strict=False
                 )
@@ -163,7 +98,7 @@ class GraphLifting(AbstractLifting):
 
 
 class PointCloudLifting(AbstractLifting):
-    r"""Abstract class for lifting point cloud topologies to other (topological) domains.
+    r"""Abstract class for lifting point clouds to other topological domains.
 
     Parameters
     ----------
@@ -178,7 +113,7 @@ class PointCloudLifting(AbstractLifting):
 
 
 class CellComplexLifting(AbstractLifting):
-    r"""Abstract class for lifting cell complexes to other (topological) domains.
+    r"""Abstract class for lifting cell complexes to other domains.
 
     Parameters
     ----------
@@ -193,7 +128,7 @@ class CellComplexLifting(AbstractLifting):
 
 
 class SimplicialLifting(AbstractLifting):
-    r"""Abstract class for lifting simplicial complexes to other (topological) domains.
+    r"""Abstract class for lifting simplicial complexes to other domains.
 
     Parameters
     ----------
@@ -208,12 +143,12 @@ class SimplicialLifting(AbstractLifting):
 
 
 class HypergraphLifting(AbstractLifting):
-    r"""Abstract class for lifting hypergraphs to other (topological) domains.
+    r"""Abstract class for lifting hypergraphs to other domains.
 
     Parameters
     ----------
     feature_lifting : str, optional
-        The feature lifting method to be used. Default is 'projection'.
+        The feature lifting method to be used. Default is 'ProjectionSum'.
     **kwargs : optional
         Additional arguments for the class.
     """
@@ -223,7 +158,7 @@ class HypergraphLifting(AbstractLifting):
 
 
 class CombinatorialLifting(AbstractLifting):
-    r"""Abstract class for lifting combinatorial structures to other (topological) domains.
+    r"""Abstract class for lifting combinatorial complexes to other domains.
 
     Parameters
     ----------

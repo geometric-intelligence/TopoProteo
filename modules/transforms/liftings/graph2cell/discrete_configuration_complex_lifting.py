@@ -7,7 +7,6 @@ import torch_geometric
 from toponetx.classes import CellComplex
 
 from modules.transforms.liftings.graph2cell.base import Graph2CellLifting
-from modules.utils.utils import edge_cycle_to_vertex_cycle
 
 Vertex = int
 Edge = tuple[Vertex, Vertex]
@@ -15,7 +14,7 @@ ConfigurationTuple = tuple[Vertex | Edge]
 
 
 class DiscreteConfigurationComplexLifting(Graph2CellLifting):
-    r"""Lifts graphs to cell complexes by generating the k-th *discrete configuration complex* $D_k(G)$ of the graph. This is a cube complex, which is similar to a simplicial complex except each n-dimensional cell is homeomorphic to a n-dimensional cube rather than an n-dimensional simplex.
+    r"""Lift graphs to cell complexes by generating the k-th *discrete configuration complex* $D_k(G)$ of the graph. This is a cube complex, which is similar to a simplicial complex except each n-dimensional cell is homeomorphic to a n-dimensional cube rather than an n-dimensional simplex.
 
     The discrete configuration complex of order k consists of all sets of k unique edges or vertices of $G$, with the additional constraint that if an edge e is in a cell, then neither of the endpoints of e are in the cell. For examples of different graphs and their configuration complexes, see the tutorial.
 
@@ -49,7 +48,9 @@ class DiscreteConfigurationComplexLifting(Graph2CellLifting):
         self.feature_aggregation = feature_aggregation
         super().__init__(preserve_edge_attr=preserve_edge_attr, **kwargs)
 
-    def forward(self, data: torch_geometric.data.Data) -> torch_geometric.data.Data:
+    def forward(
+        self, data: torch_geometric.data.Data
+    ) -> torch_geometric.data.Data:
         r"""Applies the full lifting (topology + features) to the input data.
 
         Parameters
@@ -112,6 +113,11 @@ class DiscreteConfigurationComplexLifting(Graph2CellLifting):
             cc.add_cell(cell_vertices, rank=2, **attrs)
 
         return self._get_lifted_topology(cc, G)
+
+
+def edge_cycle_to_vertex_cycle(edge_cycle: list[list | tuple]):
+    """Takes a cycle represented by a list of edges and returns a vertex representation: [(1, 2), (0, 1), (1, 2)] -> [1, 2, 3]."""
+    return [e[0] for e in nx.find_cycle(nx.Graph(edge_cycle))]
 
 
 def generate_configuration_class(
@@ -215,7 +221,10 @@ def generate_configuration_class(
                 return
 
             # We always orient edges (min -> max) to maintain uniqueness of configuration tuples
-            new_edge = (min(vertex_agent, neighbor), max(vertex_agent, neighbor))
+            new_edge = (
+                min(vertex_agent, neighbor),
+                max(vertex_agent, neighbor),
+            )
 
             # Remove the vertex at index and replace it with new edge
             new_configuration_tuple = (

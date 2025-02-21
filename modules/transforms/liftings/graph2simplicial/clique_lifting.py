@@ -1,16 +1,21 @@
+"""This module implements the CliqueLifting class, which lifts graphs to simplicial complexes."""
+
 from itertools import combinations
+from typing import Any
 
 import networkx as nx
 import torch_geometric
 from toponetx.classes import SimplicialComplex
 
-from modules.transforms.liftings.graph2simplicial.base import (
+from topobenchmark.transforms.liftings.graph2simplicial import (
     Graph2SimplicialLifting,
 )
 
 
 class SimplicialCliqueLifting(Graph2SimplicialLifting):
-    r"""Lifts graphs to simplicial complex domain by identifying the cliques as k-simplices.
+    r"""Lift graphs to simplicial complex domain.
+
+    The algorithm creates simplices by identifying the cliques and considering them as simplices of the same dimension.
 
     Parameters
     ----------
@@ -22,7 +27,7 @@ class SimplicialCliqueLifting(Graph2SimplicialLifting):
         super().__init__(**kwargs)
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a graph to a simplicial complex by identifying the cliques as k-simplices.
+        r"""Lift the topology of a graph to a simplicial complex.
 
         Parameters
         ----------
@@ -37,7 +42,9 @@ class SimplicialCliqueLifting(Graph2SimplicialLifting):
         graph = self._generate_graph_from_data(data)
         simplicial_complex = SimplicialComplex(graph)
         cliques = nx.find_cliques(graph)
-        simplices = [set() for _ in range(2, self.complex_dim + 1)]
+        simplices: list[set[tuple[Any, ...]]] = [
+            set() for _ in range(2, self.complex_dim + 1)
+        ]
         for clique in cliques:
             for i in range(2, self.complex_dim + 1):
                 for c in combinations(clique, i + 1):
