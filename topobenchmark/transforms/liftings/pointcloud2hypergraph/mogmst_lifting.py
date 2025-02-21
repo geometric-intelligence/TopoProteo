@@ -12,7 +12,11 @@ from modules.transforms.liftings.pointcloud2hypergraph.base import (
 
 class MoGMSTLifting(PointCloud2HypergraphLifting):
     def __init__(
-        self, min_components=None, max_components=None, random_state=None, **kwargs
+        self,
+        min_components=None,
+        max_components=None,
+        random_state=None,
+        **kwargs,
     ):
         super().__init__(**kwargs)
         if min_components is not None:
@@ -94,7 +98,9 @@ class MoGMSTLifting(PointCloud2HypergraphLifting):
         best_num_components = 0
         means = None
         for i in possible_num_components:
-            gm = GaussianMixture(n_components=i, random_state=self.random_state)
+            gm = GaussianMixture(
+                n_components=i, random_state=self.random_state
+            )
             labels = gm.fit_predict(data)
             score = gm.aic(data)
             if score < best_score:

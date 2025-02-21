@@ -47,7 +47,10 @@ def base_map(dim: int) -> dict:
             }
         )
     typ_wghts = Counter(
-        {d: 1.0 / (factorial(dim) / factorial(dim - k)) for d, k in enumerate(range(9))}
+        {
+            d: 1.0 / (factorial(dim) / factorial(dim - k))
+            for d, k in enumerate(range(9))
+        }
     )
     near_zero = Counter(
         {d: np.finfo(np.float64).eps for d, k in enumerate(range(9, dim + 1))}
@@ -181,7 +184,9 @@ def normalize_hg(H: list):
     return [np.unique(np.searchsorted(V, np.sort(he).astype(int))) for he in H]
 
 
-def top_weights(simplices: np.ndarray, coeffs: sparray, normalize: bool = False):
+def top_weights(
+    simplices: np.ndarray, coeffs: sparray, normalize: bool = False
+):
     """Computes topological weights from higher-order interaction data."""
     assert isinstance(coeffs, sparray), "Coefficients must be sparse matrix"
     assert coeffs.shape[0] == len(
@@ -194,12 +199,19 @@ def top_weights(simplices: np.ndarray, coeffs: sparray, normalize: bool = False)
     if normalize:
         c, d = 1.0 / factorial(N - 1), N - 1
         _coeff_weights = c * np.array(
-            [p / comb(a, d) for p, a in zip(coeffs.data, coeffs.col, strict=True)]
+            [
+                p / comb(a, d)
+                for p, a in zip(coeffs.data, coeffs.col, strict=True)
+            ]
         )
         np.add.at(topo_weights, coeffs.row, _coeff_weights)
     else:
-        base_weights = np.array([base_map(d)[N - 1] for d in range(coeffs.shape[1])])
-        np.add.at(topo_weights, coeffs.row, coeffs.data * base_weights[coeffs.col])
+        base_weights = np.array(
+            [base_map(d)[N - 1] for d in range(coeffs.shape[1])]
+        )
+        np.add.at(
+            topo_weights, coeffs.row, coeffs.data * base_weights[coeffs.col]
+        )
     return Counter(dict(zip(map(tuple, simplices), topo_weights, strict=True)))
 
 
@@ -242,7 +254,9 @@ class HypergraphHeatLifting(Hypergraph2SimplicialLifting):
         R, C = data.incidence_hyperedges.coalesce().indices().detach().numpy()
         col_sort = np.argsort(C)
         R, C = R[col_sort], C[col_sort]
-        hyperedges = np.split(R, np.cumsum(np.unique(C, return_counts=True)[1])[:-1])
+        hyperedges = np.split(
+            R, np.cumsum(np.unique(C, return_counts=True)[1])[:-1]
+        )
         hyperedges = normalize_hg(hyperedges)
 
         ## Compute the simplex -> topological weight map using the downward closure of the hyperedges
@@ -250,7 +264,9 @@ class HypergraphHeatLifting(Hypergraph2SimplicialLifting):
         SC = tnx.SimplicialComplex()
         SC_map = {}
         for d in range(max_dim + 1):
-            simplex_map = top_weights(*downward_closure(hyperedges, d, coeffs=True))
+            simplex_map = top_weights(
+                *downward_closure(hyperedges, d, coeffs=True)
+            )
             SC.add_simplices_from(simplex_map.keys())
             SC_map.update(simplex_map)
 

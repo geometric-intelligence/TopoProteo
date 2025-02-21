@@ -15,7 +15,9 @@ class PointCloud2SimplicialLifting(PointCloudLifting):
         Additional arguments for the class.
     """
 
-    def _get_lifted_topology(self, simplicial_complex: SimplicialComplex) -> dict:
+    def _get_lifted_topology(
+        self, simplicial_complex: SimplicialComplex
+    ) -> dict:
         r"""Returns the lifted topology.
 
         Parameters

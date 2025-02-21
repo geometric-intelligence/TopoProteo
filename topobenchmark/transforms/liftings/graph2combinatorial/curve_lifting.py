@@ -45,7 +45,9 @@ class GraphCurveMatroidLifting(Graph2MatroidLifting):
         """
         return [
             frozenset(edge)
-            for edge in self.get_edges_incident(vertex=v, data=data).t().tolist()
+            for edge in self.get_edges_incident(vertex=v, data=data)
+            .t()
+            .tolist()
         ]
 
     def rank_check(
@@ -80,7 +82,9 @@ class GraphCurveMatroidLifting(Graph2MatroidLifting):
                 check_1.add(frozenset(subset))
         return check_1
 
-    def _graph_curve_matroid(self, data: torch_geometric.data.Data) -> CCMatroid:
+    def _graph_curve_matroid(
+        self, data: torch_geometric.data.Data
+    ) -> CCMatroid:
         """Algorithm proposed by Geiger et. al
         We compute the graph curve matroid by computing its circuits
 

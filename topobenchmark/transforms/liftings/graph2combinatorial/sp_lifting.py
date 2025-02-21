@@ -12,7 +12,16 @@ from modules.transforms.liftings.graph2combinatorial.base import (
 
 class SimplicialPathsLifting(Graph2CombinatorialLifting):
     def __init__(
-        self, d1, d2, q, i, j, complex_dim=2, chunk_size=1024, threshold=1, **kwargs
+        self,
+        d1,
+        d2,
+        q,
+        i,
+        j,
+        complex_dim=2,
+        chunk_size=1024,
+        threshold=1,
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.d1 = d1
@@ -40,11 +49,9 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
             if adj[0] < adj[1]:
                 connectivity[f"{connectivity_info}_{adj[0]}_{adj[1]}"] = (
                     torch.from_numpy(
-
-                            combinatorial_complex.adjacency_matrix(
-                                adj[0], adj[1]
-                            ).todense()
-
+                        combinatorial_complex.adjacency_matrix(
+                            adj[0], adj[1]
+                        ).todense()
                     )
                     .to_sparse()
                     .float()
@@ -52,11 +59,9 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
             else:
                 connectivity[f"{connectivity_info}_{adj[0]}_{adj[1]}"] = (
                     torch.from_numpy(
-
-                            combinatorial_complex.coadjacency_matrix(
-                                adj[0], adj[1]
-                            ).todense()
-
+                        combinatorial_complex.coadjacency_matrix(
+                            adj[0], adj[1]
+                        ).todense()
                     )
                     .to_sparse()
                     .float()
@@ -65,7 +70,9 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
             connectivity_info = "incidence"
             connectivity[f"{connectivity_info}_{inc[0]}_{inc[1]}"] = (
                 torch.from_numpy(
-                    combinatorial_complex.incidence_matrix(inc[0], inc[1]).todense()
+                    combinatorial_complex.incidence_matrix(
+                        inc[0], inc[1]
+                    ).todense()
                 )
                 .to_sparse()
                 .float()
@@ -93,7 +100,9 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
             combinatorial_complex, adjacencies, incidences, self.complex_dim
         )
 
-        feat = torch.stack(list(nx.get_node_attributes(graph, "features").values()))
+        feat = torch.stack(
+            list(nx.get_node_attributes(graph, "features").values())
+        )
         lifted_topology["x_0"] = feat
         lifted_topology["x_2"] = torch.matmul(
             lifted_topology["incidence_0_2"].t(), feat
@@ -105,14 +114,18 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
         dataset_digraph = nx.DiGraph()
 
         dataset_digraph.add_edges_from(
-            list(zip(dataset.edge_index[0].tolist(), dataset.edge_index[1].tolist(), strict=False))
+            list(
+                zip(
+                    dataset.edge_index[0].tolist(),
+                    dataset.edge_index[1].tolist(),
+                    strict=False,
+                )
+            )
         )
 
         return DirectedQConnectivity(dataset_digraph, complex_dim)
 
-
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-
         FlG = self._create_flag_complex_from_dataset(data, complex_dim=2)
 
         indices = FlG.qij_adj(
@@ -172,13 +185,17 @@ class DirectedQConnectivity:
     complex: dict[int, set[tuple]]
 
     def __init__(
-        self, digraph: nx.DiGraph, complex_dim: int = 2, flagser_num_threads: int = 4
+        self,
+        digraph: nx.DiGraph,
+        complex_dim: int = 2,
+        flagser_num_threads: int = 4,
     ):
-
         self.digraph = digraph
         self.complex_dim = complex_dim
 
-        sparse_adjacency_matrix = nx.to_scipy_sparse_array(digraph, format="csr")
+        sparse_adjacency_matrix = nx.to_scipy_sparse_array(
+            digraph, format="csr"
+        )
 
         self.X = pfc.flagser_count(
             sparse_adjacency_matrix,
@@ -189,7 +206,9 @@ class DirectedQConnectivity:
         )
 
         self.device = (
-            torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+            torch.device("cuda")
+            if torch.cuda.is_available()
+            else torch.device("cpu")
         )
         # else torch.device("cpu") #Server
 
@@ -241,7 +260,9 @@ class DirectedQConnectivity:
         # batch structure
         return simplices[:, mask]
 
-    def _gen_q_faces_batched(self, simplices: torch.tensor, c: int) -> torch.tensor:
+    def _gen_q_faces_batched(
+        self, simplices: torch.tensor, c: int
+    ) -> torch.tensor:
         r"""Compute the :math:`q`-dimensional faces of the simplices in the
         batched simplices tensor, where :math:c represents the cardinality
         of the faces to compute and :math:q=c-1.
@@ -337,7 +358,9 @@ class DirectedQConnectivity:
                 # (end_j - j) // Nf is the number of taus in the chunk
                 # Nf is the number of faces in each tau of dimension equal
                 # to the dimension of the simplices in sigma.
-                matches_reshaped = matches.view(end_i - i, (end_j - j) // Nf, Nf)
+                matches_reshaped = matches.view(
+                    end_i - i, (end_j - j) // Nf, Nf
+                )
 
                 matches_aggregated = matches_reshaped.any(dim=2)
 
@@ -365,9 +388,12 @@ class DirectedQConnectivity:
             device="cpu",
         )
 
-
     def _alpha_q_contained_sparse(
-        self, sigmas: torch.Tensor, taus: torch.Tensor, q: int, chunk_size: int = 1024
+        self,
+        sigmas: torch.Tensor,
+        taus: torch.Tensor,
+        q: int,
+        chunk_size: int = 1024,
     ) -> torch.Tensor:
         r"""Compute the adjacency matrix induced by the relation
         :math:`\sigma_i \sim \tau_j \Leftrightarrow \exists \alpha_q
@@ -415,7 +441,6 @@ class DirectedQConnectivity:
             dtype=torch.bool,
             size=(sigmas.size(0), taus.size(0)),
         )
-
 
     def qij_adj(
         self,
@@ -472,7 +497,8 @@ class DirectedQConnectivity:
 
         return (
             torch.cat(
-                (contained._indices().t(), alpha_q_contained._indices().t()), dim=0
+                (contained._indices().t(), alpha_q_contained._indices().t()),
+                dim=0,
             )
             .unique(dim=0)
             .t()
@@ -509,8 +535,9 @@ class DirectedQConnectivity:
                     dfs(new_node, adj_list, all_paths, path)
                     path.pop()
 
-            if only_loops and len(
-                    path) > threshold:  # then we have another longest path
+            if (
+                only_loops and len(path) > threshold
+            ):  # then we have another longest path
                 all_paths = add_path(path.copy(), all_paths)
 
             return
@@ -531,7 +558,7 @@ class DirectedQConnectivity:
             if len(p1) == len(p2):
                 return p1 == p2
             diff = len(p2) - len(p1)
-            return any(p2[i:i + len(p1)] == p1 for i in range(diff + 1))
+            return any(p2[i : i + len(p1)] == p1 for i in range(diff + 1))
 
         def add_path(new_path, all_paths):
             for path in all_paths:
@@ -554,4 +581,3 @@ class DirectedQConnectivity:
             dfs(src, adj_list, all_paths, path)
 
         return all_paths
-

@@ -13,4 +13,3 @@ class Simplicial2CombinatorialLifting(SimplicialLifting):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.type = "simplicial2combinatorial"
-

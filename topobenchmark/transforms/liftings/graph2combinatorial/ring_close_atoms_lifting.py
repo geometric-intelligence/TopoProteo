@@ -35,7 +35,9 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
     ################### RINGS #############################
     #######################################################
 
-    def get_rings(self, data: torch_geometric.data.Data | dict) -> torch.Tensor:
+    def get_rings(
+        self, data: torch_geometric.data.Data | dict
+    ) -> torch.Tensor:
         r"""Returns the ring information for each molecule.
 
         Parameters
@@ -80,8 +82,8 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
     #######################################################
 
     def find_close_atom_groups(
-            self, mol : Chem.Mol, data: torch_geometric.data.Data | dict
-        ) -> list:
+        self, mol: Chem.Mol, data: torch_geometric.data.Data | dict
+    ) -> list:
         r"""Finds the groups of atoms that are close to each other within a molecule.
 
         Parameters
@@ -119,7 +121,9 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         return substructures
 
     def find_close_atoms(
-        self, mol : Chem.Mol, data: torch_geometric.data.Data | dict
+        self,
+        mol: Chem.Mol,
+        data: torch_geometric.data.Data | dict,
         # data: torch_geometric.data.Data | dict
     ) -> list:
         r"""Finds the atoms that are close to each other within a molecule.
@@ -150,7 +154,9 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         ]
 
     def get_distance_matrix(
-        self, mol : Chem.Mol, data: torch_geometric.data.Data | dict
+        self,
+        mol: Chem.Mol,
+        data: torch_geometric.data.Data | dict,
         # data: torch_geometric.data.Data | dict
     ) -> torch.Tensor:
         r"""Computes the pairwise distances between atoms in a molecule.
@@ -182,9 +188,7 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
     ################### ATTRIBUTES ########################
     #######################################################
 
-    def get_atom_attributes(
-            self, mol: Chem.Mol
-        ) -> dict:
+    def get_atom_attributes(self, mol: Chem.Mol) -> dict:
         r"""Returns the atom attributes for each molecule.
 
         Parameters
@@ -209,20 +213,18 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         attr = {}
         for atom in mol.GetAtoms():
             attr[atom.GetIdx()] = {
-                    "atomic_num": atom.GetAtomicNum(),
-                    "symbol": atom.GetSymbol(),
-                    "degree": atom.GetDegree(),
-                    "formal_charge": atom.GetFormalCharge(),
-                    "hybridization": str(atom.GetHybridization()),
-                    "is_aromatic": atom.GetIsAromatic(),
-                    "mass": atom.GetMass(),
-                    "chirality": atom.GetChiralTag()
-                }
+                "atomic_num": atom.GetAtomicNum(),
+                "symbol": atom.GetSymbol(),
+                "degree": atom.GetDegree(),
+                "formal_charge": atom.GetFormalCharge(),
+                "hybridization": str(atom.GetHybridization()),
+                "is_aromatic": atom.GetIsAromatic(),
+                "mass": atom.GetMass(),
+                "chirality": atom.GetChiralTag(),
+            }
         return attr
 
-    def get_bond_attributes(
-            self, mol: Chem.Mol
-        ) -> torch.Tensor:
+    def get_bond_attributes(self, mol: Chem.Mol) -> torch.Tensor:
         r"""Returns the bond attributes for each molecule.
 
         Parameters
@@ -244,15 +246,13 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         attr = {}
         for bond in mol.GetBonds():
             attr[(bond.GetBeginAtomIdx(), bond.GetEndAtomIdx())] = {
-                        "bond_type": str(bond.GetBondType()),
-                        "is_conjugated": bond.GetIsConjugated(),
-                        "is_stereo": bond.GetStereo()
-                    }
+                "bond_type": str(bond.GetBondType()),
+                "is_conjugated": bond.GetIsConjugated(),
+                "is_stereo": bond.GetStereo(),
+            }
         return attr
 
-    def get_ring_attributes(
-            self, mol: Chem.Mol, rings: list
-        ) -> dict:
+    def get_ring_attributes(self, mol: Chem.Mol, rings: list) -> dict:
         r"""Returns the ring attributes for each molecule.
 
         • Ring Size: Number of atoms that form the ring.
@@ -298,7 +298,11 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         attr = {}
         for ring in rings:
             ring_size = len(ring)
-            mol_ring = Chem.MolFromSmiles("".join([mol.GetAtomWithIdx(atom).GetSymbol() for atom in ring]))
+            mol_ring = Chem.MolFromSmiles(
+                "".join(
+                    [mol.GetAtomWithIdx(atom).GetSymbol() for atom in ring]
+                )
+            )
 
             try:
                 # Attempt to sanitize the molecule
@@ -308,10 +312,18 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
                 # print(f"Failed to sanitize molecule for SMILES '{fg}'")
                 continue
 
-
-            aromaticity = all([atom.GetIsAromatic() for atom in mol_ring.GetAtoms()])
-            has_heteroatom = any([atom.GetAtomicNum() != 6 for atom in mol_ring.GetAtoms()])
-            saturation = all([bond.GetBondType() == Chem.rdchem.BondType.SINGLE for bond in mol_ring.GetBonds()])
+            aromaticity = all(
+                [atom.GetIsAromatic() for atom in mol_ring.GetAtoms()]
+            )
+            has_heteroatom = any(
+                [atom.GetAtomicNum() != 6 for atom in mol_ring.GetAtoms()]
+            )
+            saturation = all(
+                [
+                    bond.GetBondType() == Chem.rdchem.BondType.SINGLE
+                    for bond in mol_ring.GetBonds()
+                ]
+            )
             hydrophobicity = Descriptors.MolLogP(mol_ring)
             electrophilicity = Descriptors.NumHAcceptors(mol_ring)
             nucleophilicity = Descriptors.NumHDonors(mol_ring)
@@ -325,14 +337,14 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
                 "hydrophobicity": hydrophobicity,
                 "electrophilicity": electrophilicity,
                 "nucleophilicity": nucleophilicity,
-                "polarity": polarity
+                "polarity": polarity,
             }
 
         return attr
 
     def get_close_atoms_attributes(
-            self, mol: Chem.Mol, close_atoms: dict
-        ) -> dict:
+        self, mol: Chem.Mol, close_atoms: dict
+    ) -> dict:
         r"""Returns the functional groups attributes for each molecule.
 
         • Conjugation: A binary feature telling whether the functional group
@@ -390,7 +402,9 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
                 # print(f"Failed to sanitize molecule for SMILES '{fg}'")
                 continue
 
-            conjugation = all([bond.GetIsConjugated() for bond in fg_mol.GetBonds()])
+            conjugation = all(
+                [bond.GetIsConjugated() for bond in fg_mol.GetBonds()]
+            )
             hydrophobicity = Descriptors.MolLogP(fg_mol)
             electrophilicity = Descriptors.NumHAcceptors(fg_mol)
             nucleophilicity = Descriptors.NumHDonors(fg_mol)
@@ -403,7 +417,7 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
                     "hydrophobicity": hydrophobicity,
                     "electrophilicity": electrophilicity,
                     "nucleophilicity": nucleophilicity,
-                    "polarity": polarity
+                    "polarity": polarity,
                 }
 
         return attr
@@ -458,12 +472,16 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         ccc.set_cell_attributes(ring_attributes, rank=2)
 
         # Create the lifted topology dict for the cell complex
-        ccc_lifted_topology = Graph2CellLifting._get_lifted_topology(self, ccc, G)
+        ccc_lifted_topology = Graph2CellLifting._get_lifted_topology(
+            self, ccc, G
+        )
 
         # Hypergraph stuff
         # add close atoms as hyperedges (rank = 1)
         close_atoms = self.find_close_atom_groups(mol, data)
-        list_close_atoms = [item for sublist in close_atoms.values() for item in sublist]
+        list_close_atoms = [
+            item for sublist in close_atoms.values() for item in sublist
+        ]
         edges = [[edge[0], edge[1]] for edge in G.edges]
 
         # Hyperedges can be edges or list_close_atoms
@@ -483,8 +501,12 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
 
         # add hyperedge attributes
         if close_atoms:
-            close_atoms_attributes = self.get_close_atoms_attributes(mol, close_atoms)
-            ccc.set_cell_attributes(close_atoms_attributes, rank=2) # if rank = 1, error in the code when close atoms are of more than 2 atoms
+            close_atoms_attributes = self.get_close_atoms_attributes(
+                mol, close_atoms
+            )
+            ccc.set_cell_attributes(
+                close_atoms_attributes, rank=2
+            )  # if rank = 1, error in the code when close atoms are of more than 2 atoms
 
         # add hyperedges to the lifted topology
         ccc_lifted_topology["num_hyperedges"] = num_hyperedges

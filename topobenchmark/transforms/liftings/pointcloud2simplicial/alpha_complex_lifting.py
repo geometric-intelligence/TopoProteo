@@ -37,7 +37,9 @@ class AlphaComplexLifting(PointCloud2SimplicialLifting):
         stree = ac.create_simplex_tree()
         stree.prune_above_filtration(self.alpha)
         stree.prune_above_dimension(self.complex_dim)
-        sc = SimplicialComplex(s for s, filtration_value in stree.get_simplices())
+        sc = SimplicialComplex(
+            s for s, filtration_value in stree.get_simplices()
+        )
         lifted_topolgy = self._get_lifted_topology(sc)
         lifted_topolgy["x_0"] = data.x
         return lifted_topolgy

@@ -52,7 +52,9 @@ class UniversalStrictLifting(Hypergraph2CombinatorialLifting):
         for i, (he_start, he_length) in enumerate(sorted_indices):
             hyperedge = set(
                 node.item()
-                for node in incidence_indices[1][he_start : he_start + he_length]
+                for node in incidence_indices[1][
+                    he_start : he_start + he_length
+                ]
             )
 
             # Iterate over sub-hyperedges
@@ -92,7 +94,9 @@ class UniversalStrictLifting(Hypergraph2CombinatorialLifting):
             A list of pairs (start, length) sorted according to length (ascending)
         """
         # Identify where the changes occur
-        changes = torch.cat([torch.tensor([True]), hyperedges[1:] != hyperedges[:-1]])
+        changes = torch.cat(
+            [torch.tensor([True]), hyperedges[1:] != hyperedges[:-1]]
+        )
         change_indices = torch.where(changes)[0]
 
         # Calculate the size of each hyperedge
@@ -102,7 +106,9 @@ class UniversalStrictLifting(Hypergraph2CombinatorialLifting):
         )
 
         # Sort the list according to the lengths entry
-        indices = list(zip(change_indices.tolist(), lengths.tolist(), strict=False))
+        indices = list(
+            zip(change_indices.tolist(), lengths.tolist(), strict=False)
+        )
         indices.sort(key=lambda x: x[1])
 
         return indices

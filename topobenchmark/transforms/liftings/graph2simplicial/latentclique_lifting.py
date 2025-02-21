@@ -82,7 +82,9 @@ class LatentCliqueLifting(Graph2SimplicialLifting):
             edge_prob_var=self.edge_prob_var,
         )
         it = self.it if self.it is not None else data.num_edges
-        mod.sample(sample_hypers=True, num_iters=it, do_gibbs=False, verbose=verbose)
+        mod.sample(
+            sample_hypers=True, num_iters=it, do_gibbs=False, verbose=verbose
+        )
 
         # # Translate fitted model to a new topology
         cic = mod.Z.T @ mod.Z
@@ -206,7 +208,9 @@ class _LatentCliqueModel:
         # and therefore larger cliques. The mean, var parameterization is transformed
         # to the alpha, beta parameterization of the Beta distribution.
         self._sample_edge_prob = edge_prob_var > 0 and edge_prob_mean < 1
-        self._edge_prob_params = _get_beta_params(edge_prob_mean, edge_prob_var)
+        self._edge_prob_params = _get_beta_params(
+            edge_prob_mean, edge_prob_var
+        )
 
     def _init_Z(self):
         """Initialize the clique cover matrix Z."""
@@ -334,7 +338,12 @@ class _LatentCliqueModel:
         )
 
         # Compute logD
-        logD = gammaln(1 + c) - gammaln(c + sigma) - gammaln(1 - sigma) - gammaln(N + c)
+        logD = (
+            gammaln(1 + c)
+            - gammaln(c + sigma)
+            - gammaln(1 - sigma)
+            - gammaln(N + c)
+        )
 
         # Compute the rest of the likelihood
         ll = ll + logC + N * logD
@@ -391,9 +400,11 @@ class _LatentCliqueModel:
             a = self._edge_prob_params[0]
             b = self._edge_prob_params[1]
             # lp ratio comes from a beta distribution
-            lp_ratio = (a - 1) * (np.log(edge_prob_prop) - np.log(self.edge_prob)) + (
-                b - 1
-            ) * (np.log(1 - edge_prob_prop) - np.log(1 - self.edge_prob))
+            lp_ratio = (a - 1) * (
+                np.log(edge_prob_prop) - np.log(self.edge_prob)
+            ) + (b - 1) * (
+                np.log(1 - edge_prob_prop) - np.log(1 - self.edge_prob)
+            )
             lratio = ll_new - ll_old + lp_ratio
             r = np.log(self.rng.random())
             if r < lratio:
@@ -712,7 +723,9 @@ class _LatentCliqueModel:
                 lpmerge = np.log(self.K / self.lamb)
                 ll_old = self.loglikZ()
 
-                laccept = lpmerge - lpsplit + lqsplit - lqmerge + ll_prop - ll_old
+                laccept = (
+                    lpmerge - lpsplit + lqsplit - lqmerge + ll_prop - ll_old
+                )
                 r = np.log(self.rng.random())
 
                 if r < laccept:
@@ -805,7 +818,6 @@ def _sample_from_ibp(K, alpha, sigma, c, seed=None):
 
     # delte empty cliques
     return Z[np.where(Z.sum(1) > 1)[0]]
-
 
 
 # if __name__ == "__main__":

@@ -14,7 +14,7 @@ class CofaceCCLifting(Simplicial2CombinatorialLifting):
         self.keep_features = kwargs.get("keep_features", False)
 
     def get_lower_cells(self, data: Data) -> list[HyperEdge]:
-        """ Get the lower cells of the complex
+        """Get the lower cells of the complex
 
         Parameters:
             data (Data): The input data
@@ -32,7 +32,7 @@ class CofaceCCLifting(Simplicial2CombinatorialLifting):
         for inc_c_1 in data["incidence_1"].to_dense().T:
             # Get the 0-cells that are incident to the 1-cell
             cell_0_bound = inc_c_1.nonzero().flatten().tolist()
-            assert(len(cell_0_bound) == 2)
+            assert len(cell_0_bound) == 2
             one_cell = HyperEdge(cell_0_bound, rank=1)
             cells.append(one_cell)
 
@@ -41,7 +41,9 @@ class CofaceCCLifting(Simplicial2CombinatorialLifting):
             # Get the 1-cells that are incident to the 2-cell
             cell_1_bound = inc_c_2.nonzero().flatten()
             # Get the 0-cells that are incident to the 1-cells
-            cell_0_bound = data["incidence_1"].to_dense().T[cell_1_bound].nonzero()
+            cell_0_bound = (
+                data["incidence_1"].to_dense().T[cell_1_bound].nonzero()
+            )
             # Get the actual 0-cells since nonzero()
             # indexes in 2D
             cell_0_bound = cell_0_bound[:, 1]
@@ -52,8 +54,7 @@ class CofaceCCLifting(Simplicial2CombinatorialLifting):
         return cells
 
     def lift_topology(self, data: Data) -> dict:
-        """ Lift the simplicial topology to a combinatorial complex
-        """
+        """Lift the simplicial topology to a combinatorial complex"""
 
         # Check that the dataset has the required fields
         # assume that it's a simplicial dataset
@@ -70,7 +71,9 @@ class CofaceCCLifting(Simplicial2CombinatorialLifting):
             indices, coface = ccc.coadjacency_matrix(2, 1, index=True)
 
             # Get the indices of the 2-cell that are co-adjacent
-            coface_indices = coface.todense()[indices[r_cell]].nonzero()[1].tolist()
+            coface_indices = (
+                coface.todense()[indices[r_cell]].nonzero()[1].tolist()
+            )
             cell_3 = set(r_cell)
 
             # Iterate over the indices of the 2-cells
@@ -93,7 +96,12 @@ class CofaceCCLifting(Simplicial2CombinatorialLifting):
         # If the user wants to keep the features
         # from the r-cells aside from the first x_0
         if self.keep_features:
-            lifted_data = {"x_0": data["x_0"], "x_1": data["x_1"], "x_2": data["x_2"], **lifted_data}
+            lifted_data = {
+                "x_0": data["x_0"],
+                "x_1": data["x_1"],
+                "x_2": data["x_2"],
+                **lifted_data,
+            }
         else:
             lifted_data = {"x_0": data["x_0"], **lifted_data}
 

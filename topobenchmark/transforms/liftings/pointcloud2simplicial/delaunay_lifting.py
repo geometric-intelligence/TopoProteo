@@ -13,7 +13,9 @@ class DelaunayLifting(PointCloud2SimplicialLifting):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def _get_lifted_topology(self, simplicial_complex: SimplicialComplex) -> dict:
+    def _get_lifted_topology(
+        self, simplicial_complex: SimplicialComplex
+    ) -> dict:
         r"""Returns the lifted topology.
 
         Parameters
@@ -25,9 +27,15 @@ class DelaunayLifting(PointCloud2SimplicialLifting):
         dict
             The lifted topology.
         """
-        lifted_topology = get_complex_connectivity(simplicial_complex, self.complex_dim)
+        lifted_topology = get_complex_connectivity(
+            simplicial_complex, self.complex_dim
+        )
         lifted_topology["x_0"] = torch.stack(
-            list(simplicial_complex.get_simplex_attributes("features", 0).values())
+            list(
+                simplicial_complex.get_simplex_attributes(
+                    "features", 0
+                ).values()
+            )
         )
 
         return lifted_topology
@@ -38,6 +46,8 @@ class DelaunayLifting(PointCloud2SimplicialLifting):
         self.complex_dim = simplicial_complex.dim
 
         node_features = {i: data.x[i, :] for i in range(data.x.shape[0])}
-        simplicial_complex.set_simplex_attributes(node_features, name="features")
+        simplicial_complex.set_simplex_attributes(
+            node_features, name="features"
+        )
 
         return self._get_lifted_topology(simplicial_complex)

@@ -18,7 +18,9 @@ class Hypergraph2CombinatorialLifting(HypergraphLifting):
         super().__init__(**kwargs)
         self.type = "hypergraph2combinatorial"
 
-    def _get_lifted_topology(self, combinatorial_complex: CombinatorialComplex) -> dict:
+    def _get_lifted_topology(
+        self, combinatorial_complex: CombinatorialComplex
+    ) -> dict:
         r"""Returns the lifted topology.
 
         Parameters
@@ -31,7 +33,9 @@ class Hypergraph2CombinatorialLifting(HypergraphLifting):
         dict
             The lifted topology.
         """
-        lifted_topology = get_combinatorial_complex_connectivity(combinatorial_complex)
+        lifted_topology = get_combinatorial_complex_connectivity(
+            combinatorial_complex
+        )
 
         # Feature liftings
 

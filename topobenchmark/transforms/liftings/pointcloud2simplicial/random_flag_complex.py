@@ -15,9 +15,15 @@ from modules.transforms.liftings.pointcloud2simplicial.base import (
 
 
 class RandomFlagComplexLifting(PointCloud2SimplicialLifting):
-    """  Lifting of pointclouds to simplicial complexes using the Random Flag Complex construction.
-    """
-    def __init__(self, steps, alpha: float | None = None, p: float | None = None, **kwargs):
+    """Lifting of pointclouds to simplicial complexes using the Random Flag Complex construction."""
+
+    def __init__(
+        self,
+        steps,
+        alpha: float | None = None,
+        p: float | None = None,
+        **kwargs,
+    ):
         self.alpha = alpha
         self.steps = steps
         self.p = p
@@ -39,7 +45,7 @@ class RandomFlagComplexLifting(PointCloud2SimplicialLifting):
         # For each step, sample from random binomial distribution
         # for each edge appearign
         for _ in range(self.steps):
-            number_of_edges = n*(n+1)//2
+            number_of_edges = n * (n + 1) // 2
             prob = generator.binomial(1, self.p, size=number_of_edges)
             print(prob)
             tmp_mat = np.zeros((n, n))
@@ -60,10 +66,7 @@ class RandomFlagComplexLifting(PointCloud2SimplicialLifting):
         simplicial_complex = SimplicialComplex(graph)
 
         # Add features to the vertices
-        feats = {
-            i: f
-            for i, f in enumerate(data["x"])
-        }
+        feats = {i: f for i, f in enumerate(data["x"])}
 
         simplicial_complex.set_simplex_attributes(feats, name="features")
 
@@ -76,7 +79,6 @@ class RandomFlagComplexLifting(PointCloud2SimplicialLifting):
                 for c in combinations(clique, i + 1):
                     simplices[i - 2].add(tuple(c))
 
-
         # Add the k-tuples as simplices
         for set_k_simplices in simplices:
             for k_simplex in set_k_simplices:
@@ -85,8 +87,9 @@ class RandomFlagComplexLifting(PointCloud2SimplicialLifting):
 
         return self._get_lifted_topology(simplicial_complex, st)
 
-    def _get_lifted_topology(self, simplicial_complex: SimplicialComplex, st: gudhi.SimplexTree) -> dict:
-
+    def _get_lifted_topology(
+        self, simplicial_complex: SimplicialComplex, st: gudhi.SimplexTree
+    ) -> dict:
         # Connectivity of the complex
         lifted_topology = get_complex_connectivity(
             simplicial_complex, self.complex_dim, signed=False
@@ -97,13 +100,18 @@ class RandomFlagComplexLifting(PointCloud2SimplicialLifting):
         # Save the Betti numbers in the Data object
         lifted_topology["betti"] = torch.tensor(st.betti_numbers())
 
-
         lifted_topology["x_0"] = torch.stack(
-            list(simplicial_complex.get_simplex_attributes("features", 0).values())
+            list(
+                simplicial_complex.get_simplex_attributes(
+                    "features", 0
+                ).values()
+            )
         )
 
         # Add the indices of the simplices
         for r in range(simplicial_complex.dim):
-            lifted_topology[f"x_idx_{r}"] = torch.tensor(simplicial_complex.skeleton(r))
+            lifted_topology[f"x_idx_{r}"] = torch.tensor(
+                simplicial_complex.skeleton(r)
+            )
 
         return lifted_topology
