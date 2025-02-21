@@ -1,3 +1,5 @@
+"""Simulates a Dungeons & Dragons inspired system to lift graphs to simplicial complexes."""
+
 import random
 from itertools import combinations
 
@@ -11,7 +13,7 @@ from topobenchmark.transforms.liftings.graph2simplicial.base import (
 
 
 class SimplicialDnDLifting(Graph2SimplicialLifting):
-    r"""Lifts graphs to simplicial complex domain using a Dungeons & Dragons inspired system.
+    r"""Lift graphs to simplicial complex domain using a Dungeons & Dragons inspired system.
 
     Parameters
     ----------
@@ -23,7 +25,7 @@ class SimplicialDnDLifting(Graph2SimplicialLifting):
         super().__init__(**kwargs)
 
     def lift_topology(self, data: Data) -> dict:
-        r"""Lifts the topology of a graph to a simplicial complex using Dungeons & Dragons (D&D) inspired mechanics.
+        r"""Lift the topology of a graph to a simplicial complex using Dungeons & Dragons (D&D) inspired mechanics.
 
         Parameters
         ----------
@@ -62,11 +64,22 @@ class SimplicialDnDLifting(Graph2SimplicialLifting):
         return self._get_lifted_topology(simplicial_complex, graph)
 
     def _assign_attributes(self, graph):
-        """Assign D&D-inspired attributes based on node properties."""
+        """Assign D&D-inspired attributes based on node properties.
+
+        Parameters
+        ----------
+        graph : nx.Graph
+            The input graph.
+
+        Returns
+        -------
+        dict
+            The assigned attributes.
+        """
         degrees = nx.degree_centrality(graph)
         clustering = nx.clustering(graph)
         closeness = nx.closeness_centrality(graph)
-        eigenvector = nx.eigenvector_centrality(graph)
+        eigenvector = nx.eigenvector_centrality(graph, tol=1e-3)
         betweenness = nx.betweenness_centrality(graph)
         pagerank = nx.pagerank(graph)
 
@@ -83,7 +96,20 @@ class SimplicialDnDLifting(Graph2SimplicialLifting):
         return attributes
 
     def _roll_dice(self, attributes, k):
-        """Simulate a D20 dice roll influenced by node attributes where a different attribute is used based on the simplex level."""
+        """Simulate a D20 dice roll influenced by node attributes where a different attribute is used based on the simplex level.
+
+        Parameters
+        ----------
+        attributes : dict
+            The attributes of the node.
+        k : int
+            The level of the simplex.
+
+        Returns
+        -------
+        int
+            The dice roll.
+        """
 
         attribute = None
         if k == 1:
