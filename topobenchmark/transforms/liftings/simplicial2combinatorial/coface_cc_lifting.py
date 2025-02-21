@@ -2,8 +2,10 @@ from toponetx.classes.combinatorial_complex import CombinatorialComplex
 from toponetx.classes.hyperedge import HyperEdge
 from torch_geometric.data import Data
 
-from modules.data.utils.utils import get_combinatorial_complex_connectivity
-from modules.transforms.liftings.simplicial2combinatorial.base import (
+from topobenchmark.data.utils.utils import (
+    get_combinatorial_complex_connectivity,
+)
+from topobenchmark.transforms.liftings.simplicial2combinatorial.base import (
     Simplicial2CombinatorialLifting,
 )
 

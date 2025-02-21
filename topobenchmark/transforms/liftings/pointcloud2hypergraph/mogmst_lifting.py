@@ -5,7 +5,7 @@ from networkx import from_numpy_array, minimum_spanning_tree
 from sklearn.metrics import pairwise_distances
 from sklearn.mixture import GaussianMixture
 
-from modules.transforms.liftings.pointcloud2hypergraph.base import (
+from topobenchmark.transforms.liftings.pointcloud2hypergraph.base import (
     PointCloud2HypergraphLifting,
 )
 

@@ -2,7 +2,7 @@ import torch
 import torch_geometric
 from toponetx.classes import CombinatorialComplex
 
-from modules.transforms.liftings.hypergraph2combinatorial.base import (
+from topobenchmark.transforms.liftings.hypergraph2combinatorial.base import (
     Hypergraph2CombinatorialLifting,
 )
 

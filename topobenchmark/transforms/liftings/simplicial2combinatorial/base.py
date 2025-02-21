@@ -1,4 +1,4 @@
-from modules.transforms.liftings.lifting import SimplicialLifting
+from topobenchmark.transforms.liftings.lifting import SimplicialLifting
 
 
 class Simplicial2CombinatorialLifting(SimplicialLifting):

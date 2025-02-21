@@ -1,8 +1,10 @@
 import torch
 from toponetx import CombinatorialComplex
 
-from modules.data.utils.utils import get_combinatorial_complex_connectivity
-from modules.transforms.liftings.lifting import HypergraphLifting
+from topobenchmark.data.utils.utils import (
+    get_combinatorial_complex_connectivity,
+)
+from topobenchmark.transforms.liftings.lifting import HypergraphLifting
 
 
 class Hypergraph2CombinatorialLifting(HypergraphLifting):

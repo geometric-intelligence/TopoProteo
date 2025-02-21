@@ -5,7 +5,7 @@ import torch
 import torch_geometric
 from toponetx.classes import CombinatorialComplex
 
-from modules.transforms.liftings.graph2combinatorial.base import (
+from topobenchmark.transforms.liftings.graph2combinatorial.base import (
     Graph2CombinatorialLifting,
 )
 

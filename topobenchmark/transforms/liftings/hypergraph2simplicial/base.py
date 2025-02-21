@@ -1,4 +1,4 @@
-from modules.transforms.liftings.lifting import HypergraphLifting
+from topobenchmark.transforms.liftings.lifting import HypergraphLifting
 
 
 class Hypergraph2SimplicialLifting(HypergraphLifting):

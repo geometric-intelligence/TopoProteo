@@ -2,7 +2,7 @@ import torch
 import torch_geometric
 from torch_cluster import fps, knn
 
-from modules.transforms.liftings.pointcloud2hypergraph.base import (
+from topobenchmark.transforms.liftings.pointcloud2hypergraph.base import (
     PointCloud2HypergraphLifting,
 )
 

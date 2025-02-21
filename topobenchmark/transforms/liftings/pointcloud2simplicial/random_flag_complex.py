@@ -8,8 +8,8 @@ import torch
 from toponetx.classes import SimplicialComplex
 from torch_geometric.data import Data
 
-from modules.data.utils.utils import get_complex_connectivity
-from modules.transforms.liftings.pointcloud2simplicial.base import (
+from topobenchmark.data.utils.utils import get_complex_connectivity
+from topobenchmark.transforms.liftings.pointcloud2simplicial.base import (
     PointCloud2SimplicialLifting,
 )
 

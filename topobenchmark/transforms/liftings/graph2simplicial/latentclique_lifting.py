@@ -6,7 +6,7 @@ from scipy.sparse import csr_matrix
 from scipy.special import gammaln, logsumexp
 from tqdm.auto import tqdm
 
-from modules.transforms.liftings.graph2simplicial.clique_lifting import (
+from topobenchmark.transforms.liftings.graph2simplicial.clique_lifting import (
     Graph2SimplicialLifting,
     SimplicialCliqueLifting,
 )

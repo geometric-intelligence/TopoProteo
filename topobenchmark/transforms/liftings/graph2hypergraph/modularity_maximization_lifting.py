@@ -1,7 +1,7 @@
 import torch
 import torch_geometric
 
-from modules.transforms.liftings.graph2hypergraph.base import (
+from topobenchmark.transforms.liftings.graph2hypergraph.base import (
     Graph2HypergraphLifting,
 )
 

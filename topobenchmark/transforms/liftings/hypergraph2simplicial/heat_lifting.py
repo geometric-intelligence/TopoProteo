@@ -13,7 +13,7 @@ import torch_geometric
 from scipy.sparse import coo_array, sparray
 from scipy.sparse.linalg import eigsh
 
-from modules.transforms.liftings.hypergraph2simplicial.base import (
+from topobenchmark.transforms.liftings.hypergraph2simplicial.base import (
     Hypergraph2SimplicialLifting,
 )
 
