@@ -1,9 +1,11 @@
 project_name="LIFTING_TEST"
 DATASETS=('MUTAG')
 
-transforms_experiments=(g2s_line)
+transforms_experiments=(g2s_latent_clique)
 
-# 24/02 working: g2s_khop g2s_vietoris_rips
+# Date 24/02
+# working: g2s_khop g2s_vietoris_rips
+# not working: g2s_line
 
 for transform in ${transforms_experiments[*]}
 do
