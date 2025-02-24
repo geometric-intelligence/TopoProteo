@@ -1,11 +1,12 @@
 project_name="LIFTING_TEST"
-DATASETS=('MUTAG')
+DATASETS=('MUTAG') #'PROTEINS'
 
-transforms_experiments=(g2s_latent_clique)
+transforms_experiments=(g2s_khop)
 
 # Date 24/02
 # working: g2s_khop g2s_vietoris_rips
-# not working: g2s_line
+# not working: g2s_line neighborhood_complex
+# NOTES: g2s_latent_clique has issue with MUTAG and preserve_edge_attributes==True with False it works fine
 
 for transform in ${transforms_experiments[*]}
 do
@@ -21,3 +22,4 @@ do
             logger.wandb.project=$project_name
     done
 done
+
