@@ -1,4 +1,5 @@
 """This module implements the discrete configuratio complex lifting lifting for graphs to cell complexes."""
+
 from itertools import permutations
 from typing import ClassVar
 
@@ -16,7 +17,7 @@ ConfigurationTuple = tuple[Vertex | Edge]
 
 class DiscreteConfigurationComplexLifting(Graph2CellLifting):
     r"""Lift graphs to cell complexes.
-    
+
     Lift graphs to cell complexes by generating the k-th *discrete configuration complex* $D_k(G)$ of the graph. This is a cube complex, which is similar to a simplicial complex except each n-dimensional cell is homeomorphic to a n-dimensional cube rather than an n-dimensional simplex.
 
     The discrete configuration complex of order k consists of all sets of k unique edges or vertices of $G$, with the additional constraint that if an edge e is in a cell, then neither of the endpoints of e are in the cell. For examples of different graphs and their configuration complexes, see the tutorial.
@@ -129,7 +130,9 @@ def generate_configuration_class(
     """Class factory for the Configuration class."""
 
     class Configuration:
-        """Represents a single legal configuration of k agents on a graph G. A legal configuration is a tuple of k edges and vertices of G where all the vertices and endpoints are **distinct** i.e. no two edges sharing an endpoint can simultaneously be in the configuration, and adjacent (edge, vertex) pair can be contained in the configuration. Each configuration corresponds to a cell, and the number of edges in the configuration is the dimension.
+        """Configuration Class.
+
+        Represents a single legal configuration of k agents on a graph G. A legal configuration is a tuple of k edges and vertices of G where all the vertices and endpoints are **distinct** i.e. no two edges sharing an endpoint can simultaneously be in the configuration, and adjacent (edge, vertex) pair can be contained in the configuration. Each configuration corresponds to a cell, and the number of edges in the configuration is the dimension.
 
         Parameters
         ----------
@@ -173,7 +176,13 @@ def generate_configuration_class(
             self._upwards_neighbors_generated = False
 
         def features(self):
-            """Generate the features for the configuration by combining the edge and vertex features."""
+            """Generate the features for the configuration by combining the edge and vertex features.
+
+            Returns
+            -------
+            torch.Tensor
+                The features of the configuration.
+            """
             features = []
             for agent in self.configuration_tuple:
                 if isinstance(agent, Vertex):
