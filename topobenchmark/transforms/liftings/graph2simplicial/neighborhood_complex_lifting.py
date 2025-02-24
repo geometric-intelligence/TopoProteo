@@ -1,3 +1,4 @@
+"""This module implements the NeighborhoodComplexLifting class, which lifts graphs to simplicial complexes."""
 import networkx as nx
 import torch
 from toponetx.classes import SimplicialComplex
@@ -19,6 +20,18 @@ class NeighborhoodComplexLifting(Graph2SimplicialLifting):
         super().__init__(**kwargs)
 
     def lift_topology(self, data: Data) -> dict:
+        r"""Lift the topology of a graph to a simplicial complex.
+
+        Parameters
+        ----------
+        data : torch_geometric.data.Data
+            The input data to be lifted.
+
+        Returns
+        -------
+        dict
+            The lifted topology.
+        """
         graph = self._generate_graph_from_data(data)
         graph = graph.to_undirected()
         simplicial_complex = SimplicialComplex(simplices=graph)
@@ -56,14 +69,3 @@ class NeighborhoodComplexLifting(Graph2SimplicialLifting):
         )
 
         return self._get_lifted_topology(simplicial_complex, graph)
-
-    def _get_lifted_topology(
-        self, simplicial_complex: SimplicialComplex, graph: nx.Graph
-    ) -> dict:
-        data = super()._get_lifted_topology(simplicial_complex, graph)
-
-        # TODO: I have commented this out as it was not working. 
-        # for r in range(simplicial_complex.dim + 1):
-        #     data[f"x_idx_{r}"] = torch.Tensor(simplicial_complex.skeleton(r))
-
-        return data

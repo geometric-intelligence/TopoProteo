@@ -4,7 +4,7 @@ DATASETS=('MUTAG') #'PROTEINS'
 transforms_experiments=(g2s_dnd)
 
 # Date 24/02
-# working: g2s_khop g2s_vietoris_rips g2h_neighborhood_complex g2s_graph_induceds
+# working: g2s_khop g2s_vietoris_rips g2h_neighborhood_complex g2s_graph_induceds g2s_dnd
 
 # NOTE 1: the code of this submission is good but g2s_line (line lifting) construct line graph and finds graph induced topology. Hence the edges becomes nodes. THis lifting do not fits into our TB framework without modification 
 # NOTE 2: it seems that g2s_graph_induced is our clique lifting. 
