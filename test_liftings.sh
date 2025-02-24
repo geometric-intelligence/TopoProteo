@@ -1,12 +1,14 @@
 project_name="LIFTING_TEST"
-DATASETS=('MUTAG' 'PROTEINS')
+DATASETS=('MUTAG')
 
-transforms_experiments=(g2s_khop g2s_vietoris_rips line_lifting)
+transforms_experiments=(g2s_line)
+
+# 24/02 working: g2s_khop g2s_vietoris_rips
 
 for transform in ${transforms_experiments[*]}
-for dataset in ${DATASETS[*]}
+do
+    for dataset in ${DATASETS[*]}
     do
-        do
             python topobenchmark/run.py\
             model=simplicial/scn\
             dataset=graph/$dataset\
@@ -15,5 +17,5 @@ for dataset in ${DATASETS[*]}
             trainer.check_val_every_n_epoch=1\
             transforms=$transform\
             logger.wandb.project=$project_name
-        done
     done
+done
