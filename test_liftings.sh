@@ -1,7 +1,7 @@
 project_name="LIFTING_TEST"
 DATASETS=('MUTAG') #'PROTEINS'
 
-transforms_experiments=(g2s_dnd)
+transforms_experiments=(g2s_khop g2s_vietoris_rips g2h_neighborhood_complex g2s_graph_induceds g2s_dnd)
 
 # Date 24/02
 # working: g2s_khop g2s_vietoris_rips g2h_neighborhood_complex g2s_graph_induceds g2s_dnd
