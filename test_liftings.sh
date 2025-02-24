@@ -1,11 +1,14 @@
 project_name="LIFTING_TEST"
 DATASETS=('MUTAG') #'PROTEINS'
 
-transforms_experiments=(g2h_neighborhood_complex)
+transforms_experiments=(g2s_dnd)
 
 # Date 24/02
-# working: g2s_khop g2s_vietoris_rips
-# not working: g2s_line g2h_neighborhood_complex
+# working: g2s_khop g2s_vietoris_rips g2h_neighborhood_complex g2s_graph_induceds
+
+# NOTE 1: the code of this submission is good but g2s_line (line lifting) construct line graph and finds graph induced topology. Hence the edges becomes nodes. THis lifting do not fits into our TB framework without modification 
+# NOTE 2: it seems that g2s_graph_induced is our clique lifting. 
+# NOTE 3: g2s_dnd is very slow as it generates enormous amout of simplices, even for small datasets.
 
 
 for transform in ${transforms_experiments[*]}
