@@ -19,7 +19,8 @@ class NeighborhoodComplexLifting(Graph2SimplicialLifting):
         super().__init__(**kwargs)
 
     def lift_topology(self, data: Data) -> dict:
-        graph: nx.Graph = to_networkx(data, to_undirected=True)
+        graph = self._generate_graph_from_data(data)
+        graph = graph.to_undirected()
         simplicial_complex = SimplicialComplex(simplices=graph)
 
         # For every node u

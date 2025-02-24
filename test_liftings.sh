@@ -1,12 +1,12 @@
 project_name="LIFTING_TEST"
 DATASETS=('MUTAG') #'PROTEINS'
 
-transforms_experiments=(g2s_khop)
+transforms_experiments=(g2h_neighborhood_complex)
 
 # Date 24/02
 # working: g2s_khop g2s_vietoris_rips
-# not working: g2s_line neighborhood_complex
-# NOTES: g2s_latent_clique has issue with MUTAG and preserve_edge_attributes==True with False it works fine
+# not working: g2s_line g2h_neighborhood_complex
+
 
 for transform in ${transforms_experiments[*]}
 do
