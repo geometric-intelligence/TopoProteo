@@ -2,7 +2,7 @@ project_name="LIFTING_TEST"
 DATASETS=('MUTAG') #'PROTEINS'
 
 # CELLULAR
-transforms_experiments=(exp_cell/g2h_discrete_configuration_complex)
+transforms_experiments=(exp_cell/g2c_discrete_configuration_complex)
 
 # Date 24/02
 # working: 

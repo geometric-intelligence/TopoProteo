@@ -1,3 +1,4 @@
+"""This module implements the discrete configuratio complex lifting lifting for graphs to cell complexes."""
 from itertools import permutations
 from typing import ClassVar
 
@@ -22,7 +23,7 @@ class DiscreteConfigurationComplexLifting(Graph2CellLifting):
 
     Parameters
     ----------
-    k: int,
+    k : int
         The order of the configuration complex, i.e. the number of 'agents' in a single configuration.
     preserve_edge_attr : bool, optional
         Whether to preserve edge attributes. Default is True.
@@ -40,7 +41,7 @@ class DiscreteConfigurationComplexLifting(Graph2CellLifting):
         **kwargs,
     ):
         self.k = k
-        self.complex_dim = 2
+        self.complex_dim = kwargs["complex_dim"]
         if feature_aggregation not in ["mean", "sum", "concat"]:
             raise ValueError(
                 "feature_aggregation must be one of 'mean', 'sum', 'concat'"
