@@ -1,7 +1,7 @@
 project_name="LIFTING_TEST"
 DATASETS=('MUTAG' 'PROTEINS')
 
-transforms_experiments=(g2s_khop g2s_vietoris_rips)
+transforms_experiments=(g2s_khop g2s_vietoris_rips line_lifting)
 
 for transform in ${transforms_experiments[*]}
 for dataset in ${DATASETS[*]}
