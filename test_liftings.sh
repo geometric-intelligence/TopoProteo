@@ -4,9 +4,9 @@ DATASETS=('MUTAG') #'PROTEINS'
 
 
 # ------------------------- Hypergraph -------------------------
-transforms_experiments=(exp_hypergraph/g2h_knn)
-# Date 25/02
-# working: exp_hypergraph/g2h_forman_ricci_curvature exp_hypergraph/g2h_expander_graph g2h_kernel  exp_hypergraph/g2h_khop
+transforms_experiments=(exp_hypergraph/g2h_modularity_maximization)
+# Date 25/02 
+# working: exp_hypergraph/g2h_forman_ricci_curvature exp_hypergraph/g2h_expander_graph g2h_kernel  exp_hypergraph/g2h_khop g2h_knn exp_hypergraph/g2h_mapper
 # Not working 
 # NOTE 1: The discrete_configuration_complex has a
 
