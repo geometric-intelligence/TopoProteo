@@ -3,20 +3,19 @@ DATASETS=('MUTAG') #'PROTEINS'
 
 
 
-# ------------------------- Hypergraph -------------------------
-transforms_experiments=(exp_hypergraph/g2h_modularity_maximization)
+# ------------------------- Hypergraph2Simplicial -------------------------
+transforms_experiments=(exp_combinatorial/g2c_curve)
 # Date 25/02 
-# working: exp_hypergraph/g2h_forman_ricci_curvature exp_hypergraph/g2h_expander_graph g2h_kernel  exp_hypergraph/g2h_khop g2h_knn exp_hypergraph/g2h_mapper
+# working: 
 # Not working 
-# NOTE 1: The discrete_configuration_complex has a
-
+# NOTE 1: 
 
 for transform in ${transforms_experiments[*]}
 do
     for dataset in ${DATASETS[*]}
     do
             python topobenchmark/run.py\
-            model=hypergraph/unignn2\
+            model=simplicial/scn\
             dataset=graph/$dataset\
             trainer.max_epochs=2\
             trainer.min_epochs=1\
@@ -26,6 +25,79 @@ do
             #trainer.devices=\[$device\]
     done
 done
+
+
+# # ------------------------- Hypergraph2Simplicial -------------------------
+# transforms_experiments=(exp_simplicial/h2s_heat)
+# # Date 25/02 
+# # working: 
+# # Not working exp_simplicial/h2s_heat
+# # NOTE 1: exp_simplicial/h2s_heat is not working as HypergraphHeatLifting not defined in the TB framework. and HypergraphHeatLifting uses external library.
+
+# for transform in ${transforms_experiments[*]}
+# do
+#     for dataset in ${DATASETS[*]}
+#     do
+#             python topobenchmark/run.py\
+#             model=simplicial/scn\
+#             dataset=graph/$dataset\
+#             trainer.max_epochs=2\
+#             trainer.min_epochs=1\
+#             trainer.check_val_every_n_epoch=1\
+#             transforms=$transform\
+#             logger.wandb.project=$project_name
+#             #trainer.devices=\[$device\]
+#     done
+# done
+
+
+# # ------------------------- Hypergraph -------------------------
+# transforms_experiments=(exp_hypergraph/g2h_forman_ricci_curvature exp_hypergraph/g2h_expander_graph g2h_kernel  exp_hypergraph/g2h_khop g2h_knn exp_hypergraph/g2h_mapper exp_hypergraph/g2h_modularity_maximization)
+# # Date 25/02 
+# # working: exp_hypergraph/g2h_forman_ricci_curvature exp_hypergraph/g2h_expander_graph g2h_kernel  exp_hypergraph/g2h_khop g2h_knn exp_hypergraph/g2h_mapper exp_hypergraph/g2h_modularity_maximization
+# # Not working 
+# # NOTE 1: 
+
+
+# for transform in ${transforms_experiments[*]}
+# do
+#     for dataset in ${DATASETS[*]}
+#     do
+#             python topobenchmark/run.py\
+#             model=hypergraph/unignn2\
+#             dataset=graph/$dataset\
+#             trainer.max_epochs=2\
+#             trainer.min_epochs=1\
+#             trainer.check_val_every_n_epoch=1\
+#             transforms=$transform\
+#             logger.wandb.project=$project_name
+#             #trainer.devices=\[$device\]
+#     done
+# done
+
+# # ------------------------- Hypergraph -------------------------
+# transforms_experiments=(exp_hypergraph/g2h_forman_ricci_curvature exp_hypergraph/g2h_expander_graph g2h_kernel  exp_hypergraph/g2h_khop g2h_knn exp_hypergraph/g2h_mapper exp_hypergraph/g2h_modularity_maximization)
+# # Date 25/02 
+# # working: exp_hypergraph/g2h_forman_ricci_curvature exp_hypergraph/g2h_expander_graph g2h_kernel  exp_hypergraph/g2h_khop g2h_knn exp_hypergraph/g2h_mapper exp_hypergraph/g2h_modularity_maximization
+# # Not working 
+# # NOTE 1: The discrete_configuration_complex has a
+
+
+# for transform in ${transforms_experiments[*]}
+# do
+#     for dataset in ${DATASETS[*]}
+#     do
+#             python topobenchmark/run.py\
+#             model=hypergraph/unignn2\
+#             dataset=graph/$dataset\
+#             trainer.max_epochs=2\
+#             trainer.min_epochs=1\
+#             trainer.check_val_every_n_epoch=1\
+#             transforms=$transform\
+#             logger.wandb.project=$project_name
+#             #trainer.devices=\[$device\]
+#     done
+# done
 
 
 # # ------------------------- CELLULAR -------------------------
