@@ -1,7 +1,7 @@
 project_name="LIFTING_TEST"
 DATASETS=('MUTAG') #'PROTEINS'
 # Hypergraph
-transforms_experiments=(exp_hypergraph/g2h_forman_ricci_curvature)
+transforms_experiments=(exp_hypergraph/g2h_expander_graph)
 
 # Date 25/02
 # working: exp_hypergraph/g2h_forman_ricci_curvature
