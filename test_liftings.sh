@@ -1,12 +1,11 @@
 project_name="LIFTING_TEST"
 DATASETS=('MUTAG') #'PROTEINS'
+# Hypergraph
+transforms_experiments=(exp_hypergraph/g2h_forman_ricci_curvature)
 
-# CELLULAR
-transforms_experiments=(exp_cell/g2c_discrete_configuration_complex)
-
-# Date 24/02
-# working: 
-# Not working exp_cell/g2h_discrete_configuration_complex
+# Date 25/02
+# working: exp_hypergraph/g2h_forman_ricci_curvature
+# Not working 
 # NOTE 1: The discrete_configuration_complex has a
 
 
@@ -15,15 +14,41 @@ do
     for dataset in ${DATASETS[*]}
     do
             python topobenchmark/run.py\
-            model=cell/cwn\
+            model=hypergraph/unignn2\
             dataset=graph/$dataset\
             trainer.max_epochs=2\
             trainer.min_epochs=1\
             trainer.check_val_every_n_epoch=1\
             transforms=$transform\
             logger.wandb.project=$project_name
+            #trainer.devices=\[$device\]
     done
 done
+
+
+# # CELLULAR
+# transforms_experiments=(exp_cell/g2c_discrete_configuration_complex)
+
+# # Date 24/02
+# # working: exp_cell/g2h_discrete_configuration_complex
+# # Not working:
+# # NOTE 1: The discrete_configuration_complex has a
+
+
+# for transform in ${transforms_experiments[*]}
+# do
+#     for dataset in ${DATASETS[*]}
+#     do
+#             python topobenchmark/run.py\
+#             model=cell/cwn\
+#             dataset=graph/$dataset\
+#             trainer.max_epochs=2\
+#             trainer.min_epochs=1\
+#             trainer.check_val_every_n_epoch=1\
+#             transforms=$transform\
+#             logger.wandb.project=$project_name
+#     done
+# done
 
 # ------------------------- SIMPLICIAL -------------------------
 # transforms_experiments=(exp_simplicial/g2h_neighborhood_complex)
