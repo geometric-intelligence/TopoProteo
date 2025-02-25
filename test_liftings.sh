@@ -1,10 +1,12 @@
 project_name="LIFTING_TEST"
 DATASETS=('MUTAG') #'PROTEINS'
-# Hypergraph
-transforms_experiments=(exp_hypergraph/g2h_kernel)
 
+
+
+# ------------------------- Hypergraph -------------------------
+transforms_experiments=(exp_hypergraph/g2h_knn)
 # Date 25/02
-# working: exp_hypergraph/g2h_forman_ricci_curvature exp_hypergraph/g2h_expander_graph g2h_kernel
+# working: exp_hypergraph/g2h_forman_ricci_curvature exp_hypergraph/g2h_expander_graph g2h_kernel  exp_hypergraph/g2h_khop
 # Not working 
 # NOTE 1: The discrete_configuration_complex has a
 
@@ -26,7 +28,7 @@ do
 done
 
 
-# # CELLULAR
+# # ------------------------- CELLULAR -------------------------
 # transforms_experiments=(exp_cell/g2c_discrete_configuration_complex)
 
 # # Date 24/02
