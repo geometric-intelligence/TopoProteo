@@ -4,7 +4,7 @@ DATASETS=('MUTAG') #'PROTEINS'
 transforms_experiments=(exp_hypergraph/g2h_expander_graph)
 
 # Date 25/02
-# working: exp_hypergraph/g2h_forman_ricci_curvature
+# working: exp_hypergraph/g2h_forman_ricci_curvature exp_hypergraph/g2h_expander_graph
 # Not working 
 # NOTE 1: The discrete_configuration_complex has a
 
