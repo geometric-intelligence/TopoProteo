@@ -3,7 +3,7 @@ DATASETS=('MUTAG') #'PROTEINS'
 
 
 
-# ------------------------- Hypergraph2Simplicial -------------------------
+# ------------------------- Graph2Combinatorial -------------------------
 transforms_experiments=(exp_combinatorial/g2c_curve)
 # Date 25/02 
 # working: 
@@ -15,7 +15,7 @@ do
     for dataset in ${DATASETS[*]}
     do
             python topobenchmark/run.py\
-            model=simplicial/scn\
+            model=cell/topotune\
             dataset=graph/$dataset\
             trainer.max_epochs=2\
             trainer.min_epochs=1\
@@ -51,7 +51,7 @@ done
 # done
 
 
-# # ------------------------- Hypergraph -------------------------
+# # ------------------------- Graph2Hypergraph -------------------------
 # transforms_experiments=(exp_hypergraph/g2h_forman_ricci_curvature exp_hypergraph/g2h_expander_graph g2h_kernel  exp_hypergraph/g2h_khop g2h_knn exp_hypergraph/g2h_mapper exp_hypergraph/g2h_modularity_maximization)
 # # Date 25/02 
 # # working: exp_hypergraph/g2h_forman_ricci_curvature exp_hypergraph/g2h_expander_graph g2h_kernel  exp_hypergraph/g2h_khop g2h_knn exp_hypergraph/g2h_mapper exp_hypergraph/g2h_modularity_maximization
@@ -75,32 +75,7 @@ done
 #     done
 # done
 
-# # ------------------------- Hypergraph -------------------------
-# transforms_experiments=(exp_hypergraph/g2h_forman_ricci_curvature exp_hypergraph/g2h_expander_graph g2h_kernel  exp_hypergraph/g2h_khop g2h_knn exp_hypergraph/g2h_mapper exp_hypergraph/g2h_modularity_maximization)
-# # Date 25/02 
-# # working: exp_hypergraph/g2h_forman_ricci_curvature exp_hypergraph/g2h_expander_graph g2h_kernel  exp_hypergraph/g2h_khop g2h_knn exp_hypergraph/g2h_mapper exp_hypergraph/g2h_modularity_maximization
-# # Not working 
-# # NOTE 1: The discrete_configuration_complex has a
-
-
-# for transform in ${transforms_experiments[*]}
-# do
-#     for dataset in ${DATASETS[*]}
-#     do
-#             python topobenchmark/run.py\
-#             model=hypergraph/unignn2\
-#             dataset=graph/$dataset\
-#             trainer.max_epochs=2\
-#             trainer.min_epochs=1\
-#             trainer.check_val_every_n_epoch=1\
-#             transforms=$transform\
-#             logger.wandb.project=$project_name
-#             #trainer.devices=\[$device\]
-#     done
-# done
-
-
-# # ------------------------- CELLULAR -------------------------
+# # ------------------------- Graph2CELLULAR -------------------------
 # transforms_experiments=(exp_cell/g2c_discrete_configuration_complex)
 
 # # Date 24/02
@@ -124,7 +99,7 @@ done
 #     done
 # done
 
-# ------------------------- SIMPLICIAL -------------------------
+# ------------------------- Graph2SIMPLICIAL -------------------------
 # transforms_experiments=(exp_simplicial/g2h_neighborhood_complex)
 # # Date 24/02
 # # working: g2s_khop g2s_vietoris_rips g2h_neighborhood_complex g2s_graph_induceds g2s_dnd
