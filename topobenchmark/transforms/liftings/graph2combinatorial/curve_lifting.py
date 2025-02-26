@@ -3,7 +3,7 @@ from collections.abc import Collection
 import torch_geometric
 import torch_geometric.data
 
-from topobenchmark.matroid.matroid import CCMatroid, powerset
+from topobenchmark.data.utils.matroid import CCMatroid, powerset
 from topobenchmark.transforms.liftings.graph2combinatorial.base import (
     Graph2CombinatorialLifting,
     Graph2MatroidLifting,

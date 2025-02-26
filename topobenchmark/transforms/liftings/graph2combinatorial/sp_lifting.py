@@ -126,7 +126,9 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
         return DirectedQConnectivity(dataset_digraph, complex_dim)
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        FlG = self._create_flag_complex_from_dataset(data, complex_dim=2)
+        FlG = self._create_flag_complex_from_dataset(
+            data, complex_dim=self.complex_dim
+        )
 
         indices = FlG.qij_adj(
             FlG.complex[self.d1],

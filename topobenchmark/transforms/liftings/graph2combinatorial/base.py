@@ -5,9 +5,12 @@ import torch
 import torch_geometric
 from toponetx.classes import CombinatorialComplex
 
-from topobenchmark.data.utils.utils import get_ccc_connectivity
-from topobenchmark.matroid.matroid import CCGraphicMatroid, CCMatroid
-from topobenchmark.transforms.liftings.lifting import (
+from topobenchmark.data.utils.matroid import (
+    CCGraphicMatroid,
+    CCMatroid,
+    get_ccc_connectivity,
+)
+from topobenchmark.transforms.liftings.liftings import (
     AbstractLifting,
     GraphLifting,
 )
