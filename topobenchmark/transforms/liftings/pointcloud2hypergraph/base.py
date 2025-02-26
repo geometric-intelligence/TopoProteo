@@ -1,4 +1,6 @@
-from topobenchmark.transforms.liftings.lifting import PointCloudLifting
+"""Abstract class for PointCloud to Hypergraph liftings."""
+
+from topobenchmark.transforms.liftings.liftings import PointCloudLifting
 
 
 class PointCloud2HypergraphLifting(PointCloudLifting):

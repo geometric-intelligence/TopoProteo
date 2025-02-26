@@ -11,11 +11,23 @@ from topobenchmark.transforms.liftings.graph2hypergraph import (
 from topobenchmark.transforms.liftings.graph2simplicial import (
     GRAPH2SIMPLICIAL_LIFTINGS,
 )
+from topobenchmark.transforms.liftings.graph2combinatorial import (
+    GRAPH2COMBINATORIAL_LIFTINGS,
+)
+from topobenchmark.transforms.liftings.hypergraph2simplicial import (
+    HYPERGRAPH2SIMPLICIAL_LIFTINGS,
+)
+from topobenchmark.transforms.liftings.pointcloud2hypergraph import (
+    POINTCLOUD2HYPERGRAPH_LIFTINGS,
+)
 
 LIFTINGS = {
     **GRAPH2CELL_LIFTINGS,
     **GRAPH2HYPERGRAPH_LIFTINGS,
     **GRAPH2SIMPLICIAL_LIFTINGS,
+    **GRAPH2COMBINATORIAL_LIFTINGS,
+    **HYPERGRAPH2SIMPLICIAL_LIFTINGS,
+    **POINTCLOUD2HYPERGRAPH_LIFTINGS,
 }
 
 TRANSFORMS: dict[Any, Any] = {

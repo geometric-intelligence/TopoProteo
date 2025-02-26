@@ -1,3 +1,5 @@
+"""Mixture of Gaussians and Minimum Spanning Tree (MoGMST) Lifting."""
+
 import numpy as np
 import torch
 import torch_geometric
@@ -11,6 +13,22 @@ from topobenchmark.transforms.liftings.pointcloud2hypergraph.base import (
 
 
 class MoGMSTLifting(PointCloud2HypergraphLifting):
+    r"""Lift a point cloud to a hypergraph.
+
+    We find a Mixture of Gaussians and then create a Minimum Spanning Tree (MST) between the means of the Gaussians.
+
+    Parameters
+    ----------
+    min_components : int
+        The minimum number of components for the Mixture of Gaussians model.
+    max_components : int
+        The maximum number of components for the Mixture of Gaussians model.
+    random_state : int
+        The random state for the Mixture of Gaussians model.
+    **kwargs : optional
+        Additional arguments for the class.
+    """
+
     def __init__(
         self,
         min_components=None,
@@ -37,16 +55,37 @@ class MoGMSTLifting(PointCloud2HypergraphLifting):
         self.random_state = random_state
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        # Find a mix of Gaussians
-        labels, num_components, means = self.find_mog(data.pos.numpy())
+        """Lift the topology of a graph to a hypergraph.
 
+        Parameters
+        ----------
+        data : torch_geometric.data.Data
+            The input data to be lifted.
+
+        Returns
+        -------
+        dict
+            The lifted topology.
+        """
+        # Find a mix of Gaussians
+        number_of_points = data.x.shape[0]
+        labels, num_components, means = self.find_mog(data.x.numpy())
+
+        # If no labels are found, return a single hyperedge with all the nodes
+        if labels is None:
+            incidence = torch.ones((number_of_points, 1))
+            incidence = incidence.to_sparse_coo()
+            return {
+                "incidence_hyperedges": incidence,
+                "num_hyperedges": 1,
+                "x_0": data.x,
+            }
         # Create MST
         distance_matrix = pairwise_distances(means)
         original_graph = from_numpy_array(distance_matrix)
         mst = minimum_spanning_tree(original_graph)
 
         # Create hypergraph incidence
-        number_of_points = data.pos.shape[0]
         incidence = torch.zeros((number_of_points, 2 * num_components))
 
         # Add to which Gaussian the points belong to
@@ -70,6 +109,18 @@ class MoGMSTLifting(PointCloud2HypergraphLifting):
         }
 
     def find_mog(self, data) -> tuple[np.ndarray, int, np.ndarray]:
+        """Find the best number of components for a Mixture of Gaussians model.
+
+        Parameters
+        ----------
+        data : np.ndarray
+            The input data to be fitted.
+
+        Returns
+        -------
+        tuple[np.ndarray, int, np.ndarray]
+            The labels of the data, the number of components and the means of the components.
+        """
         if self.min_components is not None and self.max_components is not None:
             possible_num_components = range(
                 self.min_components, self.max_components + 1

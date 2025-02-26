@@ -7,10 +7,13 @@ from .hypergraph import *
 from .hypergraph import __all__ as hypergraph_all
 from .simplicial import *
 from .simplicial import __all__ as simplicial_all
+from .pointcloud import *
+from .pointcloud import __all__ as pointcloud_all
 
 __all__ = [
     "AbstractLoader",
     *graph_all,
     *hypergraph_all,
     *simplicial_all,
+    *pointcloud_all,
 ]

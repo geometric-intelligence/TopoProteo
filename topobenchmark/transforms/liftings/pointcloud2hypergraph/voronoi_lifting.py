@@ -1,3 +1,5 @@
+"""Lifting pointcloud to Voronoi graph induced by Farthest Point Sampling (FPS) support set."""
+
 import torch
 import torch_geometric
 from torch_cluster import fps, knn
@@ -23,7 +25,7 @@ class VoronoiLifting(PointCloud2HypergraphLifting):
         self.support_ratio = support_ratio
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts pointcloud to voronoi graph induced by Farthest Point Sampling (FPS) support set.
+        r"""Lift pointcloud to voronoi graph induced by Farthest Point Sampling (FPS) support set.
 
         Parameters
         ----------
@@ -37,8 +39,8 @@ class VoronoiLifting(PointCloud2HypergraphLifting):
         """
 
         # Sample FPS induced Voronoi graph
-        support_idcs = fps(data.pos, ratio=self.support_ratio)
-        target_idcs, source_idcs = knn(data.pos[support_idcs], data.pos, k=1)
+        support_idcs = fps(data.x, ratio=self.support_ratio)
+        target_idcs, source_idcs = knn(data.x[support_idcs], data.x, k=1)
 
         # Construct incidence matrix
         incidence_matrix = torch.sparse_coo_tensor(

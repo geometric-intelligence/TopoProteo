@@ -3,28 +3,30 @@ DATASETS=('MUTAG') #'PROTEINS'
 
 
 
-# ------------------------- Graph2Combinatorial -------------------------
-transforms_experiments=(exp_combinatorial/g2c_curve)
-# Date 25/02 
-# working: 
-# Not working 
-# NOTE 1: 
+# # ------------------------- Graph2Combinatorial -------------------------
+# transforms_experiments=(exp_combinatorial/g2c_curve)
+# # Date 25/02 
+# # working: 
+# # Not working: exp_combinatorial/g2c_curve, exp_combinatorial/g2c_ring_close_atoms, exp_combinatorial/g2c_simplicial_paths
+# # NOTE 1: I'm pretty sure exp_combinatorial/g2c_curve is working but it is way too slow, even on MUTAG
+# # NOTE 2: exp_combinatorial/g2c_ring_close_atoms works only on data with data.smiles attribute, which is not the case for our datasets
+# # NOTE 3: exp_combinatorial/g2c_simplicial_paths is not working. They don't check if they find simplices of high enough ranks (they need cliques of adeguate size to be able to find them) so everything breaks.
 
-for transform in ${transforms_experiments[*]}
-do
-    for dataset in ${DATASETS[*]}
-    do
-            python topobenchmark/run.py\
-            model=cell/topotune\
-            dataset=graph/$dataset\
-            trainer.max_epochs=2\
-            trainer.min_epochs=1\
-            trainer.check_val_every_n_epoch=1\
-            transforms=$transform\
-            logger.wandb.project=$project_name
-            #trainer.devices=\[$device\]
-    done
-done
+# for transform in ${transforms_experiments[*]}
+# do
+#     for dataset in ${DATASETS[*]}
+#     do
+#             python topobenchmark/run.py\
+#             model=cell/topotune\
+#             dataset=graph/$dataset\
+#             trainer.max_epochs=2\
+#             trainer.min_epochs=1\
+#             trainer.check_val_every_n_epoch=1\
+#             transforms=$transform\
+#             logger.wandb.project=$project_name
+#             #trainer.devices=\[$device\]
+#     done
+# done
 
 
 # # ------------------------- Hypergraph2Simplicial -------------------------
@@ -32,7 +34,7 @@ done
 # # Date 25/02 
 # # working: 
 # # Not working exp_simplicial/h2s_heat
-# # NOTE 1: exp_simplicial/h2s_heat is not working as HypergraphHeatLifting not defined in the TB framework. and HypergraphHeatLifting uses external library.
+# # NOTE 1: exp_simplicial/h2s_heat is not working. We can remove the dependency from the external library but the lifting doesn't return a simplicial complex but a torch_geometric.data.Data object.
 
 # for transform in ${transforms_experiments[*]}
 # do
@@ -122,3 +124,28 @@ done
 #             logger.wandb.project=$project_name
 #     done
 # done
+
+# ------------------------- Pointcloud2Hypergraph -------------------------
+transforms_experiments=(exp_hypergraph/p2h_mogmst exp_hypergraph/p2h_pointnet exp_hypergraph/p2h_voronoi)
+DATASETS=('geometric_shapes')
+# Date 25/02 
+# working:exp_hypergraph/p2h_mogmst exp_hypergraph/p2h_pointnet exp_hypergraph/p2h_voronoi
+# Not working: 
+# NOTE 1: 
+
+
+for transform in ${transforms_experiments[*]}
+do
+    for dataset in ${DATASETS[*]}
+    do
+            python topobenchmark/run.py\
+            model=hypergraph/unignn2\
+            dataset=pointcloud/$dataset\
+            trainer.max_epochs=2\
+            trainer.min_epochs=1\
+            trainer.check_val_every_n_epoch=1\
+            transforms=$transform\
+            logger.wandb.project=$project_name
+            #trainer.devices=\[$device\]
+    done
+done
