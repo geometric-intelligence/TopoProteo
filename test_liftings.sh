@@ -4,15 +4,15 @@ DATASETS=('MUTAG') #'PROTEINS'
 
 
 # # ------------------------- Graph2Combinatorial -------------------------
-# transforms_experiments=(exp_combinatorial/g2c_curve)
-# # Date 25/02 
-# # working: 
-# # Not working: exp_combinatorial/g2c_curve, exp_combinatorial/g2c_ring_close_atoms, exp_combinatorial/g2c_simplicial_paths
-# # NOTE 1: I'm pretty sure exp_combinatorial/g2c_curve is working but it is way too slow, even on MUTAG
-# # NOTE 2: exp_combinatorial/g2c_ring_close_atoms works only on data with data.smiles attribute, which is not the case for our datasets
-# # NOTE 3: exp_combinatorial/g2c_simplicial_paths is not working. They don't check if they find simplices of high enough ranks (they need cliques of adeguate size to be able to find them) so everything breaks.
-# # NOTE 4: last commit before deletion 2cc98ffaa64508dc22ba8dc381112c573c1dfa5c
-# # NOTE 5: commit when deleted 86e53397a5cec8aa891acfd1f2ea61f9af247502
+transforms_experiments=(exp_combinatorial/g2c_simplicial_paths)
+# Date 25/02 
+# working: 
+# Not working: exp_combinatorial/g2c_curve, exp_combinatorial/g2c_ring_close_atoms, exp_combinatorial/g2c_simplicial_paths
+# NOTE 1: I'm pretty sure exp_combinatorial/g2c_curve is working but it is way too slow, even on MUTAG
+# NOTE 2: exp_combinatorial/g2c_ring_close_atoms works only on data with data.smiles attribute, which is not the case for our datasets
+# NOTE 3: exp_combinatorial/g2c_simplicial_paths is not working. They don't check if they find simplices of high enough ranks (they need cliques of adeguate size to be able to find them) so everything breaks.
+# NOTE 4: last commit before deletion 2cc98ffaa64508dc22ba8dc381112c573c1dfa5c
+# NOTE 5: commit when deleted 86e53397a5cec8aa891acfd1f2ea61f9af247502
 
 
 
