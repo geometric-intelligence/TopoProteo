@@ -1,3 +1,5 @@
+"""Random Flag Complex Lifting."""
+
 from itertools import combinations
 
 import gudhi
@@ -15,7 +17,20 @@ from topobenchmark.transforms.liftings.pointcloud2simplicial.base import (
 
 
 class RandomFlagComplexLifting(PointCloud2SimplicialLifting):
-    """Lifting of pointclouds to simplicial complexes using the Random Flag Complex construction."""
+    """Lifting of pointclouds to simplicial complexes using the Random Flag Complex construction.
+
+    Parameters
+    ----------
+    steps : int
+        The number of steps to perform the Random Flag Complex construction.
+    alpha : float, optional
+        The exponent of the number of points to use as the probability of an edge appearing.
+        If None, the default value is 0.5.
+    p : float, optional
+        The probability of an edge appearing. If None, the default value is 1/n.
+    **kwargs : dict
+        Additional arguments.
+    """
 
     def __init__(
         self,
@@ -30,6 +45,20 @@ class RandomFlagComplexLifting(PointCloud2SimplicialLifting):
         super().__init__(**kwargs)
 
     def lift_topology(self, data: Data) -> dict:
+        """Lift the pointcloud to a simplicial complex.
+
+        The function uses the Random Flag Complex construction.
+
+        Parameters
+        ----------
+        data : Data
+            The input pointcloud data.
+
+        Returns
+        -------
+        dict
+            The topology of the lifted complex.
+        """
         # Get the number of points and generate an empty graph
         n = data["x"].size(0)
         if self.p is None:
@@ -47,7 +76,6 @@ class RandomFlagComplexLifting(PointCloud2SimplicialLifting):
         for _ in range(self.steps):
             number_of_edges = n * (n + 1) // 2
             prob = generator.binomial(1, self.p, size=number_of_edges)
-            print(prob)
             tmp_mat = np.zeros((n, n))
             tmp_mat[indices] = prob
             np.logical_or(adj_mat, tmp_mat, out=adj_mat)
@@ -90,6 +118,20 @@ class RandomFlagComplexLifting(PointCloud2SimplicialLifting):
     def _get_lifted_topology(
         self, simplicial_complex: SimplicialComplex, st: gudhi.SimplexTree
     ) -> dict:
+        """Get the topology of the lifted complex.
+
+        Parameters
+        ----------
+        simplicial_complex : SimplicialComplex
+            The simplicial complex object.
+        st : gudhi.SimplexTree
+            The Gudhi SimplexTree object.
+
+        Returns
+        -------
+        dict
+            The topology of the lifted complex.
+        """
         # Connectivity of the complex
         lifted_topology = get_complex_connectivity(
             simplicial_complex, self.complex_dim, signed=False
@@ -109,9 +151,9 @@ class RandomFlagComplexLifting(PointCloud2SimplicialLifting):
         )
 
         # Add the indices of the simplices
-        for r in range(simplicial_complex.dim):
-            lifted_topology[f"x_idx_{r}"] = torch.tensor(
-                simplicial_complex.skeleton(r)
-            )
+        # for r in range(simplicial_complex.dim):
+        #     lifted_topology[f"x_idx_{r}"] = torch.tensor(
+        #         simplicial_complex.skeleton(r)
+        #     )
 
         return lifted_topology

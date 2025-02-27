@@ -432,3 +432,58 @@ def make_hash(o):
     hash_as_hex = sha1.hexdigest()
     # Convert the hex back to int and restrict it to the relevant int range
     return int(hash_as_hex, 16) % 4294967295
+
+
+def get_combinatorial_complex_connectivity(complex, max_rank=None):
+    r"""Generate the connectivity matrices for the combinatorial complex.
+
+    Parameters
+    ----------
+    complex : topnetx.CombinatorialComplex
+        Combinatorial complex.
+    max_rank : int
+        Maximum rank of the complex.
+
+    Returns
+    -------
+    dict
+        Dictionary containing the connectivity matrices.
+    """
+    if max_rank is None:
+        max_rank = complex.dim
+    practical_shape = list(
+        np.pad(list(complex.shape), (0, max_rank + 1 - len(complex.shape)))
+    )
+
+    connectivity = {}
+
+    for rank_idx in range(max_rank + 1):
+        if rank_idx > 0:
+            try:
+                connectivity[f"incidence_{rank_idx}"] = from_sparse(
+                    complex.incidence_matrix(
+                        rank=rank_idx - 1, to_rank=rank_idx
+                    )
+                )
+            except ValueError:
+                connectivity[f"incidence_{rank_idx}"] = (
+                    generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx],
+                        n=practical_shape[rank_idx],
+                    )
+                )
+
+        try:
+            connectivity[f"adjacency_{rank_idx}"] = from_sparse(
+                complex.adjacency_matrix(rank=rank_idx, via_rank=rank_idx + 1)
+            )
+        except ValueError:
+            connectivity[f"adjacency_{rank_idx}"] = (
+                generate_zero_sparse_connectivity(
+                    m=practical_shape[rank_idx], n=practical_shape[rank_idx]
+                )
+            )
+
+        connectivity["shape"] = practical_shape
+
+    return connectivity
