@@ -3,9 +3,7 @@
 import torch
 from toponetx import CombinatorialComplex
 
-from topobenchmark.data.utils.utils import (
-    get_combinatorial_complex_connectivity,
-)
+from topobenchmark.data.utils.utils import get_complex_connectivity
 from topobenchmark.transforms.liftings.liftings import HypergraphLifting
 
 
@@ -37,24 +35,10 @@ class Hypergraph2CombinatorialLifting(HypergraphLifting):
         dict
             The lifted topology.
         """
-        lifted_topology = get_combinatorial_complex_connectivity(
-            combinatorial_complex
+        lifted_topology = get_complex_connectivity(
+            combinatorial_complex,
+            self.complex_dim,
+            neighborhoods=self.neighborhoods,
         )
-
-        # Feature liftings
-
-        features = combinatorial_complex.get_cell_attributes("features")
-
-        for i in range(combinatorial_complex.dim + 1):
-            x = [
-                feat
-                for cell, feat in features
-                if combinatorial_complex.cells.get_rank(cell) == i
-            ]
-            if x:
-                lifted_topology[f"x_{i}"] = torch.stack(x)
-            else:
-                num_cells = len(combinatorial_complex.skeleton(i))
-                lifted_topology[f"x_{i}"] = torch.zeros(num_cells, 1)
 
         return lifted_topology

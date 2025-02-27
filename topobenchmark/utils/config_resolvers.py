@@ -158,6 +158,7 @@ def infer_in_channels(dataset, transforms):
             "pointcloud2combinatorial_lifting",
             "pointcloud2hypergraph_lifting",
             "pointcloud2cell_lifting",
+            "hypergraph2combinatorial_lifting",
         ]
         for t in complex_transforms:
             if t in transforms:

@@ -1,3 +1,5 @@
+"""Universal strict lifting of hypergraphs to combinatorial complexes."""
+
 import torch
 import torch_geometric
 from toponetx.classes import CombinatorialComplex
@@ -8,13 +10,14 @@ from topobenchmark.transforms.liftings.hypergraph2combinatorial.base import (
 
 
 class UniversalStrictLifting(Hypergraph2CombinatorialLifting):
-    r"""Lifts hypergraphs to combinatorial complexes by assinging the smallest rank values such that subcells of any cell have strictly smaller rank.
+    r"""Lift hypergraphs to combinatorial complexes.
+
+    It works by assinging the smallest rank values such that subcells of any cell have strictly smaller rank.
 
     Parameters
     ----------
     **kwargs : optional
         Additional arguments for the class.
-
     """
 
     def __init__(self, **kwargs):
@@ -23,7 +26,9 @@ class UniversalStrictLifting(Hypergraph2CombinatorialLifting):
     def lift_topology(
         self, data: torch_geometric.data.Data
     ) -> torch_geometric.data.Data | dict:
-        r"""Lifts the topology of a hypergraph to a combinatorial complex by setting the rank of a hyperedge equal to the maximum of the ranks of its sub-hyperedges plus 1.
+        r"""Lift the topology of a hypergraph to a combinatorial complex.
+
+        It works by setting the rank of a hyperedge equal to the maximum of the ranks of its sub-hyperedges plus 1.
 
         Parameters
         ----------
@@ -46,7 +51,7 @@ class UniversalStrictLifting(Hypergraph2CombinatorialLifting):
         combinatorial_complex = CombinatorialComplex()
 
         # Initialize all ranks to 1
-        ranks = torch.ones(num_hyperedges)
+        ranks = torch.zeros(num_hyperedges)
 
         # Assign a rank to each hyperedge
         for i, (he_start, he_length) in enumerate(sorted_indices):
@@ -56,6 +61,10 @@ class UniversalStrictLifting(Hypergraph2CombinatorialLifting):
                     he_start : he_start + he_length
                 ]
             )
+            # If the hyperedge has at least two nodes, set its rank to at least 1
+            # Otherwise CombinatorialComplex will complain
+            if len(hyperedge) >= 2:
+                ranks[i] = 1
 
             # Iterate over sub-hyperedges
             for j in range(i):
@@ -71,7 +80,13 @@ class UniversalStrictLifting(Hypergraph2CombinatorialLifting):
                 if subhyperedge < hyperedge:
                     ranks[i] = max(ranks[i], ranks[j] + 1)
 
-            combinatorial_complex.add_cell(hyperedge, int(ranks[i]))
+            if ranks[i] == 0:
+                # If the rank is still 0, the hyperedge is a node, so we add the features.
+                combinatorial_complex.add_cell(
+                    hyperedge, 0
+                )  # , **{'x_0': data.x[next(iter(hyperedge)),:]})
+            else:
+                combinatorial_complex.add_cell(hyperedge, int(ranks[i]))
 
         lifted_topology = self._get_lifted_topology(combinatorial_complex)
 
@@ -82,16 +97,17 @@ class UniversalStrictLifting(Hypergraph2CombinatorialLifting):
 
     def _sorted_hyperedge_indices(self, hyperedges):
         """
-        Creates a list of pairs with the starts and lengths of hyperedges in ascending order of hyperedge size.
+        Create a list of pairs with the starts and lengths of hyperedges in ascending order of hyperedge size.
 
         Parameters
         ------------
-        hyperedges: torch.tensor
-            A tensor with two rows: the first one for hyperedge indices, the second one for node indices
+        hyperedges : torch.tensor
+            A tensor with two rows: the first one for hyperedge indices, the second one for node indices.
+
         Returns
         --------
-        indices: list
-            A list of pairs (start, length) sorted according to length (ascending)
+        list
+            A list of pairs (start, length) sorted according to length (ascending).
         """
         # Identify where the changes occur
         changes = torch.cat(
