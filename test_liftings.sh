@@ -131,13 +131,38 @@ DATASETS=('MUTAG') #'PROTEINS'
 #     done
 # done
 
-# ------------------------- Pointcloud2Hypergraph -------------------------
-transforms_experiments=(exp_hypergraph/p2h_mogmst exp_hypergraph/p2h_pointnet exp_hypergraph/p2h_voronoi)
+# # ------------------------- Pointcloud2Hypergraph -------------------------
+# transforms_experiments=(exp_hypergraph/p2h_mogmst exp_hypergraph/p2h_pointnet exp_hypergraph/p2h_voronoi)
+# DATASETS=('geometric_shapes')
+# # Date 25/02 
+# # working:exp_hypergraph/p2h_mogmst exp_hypergraph/p2h_pointnet exp_hypergraph/p2h_voronoi
+# # Not working: 
+# # NOTE 1: 
+
+
+# for transform in ${transforms_experiments[*]}
+# do
+#     for dataset in ${DATASETS[*]}
+#     do
+#             python topobenchmark/run.py\
+#             model=hypergraph/unignn2\
+#             dataset=pointcloud/$dataset\
+#             trainer.max_epochs=2\
+#             trainer.min_epochs=1\
+#             trainer.check_val_every_n_epoch=1\
+#             transforms=$transform\
+#             logger.wandb.project=$project_name
+#             #trainer.devices=\[$device\]
+#     done
+# done
+
+# ------------------------- Pointcloud2Simplicial -------------------------
+transforms_experiments=(exp_simplicial/p2s_alpha_complex exp_simplicial/p2s_alpha_complex_delaunay exp_simplicial/p2s_random_flag_complex)
 DATASETS=('geometric_shapes')
 # Date 25/02 
-# working:exp_hypergraph/p2h_mogmst exp_hypergraph/p2h_pointnet exp_hypergraph/p2h_voronoi
-# Not working: 
-# NOTE 1: 
+# working: exp_simplicial/p2s_alpha_complex exp_simplicial/p2s_alpha_complex_delaunay exp_simplicial/p2s_random_flag_complex
+# Not working:
+# NOTE 1: exp_simplicial/p2s_delaunay is equal to exp_simplicial/p2s_alpha_complex_delaunay so I removed it (commit f7025bb7fed49821e1cc47f4c7c9ebf97e2040dd)
 
 
 for transform in ${transforms_experiments[*]}
@@ -145,7 +170,7 @@ do
     for dataset in ${DATASETS[*]}
     do
             python topobenchmark/run.py\
-            model=hypergraph/unignn2\
+            model=simplicial/scn\
             dataset=pointcloud/$dataset\
             trainer.max_epochs=2\
             trainer.min_epochs=1\
