@@ -1,7 +1,7 @@
 """Abstract class for lifting hypergraphs to combinatorial complexes."""
 
 import torch
-from toponetx import CombinatorialComplex
+from toponetx.classes import CombinatorialComplex
 
 from topobenchmark.data.utils.utils import get_complex_connectivity
 from topobenchmark.transforms.liftings.liftings import HypergraphLifting
