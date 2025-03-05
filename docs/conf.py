@@ -3,7 +3,7 @@
 import os
 import shutil
 
-project = "TopoBenchmark"
+project = "TopoBench"
 copyright = "2022-2023, PyT-Team, Inc."
 author = "PyT-Team Authors"
 
@@ -68,21 +68,21 @@ latex_documents = [
     (
         master_doc,
         "topobench.tex",
-        "TopoBenchmarkX Documentation",
+        "TopoBenchX Documentation",
         "PyT-Team",
         "manual",
     ),
 ]
 
 man_pages = [
-    (master_doc, "topobench", "TopoBenchmarkX Documentation", [author], 1)
+    (master_doc, "topobench", "TopoBenchX Documentation", [author], 1)
 ]
 
 texinfo_documents = [
     (
         master_doc,
         "topobench",
-        "TopoBenchmarkX Documentation",
+        "TopoBenchX Documentation",
         author,
         "topobench",
         "One line description of project.",

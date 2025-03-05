@@ -2,7 +2,7 @@
 Evaluator
 *********
 
-This module implements custom Python classes to evaluate performances of models in `TopoBenchmarkX`.
+This module implements custom Python classes to evaluate performances of models in `TopoBenchX`.
 
 .. automodule:: topobench.evaluator.base
     :members:
