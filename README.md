@@ -12,12 +12,12 @@ Assess how your model compares against state-of-the-art topological neural netwo
 
 <div align="center">
 
-[![Lint](https://github.com/geometric-intelligence/TopoBenchmark/actions/workflows/lint.yml/badge.svg)](https://github.com/geometric-intelligence/TopoBenchmark/actions/workflows/lint.yml)
-[![Test](https://github.com/geometric-intelligence/TopoBenchmark/actions/workflows/test.yml/badge.svg)](https://github.com/geometric-intelligence/TopoBenchmark/actions/workflows/test.yml)
-[![Codecov](https://codecov.io/gh/geometric-intelligence/TopoBenchmark/branch/main/graph/badge.svg)](https://app.codecov.io/gh/geometric-intelligence/TopoBenchmark)
-[![Docs](https://img.shields.io/badge/docs-website-brightgreen)](https://geometric-intelligence.github.io/topobenchmark/index.html)
+[![Lint](https://github.com/geometric-intelligence/TopoBench/actions/workflows/lint.yml/badge.svg)](https://github.com/geometric-intelligence/TopoBench/actions/workflows/lint.yml)
+[![Test](https://github.com/geometric-intelligence/TopoBench/actions/workflows/test.yml/badge.svg)](https://github.com/geometric-intelligence/TopoBench/actions/workflows/test.yml)
+[![Codecov](https://codecov.io/gh/geometric-intelligence/TopoBench/branch/main/graph/badge.svg)](https://app.codecov.io/gh/geometric-intelligence/TopoBench)
+[![Docs](https://img.shields.io/badge/docs-website-brightgreen)](https://geometric-intelligence.github.io/topobench/index.html)
 [![Python](https://img.shields.io/badge/python-3.10+-blue?logo=python)](https://www.python.org/)
-[![license](https://badgen.net/github/license/geometric-intelligence/TopoBenchmark?color=green)](https://github.com/geometric-intelligence/TopoBenchmark/blob/main/LICENSE)
+[![license](https://badgen.net/github/license/geometric-intelligence/TopoBench?color=green)](https://github.com/geometric-intelligence/TopoBench/blob/main/LICENSE)
 [![slack](https://img.shields.io/badge/chat-on%20slack-purple?logo=slack)](https://join.slack.com/t/geometric-intelligenceworkspace/shared_invite/zt-2k63sv99s-jbFMLtwzUCc8nt3sIRWjEw)
 
 
@@ -37,7 +37,7 @@ Assess how your model compares against state-of-the-art topological neural netwo
 
 ## :pushpin: Overview
 
-`TopoBenchmark` (TB) is a modular Python library designed to standardize benchmarking and accelerate research in Topological Deep Learning (TDL). In particular, TB allows to train and compare the performances of all sorts of Topological Neural Networks (TNNs) across the different topological domains, where by _topological domain_ we refer to a graph, a simplicial complex, a cellular complex, or a hypergraph. For detailed information, please refer to the [`TopoBenchmark: A Framework for Benchmarking Topological Deep Learning`](https://arxiv.org/pdf/2406.06642) paper.
+`TopoBench` (TB) is a modular Python library designed to standardize benchmarking and accelerate research in Topological Deep Learning (TDL). In particular, TB allows to train and compare the performances of all sorts of Topological Neural Networks (TNNs) across the different topological domains, where by _topological domain_ we refer to a graph, a simplicial complex, a cellular complex, or a hypergraph. For detailed information, please refer to the [`TopoBench: A Framework for Benchmarking Topological Deep Learning`](https://arxiv.org/pdf/2406.06642) paper.
 
 <p align="center">
   <img src="resources/workflow.jpg" width="700">
@@ -53,11 +53,11 @@ Additionally, the library offers the ability to transform, i.e. _lift_, each dat
 
 If you do not have conda on your machine, please follow [their guide](https://docs.anaconda.com/free/miniconda/miniconda-install/) to install it. 
 
-First, clone the `TopoBenchmark` repository and set up a conda environment `tb` with python 3.11.3. 
+First, clone the `TopoBench` repository and set up a conda environment `tb` with python 3.11.3. 
 
 ```
-git clone git@github.com:geometric-intelligence/topobenchmark.git
-cd TopoBenchmark
+git clone git@github.com:geometric-intelligence/topobench.git
+cd TopoBench
 conda create -n tb python=3.11.3
 ```
 
@@ -72,20 +72,20 @@ Next, set up the environment with the following command.
 ```
 source env_setup.sh
 ```
-This command installs the `TopoBenchmark` library and its dependencies. 
+This command installs the `TopoBench` library and its dependencies. 
 
 ### Run Training Pipeline
 
 Next, train the neural networks by running the following command:
 
 ```
-python -m topobenchmark 
+python -m topobench 
 ```
 
 Thanks to `hydra` implementation, one can easily override the default experiment configuration through the command line. For instance, the model and dataset can be selected as:
 
 ```
-python -m topobenchmark model=cell/cwn dataset=graph/MUTAG
+python -m topobench model=cell/cwn dataset=graph/MUTAG
 ```
 
 **Remark:** By default, our pipeline identifies the source and destination topological domains, and applies a default lifting between them if required.
@@ -95,7 +95,7 @@ The same CLI override mechanism also applies when modifying more finer configura
 
 
 ## :bike: Experiments Reproducibility
-To reproduce Table 1 from the [`TopoBenchmark: A Framework for Benchmarking Topological Deep Learning`](https://arxiv.org/pdf/2406.06642) paper, please run the following command:
+To reproduce Table 1 from the [`TopoBench: A Framework for Benchmarking Topological Deep Learning`](https://arxiv.org/pdf/2406.06642) paper, please run the following command:
 
 ```
 bash scripts/reproduce.sh
@@ -105,11 +105,11 @@ bash scripts/reproduce.sh
 
 ## :anchor: Tutorials
 
-Explore our [tutorials](https://github.com/geometric-intelligence/TopoBenchmark/tree/main/tutorials) for further details on how to add new datasets, transforms/liftings, and benchmark tasks. 
+Explore our [tutorials](https://github.com/geometric-intelligence/TopoBench/tree/main/tutorials) for further details on how to add new datasets, transforms/liftings, and benchmark tasks. 
 
 ## :gear: Neural Networks
 
-We list the neural networks trained and evaluated by `TopoBenchmark`, organized by the topological domain over which they operate: graph, simplicial complex, cellular complex or hypergraph. Many of these neural networks were originally implemented in [`TopoModelX`](https://github.com/pyt-team/TopoModelX).
+We list the neural networks trained and evaluated by `TopoBench`, organized by the topological domain over which they operate: graph, simplicial complex, cellular complex or hypergraph. Many of these neural networks were originally implemented in [`TopoModelX`](https://github.com/pyt-team/TopoModelX).
 
 
 ### Graphs
@@ -163,7 +163,7 @@ To implement and train a GCCN, run the following command line with the desired c
 
 
 ```
-python -m topobenchmark \
+python -m topobench \
     dataset=graph/PROTEINS \
     dataset.split_params.data_seed=1 \
     model=cell/topotune\
@@ -210,7 +210,7 @@ We invite users interested in running extensive sweeps on new GCCNs to replicate
 
 ## :rocket: Liftings
 
-We list the liftings used in `TopoBenchmark` to transform datasets. Here, a _lifting_ refers to a function that transforms a dataset defined on a topological domain (_e.g._, on a graph) into the same dataset but supported on a different topological domain (_e.g._, on a simplicial complex).
+We list the liftings used in `TopoBench` to transform datasets. Here, a _lifting_ refers to a function that transforms a dataset defined on a topological domain (_e.g._, on a graph) into the same dataset but supported on a different topological domain (_e.g._, on a simplicial complex).
 
 <details>
 <summary><b> Topology Liftings </b></summary>
@@ -287,11 +287,11 @@ We list the liftings used in `TopoBenchmark` to transform datasets. Here, a _lif
 
 ## :mag: References ##
 
-To learn more about `TopoBenchmark`, we invite you to read the paper:
+To learn more about `TopoBench`, we invite you to read the paper:
 
 ```
-@article{telyatnikov2024topobenchmark,
-      title={TopoBenchmark: A Framework for Benchmarking Topological Deep Learning}, 
+@article{telyatnikov2024topobench,
+      title={TopoBench: A Framework for Benchmarking Topological Deep Learning}, 
       author={Lev Telyatnikov and Guillermo Bernardez and Marco Montagna and Pavlo Vasylenko and Ghada Zamzmi and Mustafa Hajij and Michael T Schaub and Nina Miolane and Simone Scardapane and Theodore Papamarkou},
       year={2024},
       eprint={2406.06642},
@@ -300,7 +300,7 @@ To learn more about `TopoBenchmark`, we invite you to read the paper:
       url={https://arxiv.org/abs/2406.06642}, 
 }
 ```
-If you find `TopoBenchmark` useful, we would appreciate if you cite us!
+If you find `TopoBench` useful, we would appreciate if you cite us!
 
 
 
