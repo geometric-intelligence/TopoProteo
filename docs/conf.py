@@ -57,8 +57,8 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**.ipynb_checkpoints"]
 pygments_style = None
 
 html_theme = "pydata_sphinx_theme"
-html_baseurl = "https://geometric-intelligence.github.io/topobenchmark"
-htmlhelp_basename = "topobenchmarkdoc"
+html_baseurl = "https://geometric-intelligence.github.io/topobench"
+htmlhelp_basename = "topobenchdoc"
 html_last_updated_fmt = "%c"
 
 latex_elements = {}
@@ -67,7 +67,7 @@ latex_elements = {}
 latex_documents = [
     (
         master_doc,
-        "topobenchmark.tex",
+        "topobench.tex",
         "TopoBenchmarkX Documentation",
         "PyT-Team",
         "manual",
@@ -75,16 +75,16 @@ latex_documents = [
 ]
 
 man_pages = [
-    (master_doc, "topobenchmark", "TopoBenchmarkX Documentation", [author], 1)
+    (master_doc, "topobench", "TopoBenchmarkX Documentation", [author], 1)
 ]
 
 texinfo_documents = [
     (
         master_doc,
-        "topobenchmark",
+        "topobench",
         "TopoBenchmarkX Documentation",
         author,
-        "topobenchmark",
+        "topobench",
         "One line description of project.",
         "Miscellaneous",
     ),

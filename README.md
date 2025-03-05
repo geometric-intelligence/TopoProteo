@@ -15,7 +15,7 @@ Assess how your model compares against state-of-the-art topological neural netwo
 [![Lint](https://github.com/geometric-intelligence/TopoBenchmark/actions/workflows/lint.yml/badge.svg)](https://github.com/geometric-intelligence/TopoBenchmark/actions/workflows/lint.yml)
 [![Test](https://github.com/geometric-intelligence/TopoBenchmark/actions/workflows/test.yml/badge.svg)](https://github.com/geometric-intelligence/TopoBenchmark/actions/workflows/test.yml)
 [![Codecov](https://codecov.io/gh/geometric-intelligence/TopoBenchmark/branch/main/graph/badge.svg)](https://app.codecov.io/gh/geometric-intelligence/TopoBenchmark)
-[![Docs](https://img.shields.io/badge/docs-website-brightgreen)](https://geometric-intelligence.github.io/topobenchmark/index.html)
+[![Docs](https://img.shields.io/badge/docs-website-brightgreen)](https://geometric-intelligence.github.io/topobench/index.html)
 [![Python](https://img.shields.io/badge/python-3.10+-blue?logo=python)](https://www.python.org/)
 [![license](https://badgen.net/github/license/geometric-intelligence/TopoBenchmark?color=green)](https://github.com/geometric-intelligence/TopoBenchmark/blob/main/LICENSE)
 [![slack](https://img.shields.io/badge/chat-on%20slack-purple?logo=slack)](https://join.slack.com/t/geometric-intelligenceworkspace/shared_invite/zt-2k63sv99s-jbFMLtwzUCc8nt3sIRWjEw)
@@ -56,7 +56,7 @@ If you do not have conda on your machine, please follow [their guide](https://do
 First, clone the `TopoBenchmark` repository and set up a conda environment `tb` with python 3.11.3. 
 
 ```
-git clone git@github.com:geometric-intelligence/topobenchmark.git
+git clone git@github.com:geometric-intelligence/topobench.git
 cd TopoBenchmark
 conda create -n tb python=3.11.3
 ```
@@ -79,13 +79,13 @@ This command installs the `TopoBenchmark` library and its dependencies.
 Next, train the neural networks by running the following command:
 
 ```
-python -m topobenchmark 
+python -m topobench 
 ```
 
 Thanks to `hydra` implementation, one can easily override the default experiment configuration through the command line. For instance, the model and dataset can be selected as:
 
 ```
-python -m topobenchmark model=cell/cwn dataset=graph/MUTAG
+python -m topobench model=cell/cwn dataset=graph/MUTAG
 ```
 
 **Remark:** By default, our pipeline identifies the source and destination topological domains, and applies a default lifting between them if required.
@@ -163,7 +163,7 @@ To implement and train a GCCN, run the following command line with the desired c
 
 
 ```
-python -m topobenchmark \
+python -m topobench \
     dataset=graph/PROTEINS \
     dataset.split_params.data_seed=1 \
     model=cell/topotune\
@@ -290,7 +290,7 @@ We list the liftings used in `TopoBenchmark` to transform datasets. Here, a _lif
 To learn more about `TopoBenchmark`, we invite you to read the paper:
 
 ```
-@article{telyatnikov2024topobenchmark,
+@article{telyatnikov2024topobench,
       title={TopoBenchmark: A Framework for Benchmarking Topological Deep Learning}, 
       author={Lev Telyatnikov and Guillermo Bernardez and Marco Montagna and Pavlo Vasylenko and Ghada Zamzmi and Mustafa Hajij and Michael T Schaub and Nina Miolane and Simone Scardapane and Theodore Papamarkou},
       year={2024},

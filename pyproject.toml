@@ -135,12 +135,12 @@ convention = "numpy"
 "tests/*" = ["D"]
 
 [tool.setuptools.dynamic]
-version = {attr = "topobenchmark.__version__"}
+version = {attr = "topobench.__version__"}
 
 [tool.setuptools.packages.find]
 include = [
-    "topobenchmark",
-    "topobenchmark.*"
+    "topobench",
+    "topobench.*"
 ]
 
 [tool.mypy]

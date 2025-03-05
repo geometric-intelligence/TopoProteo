@@ -2,7 +2,7 @@
 ==========================
 
 .. figure:: https://github.com/geometric-intelligence/TopoBenchmark/raw/main/resources/logo.jpg
-   :alt: topobenchmark
+   :alt: topobench
    :class: with-shadow
    :width: 1000px
 
@@ -241,7 +241,7 @@ To learn more about `TopoBenchmark`, we invite you to read the paper:
 
 .. code-block:: BibTeX
 
-    @misc{topobenchmark2024,
+    @misc{topobench2024,
             title={TopoBenchmark},
             author={PyT-Team},
             year={2024},
