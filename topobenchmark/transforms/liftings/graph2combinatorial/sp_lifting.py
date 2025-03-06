@@ -68,6 +68,24 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
     def _get_complex_connectivity(
         self, combinatorial_complex, adjacencies, incidences, max_rank
     ):
+        """Return the connectivity information of the combinatorial complex.
+
+        Parameters
+        ----------
+        combinatorial_complex : CombinatorialComplex
+            The combinatorial complex.
+        adjacencies : List[List[int]]
+            The list of adjacency pairs.
+        incidences : List[List[int]]
+            The list of incidence pairs.
+        max_rank : int
+            The maximum rank of the complex.
+
+        Returns
+        -------
+        dict
+            The connectivity information of the combinatorial complex.
+        """
         practical_shape = list(
             np.pad(
                 list(combinatorial_complex.shape),
@@ -114,18 +132,26 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
     def _get_lifted_topology(
         self, combinatorial_complex: CombinatorialComplex, graph: nx.Graph
     ) -> dict:
-        r"""Returns the lifted topology.
+        """Return the lifted topology.
+
         Parameters
         ----------
-        cell_complex : CellComplex
-            The cell complex.
+        combinatorial_complex : CellComplex
+            The combinatorial complex representing the lifted structure.
         graph : nx.Graph
             The input graph.
+
         Returns
         -------
         dict
             The lifted topology.
+
+        Notes
+        -----
+        This method computes and returns the lifted topology based on the input
+        combinatorial complex and the original graph structure.
         """
+
         adjacencies = [[0, 1]]
         incidences = [[0, 2]]
         lifted_topology = self._get_complex_connectivity(
@@ -143,6 +169,20 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
         return lifted_topology
 
     def _create_flag_complex_from_dataset(self, dataset, complex_dim=2):
+        """Create a directed flag complex from a dataset.
+
+        Parameters
+        ----------
+        dataset : torch_geometric.data.Data
+            The input dataset.
+        complex_dim : int, optional
+            The maximum dimension of the complex. Default is 2.
+
+        Returns
+        -------
+        DirectedQConnectivity
+            The directed flag complex.
+        """
         dataset_digraph = nx.DiGraph()
 
         dataset_digraph.add_edges_from(
@@ -158,6 +198,18 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
         return DirectedQConnectivity(dataset_digraph, complex_dim)
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
+        """Lift the graph to a combinatorial complex by identifying simplicial paths.
+
+        Parameters
+        ----------
+        data : torch_geometric.data.Data
+            The input data to be lifted.
+
+        Returns
+        -------
+        dict
+            The lifted.
+        """
         FlG = self._create_flag_complex_from_dataset(data, complex_dim=2)
 
         indices = FlG.qij_adj(
@@ -186,14 +238,7 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
 
 
 class DirectedQConnectivity:
-    r"""Let :math:`G=(V,E)` be a directed graph. The directed flag complex of
-    :math:`G` :math:`dFl(G)` is the ordered simplicial complex whose
-    :math:`k`-simplices vertices are all totally ordered :math:`(k+1)`-cliques,
-    i.e. :math:`(v_0, \dots, v_n)` such that :math:`(v_i, v_j) \in E` for
-    all :math:`i \leq j`. This class provides a way to compute the directed
-    flag complex of a directed graph, compute the qij-connectivity of
-    the complex and find the maximal simplicial paths arising from the
-    qij-connectivity.
+    """Compute directed flag complex and q-connectivity of directed graphs.
 
     Parameters
     ----------
@@ -204,14 +249,22 @@ class DirectedQConnectivity:
     flagser_num_threads : int, optional
         The number of threads to use in the flagser computation. Default is 4.
 
+    Notes
+    -----
+    Let G=(V,E) be a directed graph. The directed flag complex of G, dFl(G),
+    is the ordered simplicial complex whose k-simplices vertices are all
+    totally ordered (k+1)-cliques, i.e. (v_0, ..., v_n) such that (v_i, v_j) ∈ E
+    for all i ≤ j. This class provides a way to compute the directed flag
+    complex of a directed graph, compute the qij-connectivity of the complex
+    and find the maximal simplicial paths arising from the qij-connectivity.
+
     References
     ----------
-
     .. [1] Henri Riihïmaki. Simplicial q-Connectivity of Directed Graphs
-    with Applications to Network Analysis. doi:10.1137/22M1480021.
+        with Applications to Network Analysis. doi:10.1137/22M1480021.
 
     .. [2] D. Lütgehetmann, D. Govc, J.P. Smith, and R. Levi. Computing
-    persistent homology of directed flag complexes. arXiv:1906.10458.
+        persistent homology of directed flag complexes. arXiv:1906.10458.
     """
 
     complex: dict[int, set[tuple]]
@@ -259,27 +312,31 @@ class DirectedQConnectivity:
         ]
 
     def _d_i_batched(self, i: int, simplices: torch.tensor) -> torch.tensor:
-        r"""Compute the face map :math:`d_i` of the simplices in the batched
-        simplices tensor. The map :math:`d_i` removes a vertex at position
-        :math:`min\{i, dim(\sigma)\}` for each simplex :math:`\sigma` in the
-        batch.
+        """Compute face map d_i of simplices in batched tensor.
 
         Parameters
         ----------
         i : int
             The index of the face map.
-        simplices : torch.Tensor, shape=(batch_size, n_vertices)
+        simplices : torch.Tensor
             The batch of simplices.
+            - Shape: (batch_size, n_vertices)
 
         Returns
         -------
-        d_i : torch.Tensor, shape=(batch_size, n_vertices-1)
-            The batch of simplices after applying the face map :math:`d_i`.
+        torch.Tensor
+            The batch of simplices after applying the face map d_i.
+            - Shape: (batch_size, n_vertices-1)
+
+        Notes
+        -----
+        The map d_i removes a vertex at position min{i, dim(σ)} for each simplex σ
+        in the batch, where dim(σ) is the dimension of the simplex.
 
         References
         ----------
         .. [1] Henri Riihïmaki. Simplicial q-Connectivity of Directed
-        Graphs with Applications to Network Analysis. doi:10.1137/22M1480021.
+            Graphs with Applications to Network Analysis. doi:10.1137/22M1480021.
         """
 
         batch_size, n_vertices = simplices.shape
@@ -295,21 +352,26 @@ class DirectedQConnectivity:
     def _gen_q_faces_batched(
         self, simplices: torch.tensor, c: int
     ) -> torch.tensor:
-        r"""Compute the :math:`q`-dimensional faces of the simplices in the
-        batched simplices tensor, where :math:c represents the cardinality
-        of the faces to compute and :math:q=c-1.
+        """Compute q-dimensional faces of simplices in batched tensor.
 
         Parameters
         ----------
-        simplices : torch.Tensor, shape=(batch_size, n_vertices)
-            The simplices tensor.
+        simplices : torch.Tensor
+            The simplices tensor. Shape: (batch_size, n_vertices).
         c : int
             The cardinality of the faces to compute.
 
         Returns
         -------
-        faces : torch.Tensor, shape=(batch_size, n_faces, c)
-            The :math:q-dimensional faces of the simplices tensor.
+        torch.Tensor
+            The q-dimensional faces of the simplices tensor.
+            Shape: (batch_size, n_faces, c).
+
+        Notes
+        -----
+        This function computes the q-dimensional faces of the simplices in the
+        batched simplices tensor, where c represents the cardinality of the faces
+        to compute and q = c - 1.
         """
 
         combinations = torch.combinations(
@@ -321,24 +383,28 @@ class DirectedQConnectivity:
     def _multiple_contained_chunked(
         self, sigmas: torch.Tensor, taus: torch.Tensor, chunk_size: int = 1024
     ) -> torch.Tensor:
-        r"""Compute the adjacency matrix induced by the relation
-        :math:`\sigma_i \subseteq \tau_j`. This function is chunked to avoid
-        memory issues.
+        """Compute chunked adjacency matrix for simplex containment relation.
 
         Parameters
         ----------
-        sigmas : torch.Tensor, shape=(Ns, cs)
-            The first simplices tensor.
-        taus : torch.Tensor, shape=(Nt, ct)
-            The second simplices tensor.
+        sigmas : torch.Tensor
+            The first simplices tensor. Shape: (Ns, cs).
+        taus : torch.Tensor
+            The second simplices tensor. Shape: (Nt, ct).
         chunk_size : int, optional
             The size of the chunks to process. Default is 1024.
 
         Returns
         -------
-        A : torch.sparse_coo_tensor, shape=(Ns, Nt)
-            Adjacency matrix such that :math:`A(i,j) = 1` if
-            :math:`\sigma_i \subseteq \tau_j:`, and :math:`0` otherwise.
+        torch.sparse_coo_tensor
+            Adjacency matrix A where A(i,j) = 1 if sigma_i ⊆ tau_j, and 0 otherwise.
+            Shape: (Ns, Nt).
+
+        Notes
+        -----
+        This function computes the adjacency matrix induced by the relation
+        sigma_i ⊆ tau_j. It uses chunking to avoid memory issues when processing
+        large datasets.
         """
 
         Ns, cs = sigmas.size()
@@ -427,17 +493,14 @@ class DirectedQConnectivity:
         q: int,
         chunk_size: int = 1024,
     ) -> torch.Tensor:
-        r"""Compute the adjacency matrix induced by the relation
-        :math:`\sigma_i \sim \tau_j \Leftrightarrow \exists \alpha_q
-        \subseteq \sigma_i \cap \tau_j`. This function is chunked to avoid
-        memory issues.
+        """Compute the adjacency matrix induced by the relation :math:`\sigma_i \sim \tau_j \Leftrightarrow \exists \alpha_q \subseteq \sigma_i \cap \tau_j`. This function is chunked to avoid memory issues.
 
         Parameters
         ----------
-        sigmas : torch.Tensor, shape=(Ns, cs)
-            The first simplices tensor.
-        taus : torch.Tensor, shape=(Nt, ct)
-            The second simplices tensor.
+        sigmas : torch.Tensor
+            The first simplices tensor with shape (Ns, cs).
+        taus : torch.Tensor
+            The second simplices tensor with shape (Nt, ct).
         q : int
             The dimension of the alpha_q simplices.
         chunk_size : int, optional
@@ -445,8 +508,8 @@ class DirectedQConnectivity:
 
         Returns
         -------
-        A : torch.sparse_coo_tensor, shape=(Ns, Nt)
-            Adjacency matrix. :math:`A(i,j) = 1` if
+        torch.sparse_coo_tensor
+            Adjacency matrix with shape (Ns, Nt). :math:`A(i,j) = 1` if
             there exists :math:`\alpha_q \in \Sigma_q` such that
             :math:`\alpha_q \subseteq \sigma_i \cap \tau_j:`, and :math:`0`
             otherwise.
@@ -483,36 +546,31 @@ class DirectedQConnectivity:
         j: int,
         chunk_size: int = 1024,
     ):
-        r"""Compute the adjacency matrix associated with the :math:`(q,
-        d_i, d_j)`-connectivity relation of two not necessarily distinct
-        pairs of skeletons of the complex.
+        """
+        Compute the adjacency matrix associated with the (q, d_i, d_j)-connectivity relation of two not necessarily distinct pairs of skeletons of the complex.
 
         Parameters
         ----------
-        sigmas : torch.Tensor, shape=(Ns, cs)
-           The first batch of simplices corresponds to a skeleton of the
-           complex.
-        taus : torch.Tensor, shape=(Nt, ct)
-            The second batch of simplices corresponds to a skeleton of the
-            complex.
+        sigmas : torch.Tensor
+            The first batch of simplices corresponds to a skeleton of the complex.
+            - Shape: (Ns, cs)
+        taus : torch.Tensor
+            The second batch of simplices corresponds to a skeleton of the complex.
+            - Shape: (Nt, ct)
         q : int
             First parameter of the qij-connectivity relation.
         i : int
-            Second parameter of the qij-connectivity relation. Determines
-            the first face map of the ordered pair of face maps.
+            Second parameter of the qij-connectivity relation. Determines the first face map of the ordered pair of face maps.
         j : int
-            Third parameter of the qij-connectivity relation. Determines the
-            second face map of the ordered pair of face maps.
-        offset : torch.Tensor, shape=(2, 1)
-            The initial indices to add to the computed indices.
+            Third parameter of the qij-connectivity relation. Determines the second face map of the ordered pair of face maps.
         chunk_size : int, optional
             The size of the chunks to process. Default is 1024.
 
         Returns
         -------
-        indices : torch.Tensor, shape=(2, N)
-            The indices of the qij-connected simplices of the pair of
-            skeletons.
+        torch.Tensor
+            The indices of the qij-connected simplices of the pair of skeletons.
+            - Shape: (2, N)
         """
 
         if q > self.complex_dim:
@@ -537,23 +595,51 @@ class DirectedQConnectivity:
         )
 
     def find_paths(self, indices: torch.tensor, threshold: int):
-        r"""Find the paths in the adjacency matrix associated with the
-        :math:`(q,
-        d_i, d_j)`-connectivity relation with length longer than a threshold.
+        """Find paths in adjacency matrix for (q, d_i, d_j)-connectivity relation.
+
         Parameters
         ----------
-        indices : torch.Tensor, shape=(2, N)
-           The indices of the qij-connected simplices of the pair of skeletons.
+        indices : torch.Tensor
+            The indices of the qij-connected simplices of the pair of skeletons.
+            - Shape: (2, N)
         threshold : int
-            The length threshold to select paths
+            The length threshold to select paths.
 
         Returns
         -------
-        paths : List[List]
-            List of selected paths.
+        List[List]
+            List of selected paths longer than the threshold.
+
+        Notes
+        -----
+        This method identifies paths in the adjacency matrix associated with the
+        (q, d_i, d_j)-connectivity relation. It selects paths with length
+        exceeding the specified threshold.
         """
 
         def dfs(node, adj_list, all_paths, path):
+            """
+            Perform depth-first search to find paths in the adjacency matrix.
+
+            Parameters
+            ----------
+            node : int
+                The current node being explored.
+            adj_list : List[List[int]]
+                Adjacency list representation of the graph.
+            all_paths : List[List[int]]
+                List to store all found paths.
+            path : List[int]
+                The current path being explored.
+
+            Notes
+            -----
+            This function recursively explores the graph using depth-first search
+            to find all possible paths. It modifies the `all_paths` list in-place.
+
+            The function does not return anything explicitly; instead, it updates
+            the `all_paths` list with new paths as they are discovered.
+            """
             if node not in adj_list:  # end of recursion
                 if len(path) > threshold:
                     all_paths = add_path(path.copy(), all_paths)
@@ -575,6 +661,18 @@ class DirectedQConnectivity:
             return
 
         def edge_index_to_adj_list(edge_index):
+            """Convert edge index to adjacency list representation.
+
+            Parameters
+            ----------
+            edge_index : torch.Tensor
+                The edge index tensor.
+
+            Returns
+            -------
+            Dict[int, List[int]]
+                The adjacency list representation of the graph.
+            """
             adj_list = {}
             for e in edge_index.T:
                 if e[0].item() not in adj_list:
@@ -585,6 +683,20 @@ class DirectedQConnectivity:
             return adj_list
 
         def is_subpath(p1, p2):
+            """Check if p1 is a subpath of p2.
+
+            Parameters
+            ----------
+            p1 : List[int]
+                The first path.
+            p2 : List[int]
+                The second path.
+
+            Returns
+            -------
+            bool
+                True if p1 is a subpath of p2, False otherwise.
+            """
             if len(p1) > len(p2):
                 return False
             if len(p1) == len(p2):
@@ -593,6 +705,20 @@ class DirectedQConnectivity:
             return any(p2[i : i + len(p1)] == p1 for i in range(diff + 1))
 
         def add_path(new_path, all_paths):
+            """Add a new path to the list of all paths.
+
+            Parameters
+            ----------
+            new_path : List[int]
+                The new path to add.
+            all_paths : List[List[int]]
+                The list of all paths.
+
+            Returns
+            -------
+            List[List[int]]
+                The updated list of all paths.
+            """
             for path in all_paths:
                 if is_subpath(new_path, path):
                     # don't add a subpath
