@@ -148,32 +148,75 @@ We list the neural networks trained and evaluated by `TopoBench`, organized by t
 | --- | --- |
 | GCCN | [TopoTune: A Framework for Generalized Combinatorial Complex Neural Networks](https://arxiv.org/pdf/2410.06530) |
 
-**Remark:** TopoBench includes [TopoTune](https://arxiv.org/pdf/2410.06530), a comprehensive framework for easily defining and training new, general TDL models on any domain using any (graph) neural network as a backbone. Please check out our extended [TopoTune wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/TopoTune) for further details on how to use this framework.
+**Remark:** TopoBench includes [TopoTune](https://arxiv.org/pdf/2410.06530), a comprehensive framework for easily designing new, general TDL models on any domain using any (graph) neural network as a backbone. Please check out the extended [TopoTune wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/TopoTune) for further details on how to leverage this framework to define and train customized topological neural network architectures.
 
 
-## :rocket: Liftings
+## :rocket: Liftings & Transforms
 
-We list the liftings used in `TopoBench` to transform datasets. Here, a _lifting_ refers to a function that transforms a dataset defined on a topological domain (_e.g._, on a graph) into the same dataset but supported on a different topological domain (_e.g._, on a simplicial complex).
+We list the liftings used in `TopoBench` to transform datasets. Here, a _lifting_ refers to a function that transforms a dataset defined on a topological domain (_e.g._, on a graph) into the same dataset but supported on a different topological domain (_e.g._, on a simplicial complex). 
 
 <details>
-<summary><b> Topology Liftings </b></summary>
+<summary><b> Structural Liftings </b></summary>
 
-### Graph2Simplicial
-| Name | Description | Reference |
-| --- | --- | --- |
-| CliqueLifting | The algorithm finds the cliques in the graph and creates simplices. Given a clique the first simplex added is the one containing all the nodes of the clique, then the simplices composed of all the possible combinations with one node missing, then two nodes missing, and so on, until all the possible pairs are added. Then the method moves to the next clique. | [Simplicial Complexes](https://en.wikipedia.org/wiki/Clique_complex) |
-| KHopLifting | For each node in the graph, take the set of its neighbors, up to k distance, and the node itself. These sets are then treated as simplices. The dimension of each simplex depends on the degree of the nodes. For example, a node with d neighbors forms a d-simplex. | [Neighborhood Complexes](https://arxiv.org/pdf/math/0512077) |
+We enumerate below the structural liftings currently implemented in `TopoBench` --taxonomized by source and destination topological domains. Please check out the provided description links for further details. 
 
-### Graph2Cell
-| Name | Description | Reference |
-| --- | --- | --- |
-| CellCycleLifting |To lift a graph to a cell complex (CC) we proceed as follows. First, we identify a finite set of cycles (closed loops) within the graph. Second, each identified cycle in the graph is associated to a 2-cell, such that the boundary of the 2-cell is the cycle. The nodes and edges of the cell complex are inherited from the graph. | [Appendix B](https://arxiv.org/abs/2206.00606) |
+**Remark:**: Most of these liftings are adaptations of winner submissions of the ICML TDL Challenge 2024 ([paper](https://proceedings.mlr.press/v251/bernardez24a.html) | [repo](https://github.com/pyt-team/challenge-icml-2024)); see the [Structural Liftings wiki](https://github.com/geometric-intelligence/TopoBench/wiki/Structural-Liftings) for a complete list of compatible liftings.
 
-### Graph2Hypergraph
-| Name | Description | Reference |
+### Graph to Simplicial Complex
+| Name | Type | Description |
 | --- | --- | --- |
-| KHopLifting | For each node in the graph, the algorithm finds the set of nodes that are at most k connections away from the initial node. This set is then used to create an hyperedge. The process is repeated for all nodes in the graph. | [Section 3.4](https://ieeexplore.ieee.org/abstract/document/9264674) |
-| KNearestNeighborsLifting | For each node in the graph, the method finds the k nearest nodes by using the Euclidean distance between the vectors of features. The set of k nodes found is considered as an hyperedge. The proces is repeated for all nodes in the graph. | [Section 3.1](https://ieeexplore.ieee.org/abstract/document/9264674) |
+|   DnD Lifting  |   Feature-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/DnD-Lifting-(Graph-to-Simplicial))   |
+|  Random Latent Clique Lifting   |   Connectivity-based  |   [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Random-Latent-Clique-Lifting-(Graph-to-Simplicial))  |
+|  Line Lifting   |   Connectivity-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Line-Lifting-(Graph-to-Simplicial))   |
+|  Neighbourhood Complex Lifting   |   Connectivity-based  |   [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Neighbourhood-Complex-Lifting-(Graph-to-Simplicial))  |
+|  Graph Induced Lifting   |   Connectivity-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Graph-Induced-Lifting-(Graph-to-Simplicial))   |
+|  Eccentricity Lifting  |  Connectivity-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Eccentricity-Lifting-(Graph-to-Simplicial))  |
+| Feature‐Based Rips Complex  | Both connectivity and feature-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Feature%E2%80%90Based-Rips-Complex-(Graph-to-Simplicial)) |
+| Clique Lifting | Connectivity-based | [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Clique-Lifting-(Graph-to-Simplicial)) |
+| K-hop Lifting | Connectivity-based | [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/KHop-Lifting-(Graph-to-Simplicial)) |
+
+### Graph to Cell Complex
+| Name | Type | Description |
+| --- | --- | --- |
+|  Discrete Configuration Complex  | Connectivity-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Discrete-Configuration-Complex-(Graph-to-Cell))  |
+|  Cycle Lifting  | Connectivity-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Cycle-Lifting-(Graph-to-Cell))  |
+
+
+### Graph to Hypergraph
+| Name | Type | Description |
+| --- | --- | --- |
+|  Expander Hypergraph Lifting  | Connectivity-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Expander-Hypergraph-Lifting-(Graph-to-Hypergraph))  |
+|  Kernel Lifting  | Both connectivity and feature-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Kernel-Lifting-(Graph-to-Hypergraph))  |
+|  Mapper Lifting  | Connectivity-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Mapper-Lifting-(Graph-to-Hypergraph))  |
+|  Forman‐Ricci Curvature Coarse Geometry Lifting  |  Connectivity-based |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Forman%E2%80%90Ricci-Curvature-Coarse-Geometry-Lifting-(Graph-to-Hypergraph))  |
+|  KNN Lifting  | Feature-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/KNN-Lifting-(Graph-to-Hypergraph))  |
+|  K-hop Lifting  |  Connectivity-based |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/KHop-Lifting-(Graph-to-Hypergraph))  |
+
+
+### Pointcloud to Simplicial
+| Name | Type | Description |
+| --- | --- | --- |
+|  Delaunay Lifting  | Feature-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Delaunay-Lifting-(Pointcloud-to-Simplicial))  |
+|  Random Flag Complex  |  Feature-based |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Random-Flag-Complex-(Pointcloud-to-Simplicial))  |
+
+
+### Pointcloud to Hypergraph
+| Name | Type | Description |
+| --- | --- | --- |
+|  Mixture of Gaussians MST lifting  |  Feature-based |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Mixture-of-Gaussians---MST-lifting-(Pointcloud-to-Hypergraph))  |
+|  PointNet Lifting  | Feature-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/PointNet--Lifting-(Pointcloud-to-Hypergraph))  |
+|  Voronoi Lifting  | Feature-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Voronoi-Lifting-(Pointcloud-to-Hypergraph))  |
+
+### Simplicial to Combinatorial
+| Name | Type | Description |
+| --- | --- | --- |
+| Coface Lifting | Connectivity-based | [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Coface-Lifting-(Simplicial-to-Combinatorial)) |
+
+### Hypergraph to Combinatorial
+| Name | Type | Description |
+| --- | --- | --- |
+|  Universal Strict Lifting  | Connectivity-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Universal-Strict-Lifting-(Hypergraph-to-Combinatorial))  |
+
 </details>
 
 <details>
