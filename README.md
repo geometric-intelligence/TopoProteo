@@ -232,10 +232,19 @@ We enumerate below the structural liftings currently implemented in `TopoBench` 
 <details>
   <summary><b> Data Transformations <b></summary>
 
-| Transform | Description | Reference |
-| --- | --- | --- |
-| Message Passing Homophily | Higher-order homophily measure for hypergraphs | [Source](https://arxiv.org/abs/2310.07684) |
-| Group Homophily | Higher-order homophily measure for hypergraphs that considers groups of predefined sizes  | [Source](https://arxiv.org/abs/2103.11818) |
+| Transform | Description | 
+| --- | --- |
+| OneHotDegreeFeatures | Adds the node degree as one hot encodings to the node features. |
+|NodeFeaturesToFloat |Converts the node features of the input graph to float. |
+| NodeDegrees | Calculates the node degrees of the input graph.|
+| NodeDegrees | Keeps only the selected fields of the input data. |
+| KeepOnlyConnectedComponent | Keep only the largest connected components of the input graph. |
+| InfereRadiusConnectivity | Generates the radius connectivity of the input point cloud. |
+| InfereKNNConnectivity | Generates the k-nearest neighbor connectivity of the input point cloud. |
+| IdentityTransform | An identity transform that does nothing to the input data. |
+|  EqualGausFeatures | Generates equal Gaussian features for all nodes. |
+|  CalculateSimplicialCurvature |  Calculates the simplicial curvature of the input graph.  |
+
 </details>
 
 ## :books: Datasets
