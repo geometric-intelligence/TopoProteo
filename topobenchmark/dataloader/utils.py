@@ -150,7 +150,7 @@ def collate_fn(batch):
         batch[key] = torch.cat(value, dim=1).squeeze(0).long()
 
     # Rename batch.batch to batch.batch_0 for consistency
-    if batch.get("batch") is not None:
+    if (batch.get("batch") is not None) and (batch.get("batch_0") is not None):
         # Back compatiility check
         assert torch.all(
             batch["batch_0"] == batch.pop("batch")
