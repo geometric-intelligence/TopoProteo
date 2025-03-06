@@ -224,7 +224,7 @@ We enumerate below the structural liftings currently implemented in `TopoBench` 
 
 | Name                | Description                                                                 | Supported Domains |
 |---------------------|-----------------------------------------------------------------------------|-------------------|
-| ProjectionSum       | Projects r-cell features of a graph to r+1-cell structures utilizing incidence matrices \(B_{r}\). | Simplicial, Cell  |
+| ProjectionSum       | Projects r-cell features of a graph to r+1-cell structures utilizing incidence matrices \(B_{r}\). | All  |
 | ConcatenationLifting | Concatenate r-cell features to obtain r+1-cell features.                   | Simplicial        |
 
 </details>
