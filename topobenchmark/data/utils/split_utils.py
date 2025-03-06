@@ -193,23 +193,23 @@ def assign_train_val_test_mask_to_graphs(dataset, split_idx):
     # Assign masks directly by iterating over pre-split indices
     for i in split_idx["train"]:
         graph = dataset[i]
-        graph.train_mask = torch.tensor(1, dtype=torch.long)
-        graph.val_mask = torch.tensor(0, dtype=torch.long)
-        graph.test_mask = torch.tensor(0, dtype=torch.long)
+        graph.train_mask = torch.tensor([1], dtype=torch.long)
+        graph.val_mask = torch.tensor([0], dtype=torch.long)
+        graph.test_mask = torch.tensor([0], dtype=torch.long)
         data_train_lst.append(graph)
 
     for i in split_idx["valid"]:
         graph = dataset[i]
-        graph.train_mask = torch.tensor(0, dtype=torch.long)
-        graph.val_mask = torch.tensor(1, dtype=torch.long)
-        graph.test_mask = torch.tensor(0, dtype=torch.long)
+        graph.train_mask = torch.tensor([0], dtype=torch.long)
+        graph.val_mask = torch.tensor([1], dtype=torch.long)
+        graph.test_mask = torch.tensor([0], dtype=torch.long)
         data_val_lst.append(graph)
 
     for i in split_idx["test"]:
         graph = dataset[i]
-        graph.train_mask = torch.tensor(0, dtype=torch.long)
-        graph.val_mask = torch.tensor(0, dtype=torch.long)
-        graph.test_mask = torch.tensor(1, dtype=torch.long)
+        graph.train_mask = torch.tensor([0], dtype=torch.long)
+        graph.val_mask = torch.tensor([0], dtype=torch.long)
+        graph.test_mask = torch.tensor([1], dtype=torch.long)
         data_test_lst.append(graph)
 
     return (
