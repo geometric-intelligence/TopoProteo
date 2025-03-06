@@ -1,3 +1,5 @@
+"""This module implements the SimplicialEccentricityLifting class, which lifts graphs to simplicial complexes."""
+
 from itertools import combinations
 
 import networkx as nx
@@ -10,7 +12,7 @@ from topobenchmark.transforms.liftings.graph2simplicial.base import (
 
 
 class SimplicialEccentricityLifting(Graph2SimplicialLifting):
-    r"""Lifts graphs to simplicial complex domain using eccentricity.
+    r"""Lift graphs to simplicial complex domain using eccentricity.
 
     Parameters
     ----------
@@ -22,7 +24,7 @@ class SimplicialEccentricityLifting(Graph2SimplicialLifting):
         super().__init__(**kwargs)
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a graph to a simplicial complex by identifying connected subgraphs as simplices.
+        r"""Lift the topology of a graph to a simplicial complex by identifying connected subgraphs as simplices.
 
         Parameters
         ----------

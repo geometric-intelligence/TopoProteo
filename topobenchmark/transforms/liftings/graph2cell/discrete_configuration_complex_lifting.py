@@ -16,11 +16,11 @@ ConfigurationTuple = tuple[Vertex | Edge]
 
 
 class DiscreteConfigurationComplexLifting(Graph2CellLifting):
-    r"""Lift graphs to cell complexes.
+    """Lift graphs to cell complexes.
 
-    Lift graphs to cell complexes by generating the k-th *discrete configuration complex* $D_k(G)$ of the graph. This is a cube complex, which is similar to a simplicial complex except each n-dimensional cell is homeomorphic to a n-dimensional cube rather than an n-dimensional simplex.
+    Lift graphs to cell complexes by generating the k-th discrete configuration complex D_k(G) of the graph. This is a cube complex, which is similar to a simplicial complex except each n-dimensional cell is homeomorphic to a n-dimensional cube rather than an n-dimensional simplex.
 
-    The discrete configuration complex of order k consists of all sets of k unique edges or vertices of $G$, with the additional constraint that if an edge e is in a cell, then neither of the endpoints of e are in the cell. For examples of different graphs and their configuration complexes, see the tutorial.
+    The discrete configuration complex of order k consists of all sets of k unique edges or vertices of G, with the additional constraint that if an edge e is in a cell, then neither of the endpoints of e are in the cell. For examples of different graphs and their configuration complexes, see the tutorial.
 
     Note that since TopoNetx only supports cell complexes of dimension 2, if you generate a configuration complex of order k > 2 this will only produce the 2-skeleton.
 
@@ -30,10 +30,14 @@ class DiscreteConfigurationComplexLifting(Graph2CellLifting):
         The order of the configuration complex, i.e. the number of 'agents' in a single configuration.
     preserve_edge_attr : bool, optional
         Whether to preserve edge attributes. Default is True.
-    feature_aggregation: str, optional
+    feature_aggregation : str, optional
         For a k-agent configuration, the method by which the features are aggregated. Can be "mean", "sum", or "concat". Default is "concat".
-    **kwargs : optional
+    **kwargs : dict, optional
         Additional arguments for the class.
+
+    Notes
+    -----
+    The discrete configuration complex provides a way to model higher-order interactions in graphs, particularly useful for scenarios involving multiple agents or particles moving on a graph structure.
     """
 
     def __init__(
@@ -55,7 +59,7 @@ class DiscreteConfigurationComplexLifting(Graph2CellLifting):
     def forward(
         self, data: torch_geometric.data.Data
     ) -> torch_geometric.data.Data:
-        r"""Applies the full lifting (topology + features) to the input data.
+        r"""Apply the full lifting (topology + features) to the input data.
 
         Parameters
         ----------
@@ -74,7 +78,7 @@ class DiscreteConfigurationComplexLifting(Graph2CellLifting):
         return torch_geometric.data.Data(y=data.y, **lifted_topology)
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Generates the cubical complex of discrete graph configurations.
+        r"""Generate the cubical complex of discrete graph configurations.
 
         Parameters
         ----------
@@ -120,31 +124,71 @@ class DiscreteConfigurationComplexLifting(Graph2CellLifting):
 
 
 def edge_cycle_to_vertex_cycle(edge_cycle: list[list | tuple]):
-    """Takes a cycle represented by a list of edges and returns a vertex representation: [(1, 2), (0, 1), (1, 2)] -> [1, 2, 3]."""
+    """Take a cycle represented by a list of edges and returns a vertex representation: [(1, 2), (0, 1), (1, 2)] -> [1, 2, 3].
+
+    Parameters
+    ----------
+    edge_cycle : list[list | tuple]
+        The cycle represented by a list of edges.
+
+    Returns
+    -------
+    list
+        The cycle represented by a list of vertices.
+    """
     return [e[0] for e in nx.find_cycle(nx.Graph(edge_cycle))]
 
 
 def generate_configuration_class(
     graph: nx.Graph, feature_aggregation: str, edge_features: bool
 ):
-    """Class factory for the Configuration class."""
+    """Factory for the Configuration class.
+
+    Parameters
+    ----------
+    graph : nx.Graph
+        The input graph.
+    feature_aggregation : str
+        The method by which the features are aggregated.
+    edge_features : bool
+        Whether edge features are present.
+
+    Returns
+    -------
+    Configuration
+        The Configuration.
+    """
 
     class Configuration:
         """Configuration Class.
 
-        Represents a single legal configuration of k agents on a graph G. A legal configuration is a tuple of k edges and vertices of G where all the vertices and endpoints are **distinct** i.e. no two edges sharing an endpoint can simultaneously be in the configuration, and adjacent (edge, vertex) pair can be contained in the configuration. Each configuration corresponds to a cell, and the number of edges in the configuration is the dimension.
+        Represents a single legal configuration of k agents on a graph G. A legal configuration is a tuple of k edges and vertices of G where all the vertices and endpoints are **distinct**, i.e., no two edges sharing an endpoint can simultaneously be in the configuration, and an adjacent (edge, vertex) pair can be contained in the configuration. Each configuration corresponds to a cell, and the number of edges in the configuration is the dimension.
 
         Parameters
         ----------
-        k : int, optional.
-            The order of the configuration complex, or the number of 'points' in the configuration.
-        graph: nx.Graph.
-            The graph on which the configurations are defined.
+        configuration_tuple : tuple
+            A tuple representing the configuration of k agents on the graph.
+
+        Notes
+        -----
+        The `configuration_tuple` parameter was added to document its role in representing specific configurations. This class is used to model higher-order interactions in graphs by defining legal configurations based on graph topology.
         """
 
         instances: ClassVar[dict[ConfigurationTuple, "Configuration"]] = {}
 
         def __new__(cls, configuration_tuple: ConfigurationTuple):
+            """Create a new configuration object if it does not already exist.
+
+            Parameters
+            ----------
+            configuration_tuple : ConfigurationTuple
+                The configuration tuple to be represented.
+
+            Returns
+            -------
+            Configuration
+                The configuration object.
+            """
             # Ensure that a configuration tuple corresponds to a *unique* configuration object
             key = configuration_tuple
             if key not in cls.instances:
@@ -227,7 +271,22 @@ def generate_configuration_class(
         def _generate_single_neighbor(
             self, index: int, vertex_agent: int, neighbor: int
         ):
-            """Generate a configuration containing self by moving an agent from a vertex onto an edge."""
+            """Generate a configuration containing self by moving an agent from a vertex onto an edge.
+
+            Parameters
+            ----------
+            index : int
+                The index of the vertex in the configuration tuple.
+            vertex_agent : int
+                The vertex to move.
+            neighbor : int
+                The neighbor to move the vertex to.
+
+            Returns
+            -------
+            None
+                The new configuration is added to the instances dictionary.
+            """
             # If adding the edge (vertex_agent, neighbor) would produce an illegal configuration, ignore it
             if neighbor in self.neighborhood:
                 return

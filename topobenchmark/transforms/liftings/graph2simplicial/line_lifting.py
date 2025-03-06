@@ -1,3 +1,5 @@
+"""This module implements the SimplicialLineLifting class, which lifts graphs to simplicial complexes."""
+
 import networkx as nx
 import torch_geometric
 from toponetx.classes import SimplicialComplex
@@ -8,7 +10,7 @@ from topobenchmark.transforms.liftings.graph2simplicial.base import (
 
 
 class SimplicialLineLifting(Graph2SimplicialLifting):
-    r"""Lifts graphs to a simplicial complex domain by considering line simplicial complex.
+    r"""Lift graphs to a simplicial complex domain by considering line simplicial complex.
 
     Line simplicial complex is a clique complex of the line graph. Line graph is a graph, in which
     the vertices are the edges in the initial graph, and two vertices are adjacent if the corresponding
@@ -24,7 +26,7 @@ class SimplicialLineLifting(Graph2SimplicialLifting):
         super().__init__(**kwargs)
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a graph to simplicial domain via line simplicial complex construction.
+        r"""Lift topology of a graph to simplicial domain via line simplicial complex construction.
 
         Parameters
         ----------

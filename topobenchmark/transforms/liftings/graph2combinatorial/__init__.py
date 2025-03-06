@@ -1,4 +1,4 @@
-"""Graph2Combinatorial liftings with automated exports."""
+"""Graph2CombinatorialLifting module with automated exports."""
 
 import inspect
 from importlib import util
@@ -9,11 +9,11 @@ from .base import Graph2CombinatorialLifting
 
 
 class ModuleExportsManager:
-    """Manages automatic discovery and registration of Graph2Combinatorial lifting classes."""
+    """Manages automatic discovery and registration of Graph2Simplicial lifting classes."""
 
     @staticmethod
     def is_lifting_class(obj: Any) -> bool:
-        """Check if an object is a valid Graph2Combinatorial lifting class.
+        """Check if an object is a valid Graph2Simplicial lifting class.
 
         Parameters
         ----------
@@ -23,7 +23,7 @@ class ModuleExportsManager:
         Returns
         -------
         bool
-            True if the object is a valid Graph2Combinatorial lifting class (non-private class
+            True if the object is a valid Graph2Simplicial lifting class (non-private class
             inheriting from Graph2CombinatorialLifting), False otherwise.
         """
         return (
@@ -36,7 +36,7 @@ class ModuleExportsManager:
 
     @classmethod
     def discover_liftings(cls, package_path: str) -> dict[str, type]:
-        """Dynamically discover all Graph2Combinatorial lifting classes in the package.
+        """Dynamically discover all Graph2Simplicial lifting classes in the package.
 
         Parameters
         ----------
@@ -82,7 +82,7 @@ class ModuleExportsManager:
 # Create the exports manager
 manager = ModuleExportsManager()
 
-# Automatically discover and populate GRAPH2CELL_LIFTINGS
+# Automatically discover and populate GRAPH2COMBINATORIAL_LIFTINGS
 GRAPH2COMBINATORIAL_LIFTINGS = manager.discover_liftings(__file__)
 
 # Automatically generate __all__

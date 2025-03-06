@@ -1,3 +1,5 @@
+"""This module implements the HypergraphKernelLifting class."""
+
 import copy
 import typing
 
@@ -12,8 +14,7 @@ from topobenchmark.transforms.liftings.graph2hypergraph.base import (
 
 
 def graph_heat_kernel(laplacian: torch.Tensor, t: float = 1.0) -> torch.Tensor:
-    """
-    Return graph heat kernel $$K = exp(-t L).$$
+    """Return graph heat kernel $$K = exp(-t L)$$.
 
     Parameters
     ----------
@@ -35,22 +36,27 @@ def graph_matern_kernel(
     laplacian: torch.Tensor, nu: int = 1, kappa: int = 1
 ) -> torch.Tensor:
     """
-    Return graph Mat\'ern kernel $$K = (2 \nu / kappa^2 I + L)^{-\nu}.$$
+    Return graph Matérn kernel.
 
     Parameters
     ----------
     laplacian : torch.Tensor
         The graph Laplacian (alternatively can be the normalized graph Laplacian).
-    \nu : float
-        Smoothness of the kernel.
-    \\kappa : float
-        Lengthscale of the kernel.
+    nu : float
+        Smoothness parameter of the kernel.
+    kappa : int
+        Lengthscale parameter of the kernel.
 
     Returns
     -------
     torch.Tensor
-        The Mat\'ern kernel.
+        The Matérn kernel matrix K = (2*nu / kappa^2 * I + L)^(-nu).
+
+    Notes
+    -----
+    I represents the identity matrix and L is the graph Laplacian.
     """
+
     id_matrix = torch.eye(laplacian.shape[0])
     return torch.tensor(fmp((2 * nu / kappa**2) * id_matrix + laplacian, -nu))
 
@@ -59,22 +65,24 @@ def get_graph_kernel(
     laplacian, kernel: str | typing.Callable = "heat", **kwargs
 ):
     """
-    Returns a graph kernel.
+    Return a graph kernel.
 
     Parameters
     ----------
     laplacian : torch.Tensor
         The graph Laplacian (alternatively can be the normalized graph Laplacian).
-    kernel : str | typing.Callable
-        Either the name of a kernel or callable kernel function.
-    **kwargs:
-        The hyperparameters of a kernel should be passed to the function.
+    kernel : str or callable
+        Either the name of a kernel or a callable kernel function.
+    **kwargs : dict
+        Additional keyword arguments representing the hyperparameters of the kernel.
+        These should be passed to the kernel function.
 
     Returns
     -------
     torch.Tensor
         A graph kernel for the provided Laplacian matrix.
     """
+
     if callable(kernel):
         return kernel(laplacian, **kwargs)
     if kernel == "heat":
@@ -92,50 +100,54 @@ def get_feat_kernel(
     features, kernel: str | typing.Callable = "identity", **kwargs
 ):
     """
-    Returns a kernel matrix for the given features based on the specified kernel type.
+    Compute a kernel matrix for the given features based on the specified kernel type.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     features : torch.Tensor
-        A tensor representing the features for which the kernel matrix is to be computed.
-        It is assumed to be a 2D tensor where each row corresponds to a feature vector.
+        A 2D tensor representing the features for which the kernel matrix is to be computed.
+        Each row corresponds to a feature vector.
 
     kernel : str or callable, optional
-        The type of kernel to be applied or a custom kernel function.
+        Specifies the type of kernel to apply or a custom kernel function.
         - If a string, it specifies a predefined kernel type. Currently, only "identity" is supported.
-          The "identity" kernel returns an identity matrix of the same size as the number of features.
-        - If a callable, it should be a function that takes features and additional kwargs as input
-          and returns a kernel matrix.
+        The "identity" kernel returns an identity matrix of size `(N, N)`, where `N` is the number of features.
+        - If a callable, it should be a function that takes `features` and additional keyword arguments (`**kwargs`)
+        as input and returns a kernel matrix.
         Default is "identity".
 
-    **kwargs :
-        Additional keyword arguments that may be required by the custom kernel function if `kernel` is a callable.
+    **kwargs : dict, optional
+        Additional keyword arguments required by the custom kernel function if `kernel` is a callable.
 
-    Returns:
-    --------
-    torch.Tensor
-        The kernel matrix based on the specified kernel type or the result of the custom kernel function.
-
-    Raises:
+    Returns
     -------
+    torch.Tensor
+        The computed kernel matrix. If `kernel="identity"`, the result is an identity matrix of size `(N, N)`.
+        If `kernel` is a callable, the result is determined by the custom kernel function.
+
+    Raises
+    ------
     ValueError
-        If the `kernel` is a string but not one of the supported kernel types.
+        If `kernel` is a string but not one of the supported kernel types (currently only "identity").
 
-    Examples:
-    ---------
-    # Example with the "identity" kernel
-    features = torch.randn(5, 3)  # 5 features with 3 dimensions each
-    kernel_matrix = get_feat_kernel(features, "identity")
-    print(kernel_matrix)
+    Examples
+    --------
+    Example with the "identity" kernel:
 
-    # Example with a custom kernel function
-    def custom_kernel_fn(features, **kwargs):
-        # Just an example, returns a random kernel matrix of appropriate size
-        return torch.rand(features.shape[0], features.shape[0])
+    >>> import torch
+    >>> features = torch.randn(5, 3)  # 5 features with 3 dimensions each
+    >>> kernel_matrix = get_feat_kernel(features, "identity")
+    >>> print(kernel_matrix)
 
-    kernel_matrix = get_feat_kernel(features, custom_kernel_fn)
-    print(kernel_matrix)
+    Example with a custom kernel function:
+
+    >>> def custom_kernel_fn(features, **kwargs):
+    ...     # Example: return a random kernel matrix of appropriate size
+    ...     return torch.rand(features.shape[0], features.shape[0])
+    >>> kernel_matrix = get_feat_kernel(features, custom_kernel_fn)
+    >>> print(kernel_matrix)
     """
+
     if callable(kernel):
         return kernel(features)
     if kernel == "identity":
@@ -144,11 +156,10 @@ def get_feat_kernel(
 
 
 def get_combination(c_name_or_func: typing.Callable | str) -> typing.Callable:
-    """
-    Returns a combination function based on the specified type or function.
+    """Return a combination function based on the specified type or function.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     c_name_or_func : str or callable
         The combination method to use. This can be:
         - A string specifying a predefined combination type:
@@ -156,37 +167,39 @@ def get_combination(c_name_or_func: typing.Callable | str) -> typing.Callable:
           - "sum": Returns a function that computes the element-wise sum of two inputs.
         - A callable: A custom combination function that takes two arguments (A and B) and combines them.
 
-    Returns:
-    --------
+    Returns
+    -------
     callable
         A function that combines two inputs based on the specified combination type or custom function.
         The returned function takes two parameters, A and B, which can be scalars, tensors, or other compatible types,
         and returns their combined result.
 
-    Raises:
-    -------
+    Raises
+    ------
     ValueError
         If `c_name_or_func` is a string that does not match any supported predefined combination type.
 
-    Examples:
-    ---------
-    # Example with the "prod" combination
-    prod_fn = get_combination("prod")
-    result = prod_fn(2, 3)  # result is 6
-    print(result)
+    Examples
+    --------
+    Example with the "prod" combination:
+        >>> prod_fn = get_combination("prod")
+        >>> result = prod_fn(2, 3)
+        >>> print(result)
+        6
 
-    # Example with the "sum" combination
-    sum_fn = get_combination("sum")
-    result = sum_fn(2, 3)  # result is 5
-    print(result)
+    Example with the "sum" combination:
+        >>> sum_fn = get_combination("sum")
+        >>> result = sum_fn(2, 3)
+        >>> print(result)
+        5
 
-    # Example with a custom combination function
-    def custom_combination(A, B):
-        return A - B  # example: returns the difference between A and B
-
-    custom_fn = get_combination(custom_combination)
-    result = custom_fn(7, 4)  # result is 3
-    print(result)
+    Example with a custom combination function:
+        >>> def custom_combination(A, B):
+        ...     return A - B
+        >>> custom_fn = get_combination(custom_combination)
+        >>> result = custom_fn(7, 4)
+        >>> print(result)
+        3
     """
     if callable(c_name_or_func):
         return c_name_or_func
@@ -198,14 +211,18 @@ def get_combination(c_name_or_func: typing.Callable | str) -> typing.Callable:
 
 
 class HypergraphKernelLifting(Graph2HypergraphLifting):
-    r"""Lifts graphs to hypergraph domain by the kernel over graphs (features can be included).
+    r"""Lift graphs to hypergraph domain by the kernel over graphs (features can be included).
 
     Parameters
     ----------
-    k_value : int, optional
-        The number of nearest neighbors to consider. Default is 1.
-    loop: boolean, optional
-        If True the hyperedges will contain the node they were created from.
+    graph_kernel : str or callable
+        The kernel function to be applied to the graph topology, if a string, it specifies a predefined kernel type. Currently, only "heat" is supported. If a callable, it should be a function that takes the graph Laplacian and additional kwargs as input and returns a kernel matrix.
+    feat_kernel : str or callable
+        The kernel function to be applied to the features, if a string, it specifies a predefined kernel type. Currently, only "identity" is supported. If a callable, it should be a function that takes the features and additional kwargs as input and returns a kernel matrix.
+    C : str or callable
+        Default is "heat".
+    fraction : float
+        The fraction of the kernel to be considered for the hypergraph construction. Default is 0.5.
     **kwargs : optional
         Additional arguments for the class.
     """
@@ -228,34 +245,33 @@ class HypergraphKernelLifting(Graph2HypergraphLifting):
         self.kwargs = kwargs
 
     def _remove_empty_edges(self, incidence: torch.Tensor) -> torch.Tensor:
-        r"""
-        Remove hyperedges with fewer than two incident vertices from the incidence matrix.
+        r"""Remove hyperedges with fewer than two incident vertices from the incidence matrix.
 
         Parameters
         ----------
-        incidence (torch.Tensor): A 2D tensor (vertices x hyperedges) representing
-                                      the incidence matrix of a hypergraph.
+        incidence : torch.Tensor
+            A 2D tensor (vertices x hyperedges) representing the incidence matrix of a hypergraph.
 
         Returns
         -------
-        torch.Tensor: A filtered incidence matrix with only hyperedges having
-                        more than one incident vertex.
+        torch.Tensor
+            A filtered incidence matrix with only hyperedges having more than one incident vertex.
         """
         keep_columns = torch.where(torch.sum(incidence != 0, dim=0) > 1)[0]
         return incidence[:, keep_columns]
 
     def _deduplicate_hyperedges(self, incidence: torch.Tensor) -> torch.Tensor:
-        r"""
-         Remove duplicate hyperedges from the incidence matrix.
+        r"""Remove duplicate hyperedges from the incidence matrix.
 
         Parameters
         ----------
-        incidence (torch.Tensor): A 2D tensor (vertices x hyperedges) representing
-                                    the incidence matrix of a hypergraph.
+        incidence : torch.Tensor
+            A 2D tensor (vertices x hyperedges) representing the incidence matrix of a hypergraph.
 
         Returns
         -------
-        torch.Tensor: An incidence matrix with duplicate hyperedges removed.
+        torch.Tensor
+            A deduplicated incidence matrix with unique hyperedges.
         """
         transposed_tensor = incidence.T
         return torch.unique(transposed_tensor, dim=0).T
@@ -263,7 +279,10 @@ class HypergraphKernelLifting(Graph2HypergraphLifting):
     def lift_topology(
         self, data: torch_geometric.data.Data
     ) -> dict[str, torch.Tensor]:
-        r"""Lifts the topology of a graph to hypergraph domain by considering the kernel over vertices or alternatively features.
+        r"""Lift the topology of a graph to hypergraph domain by considering the kernel over vertices or alternatively features.
+
+        Extended Summary
+        ----------------
         In a most generic form the kernel looks like:
         $$K =  C(K_v(v, v^{\prime}) K_x(x, x^{\prime})),$$
         where $K_v$ is a kernel over the graph (graph_kernel), $K_x$ is a kernel over the features (feat_kernel), and

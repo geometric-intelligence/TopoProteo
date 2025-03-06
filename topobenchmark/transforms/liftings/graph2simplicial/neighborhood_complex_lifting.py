@@ -1,4 +1,5 @@
 """This module implements the NeighborhoodComplexLifting class, which lifts graphs to simplicial complexes."""
+
 import networkx as nx
 import torch
 from toponetx.classes import SimplicialComplex
@@ -12,8 +13,11 @@ from topobenchmark.transforms.liftings.graph2simplicial.base import (
 
 class NeighborhoodComplexLifting(Graph2SimplicialLifting):
     """Lifts graphs to a simplicial complex domain by identifying the neighborhood complex as k-simplices.
-    The neighborhood complex of a node u is the set of nodes that share a neighbor with u.
 
+    Parameters
+    ----------
+    **kwargs : optional
+        Additional arguments for the class.
     """
 
     def __init__(self, **kwargs):

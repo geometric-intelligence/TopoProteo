@@ -1,4 +1,6 @@
-from topobenchmark.transforms.liftings.lifting import PointCloudLifting
+"""Abstract class for lifting pointcloud to cell complexes."""
+
+from topobenchmark.transforms.liftings.liftings import PointCloudLifting
 
 
 class PointCloud2CellLifting(PointCloudLifting):

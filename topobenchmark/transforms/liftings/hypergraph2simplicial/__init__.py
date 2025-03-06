@@ -1,4 +1,4 @@
-"""Hypergraph2Simplicial liftings with automated exports."""
+"""Hypergraph2SimplicialLifting module with automated exports."""
 
 import inspect
 from importlib import util
@@ -9,11 +9,11 @@ from .base import Hypergraph2SimplicialLifting
 
 
 class ModuleExportsManager:
-    """Manages automatic discovery and registration of Hypergraph2Simplicial lifting classes."""
+    """Manages automatic discovery and registration of Graph2Simplicial lifting classes."""
 
     @staticmethod
     def is_lifting_class(obj: Any) -> bool:
-        """Check if an object is a valid Hypergraph2Simplicial lifting class.
+        """Check if an object is a valid Graph2Simplicial lifting class.
 
         Parameters
         ----------
@@ -23,7 +23,7 @@ class ModuleExportsManager:
         Returns
         -------
         bool
-            True if the object is a valid Hypergraph2Simplicial lifting class (non-private class
+            True if the object is a valid Graph2Simplicial lifting class (non-private class
             inheriting from Hypergraph2SimplicialLifting), False otherwise.
         """
         return (
@@ -36,7 +36,7 @@ class ModuleExportsManager:
 
     @classmethod
     def discover_liftings(cls, package_path: str) -> dict[str, type]:
-        """Dynamically discover all Hypergraph2Simplicial lifting classes in the package.
+        """Dynamically discover all Graph2Simplicial lifting classes in the package.
 
         Parameters
         ----------
@@ -82,7 +82,7 @@ class ModuleExportsManager:
 # Create the exports manager
 manager = ModuleExportsManager()
 
-# Automatically discover and populate GRAPH2CELL_LIFTINGS
+# Automatically discover and populate HYPERGRAPH2SIMPLICIAL_LIFTINGS
 HYPERGRAPH2SIMPLICIAL_LIFTINGS = manager.discover_liftings(__file__)
 
 # Automatically generate __all__
