@@ -73,27 +73,27 @@ def get_complex_connectivity(
             "coadjacency",
             "hodge_laplacian",
         ]:
-            try:
-                connectivity[f"{connectivity_info}_{rank_idx}"] = from_sparse(
-                    getattr(complex, f"{connectivity_info}_matrix")(
-                        rank=rank_idx, signed=signed
+            # try: #### from_sparse doesn't have rank and signed
+            #     connectivity[f"{connectivity_info}_{rank_idx}"] = from_sparse(
+            #         getattr(complex, f"{connectivity_info}_matrix")(
+            #             rank=rank_idx, signed=signed
+            #         )
+            #     )
+            # except:
+            if connectivity_info == "incidence":
+                connectivity[f"{connectivity_info}_{rank_idx}"] = (
+                    generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx - 1],
+                        n=practical_shape[rank_idx],
                     )
                 )
-            except ValueError:
-                if connectivity_info == "incidence":
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx - 1],
-                            n=practical_shape[rank_idx],
-                        )
+            else:
+                connectivity[f"{connectivity_info}_{rank_idx}"] = (
+                    generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx],
+                        n=practical_shape[rank_idx],
                     )
-                else:
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx],
-                            n=practical_shape[rank_idx],
-                        )
-                    )
+                )
     if neighborhoods is not None:
         connectivity = select_neighborhoods_of_interest(
             connectivity, neighborhoods
