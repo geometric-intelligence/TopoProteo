@@ -1,3 +1,5 @@
+"""This module implements the ModularityMaximizationLifting class."""
+
 import torch
 import torch_geometric
 

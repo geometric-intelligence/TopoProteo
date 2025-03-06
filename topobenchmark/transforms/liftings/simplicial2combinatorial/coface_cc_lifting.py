@@ -1,3 +1,5 @@
+"""The CofaceCCLifting lifting."""
+
 from toponetx.classes.combinatorial_complex import CombinatorialComplex
 from toponetx.classes.hyperedge import HyperEdge
 from torch_geometric.data import Data
@@ -11,17 +13,33 @@ from topobenchmark.transforms.liftings.simplicial2combinatorial.base import (
 
 
 class CofaceCCLifting(Simplicial2CombinatorialLifting):
+    """The CofaceCCLifting class.
+
+    This class lifts a simplicial complex to a combinatorial complex
+    by using the coface relation between the simplicial cells.
+
+    Parameters
+    ----------
+    **kwargs : dict
+        The keyword arguments.
+    """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.keep_features = kwargs.get("keep_features", False)
 
     def get_lower_cells(self, data: Data) -> list[HyperEdge]:
-        """Get the lower cells of the complex
+        """Get the lower cells of the complex.
 
-        Parameters:
-            data (Data): The input data
-        Returns:
-            List[HyperEdge]: The lower cells of the complex
+        Parameters
+        ----------
+        data : torch_geometric.data.Data
+            The input data.
+
+        Returns
+        -------
+        list
+            The list of lower cells.
         """
         cells: list[HyperEdge] = []
 
@@ -56,7 +74,18 @@ class CofaceCCLifting(Simplicial2CombinatorialLifting):
         return cells
 
     def lift_topology(self, data: Data) -> dict:
-        """Lift the simplicial topology to a combinatorial complex"""
+        """Lift the simplicial topology to a combinatorial complex.
+
+        Parameters
+        ----------
+        data : torch_geometric.data.Data
+            The input data.
+
+        Returns
+        -------
+        dict
+            The lifted connectivity dict.
+        """
 
         # Check that the dataset has the required fields
         # assume that it's a simplicial dataset
@@ -110,6 +139,18 @@ class CofaceCCLifting(Simplicial2CombinatorialLifting):
         return lifted_data
 
     def forward(self, data: Data) -> Data:
+        """Forward pass.
+
+        Parameters
+        ----------
+        data : torch_geometric.data.Data
+            The input data.
+
+        Returns
+        -------
+        torch_geometric.data.Data
+            The updated lifted data.
+        """
         initial_data = data.to_dict()
         lifted_topology = self.lift_topology(data)
         lifted_topology = self.feature_lifting(lifted_topology)

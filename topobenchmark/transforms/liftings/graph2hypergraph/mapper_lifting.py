@@ -1,3 +1,5 @@
+"""This module implements the MapperCover class."""
+
 import networkx as nx
 import torch
 import torch_geometric
@@ -14,11 +16,10 @@ from topobenchmark.transforms.liftings.graph2hypergraph.base import (
 
 
 class MapperCover:
-    r"""The MapperCover class computes the cover used in constructing the Mapper
-    for the MapperLifting class.
+    r"""The MapperCover class computes the cover used in constructing the Mapper for the MapperLifting class.
 
     Parameters
-    ---------
+    ----------
     resolution : int, optional
         The number of intervals in the MapperCover. Default is 10.
     gain : float, optional
@@ -38,12 +39,12 @@ class MapperCover:
         self._verify_cover_parameters()
 
     def fit_transform(self, filtered_data):
-        r"""Constructs an interval cover over filtered data.
+        r"""Construct an interval cover over filtered data.
 
         Parameters
         ----------
-        filtered_data : torch_geometric.data.Data or torch.Tensor
-        with size (n_sample, 1).
+        filtered_data : (n_sample, 1) Tensor
+            Filtered data to construct the Mapper cover.
 
         Returns
         -------
@@ -97,6 +98,7 @@ class MapperCover:
         return mask[:, non_empty_covers]
 
     def _verify_cover_parameters(self):
+        """Verify the cover parameters for the MapperCover class."""
         assert (
             self.gain > 0 and self.gain <= 0.5
         ), f"Gain must be a proportion greater than 0 and at most 0.5. Currently, gain is {self.gain}."
@@ -126,8 +128,7 @@ filter_dict = {
 
 
 class MapperLifting(Graph2HypergraphLifting):
-    r"""Lifts graphs to hypergraph domain using a Mapper construction for CC-pooling.
-    (See Figure 30 in \[1\])
+    r"""Lift graphs to hypergraph domain using a Mapper construction for CC-pooling.
 
     Parameters
     ----------
@@ -226,6 +227,15 @@ class MapperLifting(Graph2HypergraphLifting):
         self._verify_filter_parameters(filter_attr, filter_func)
 
     def _verify_filter_parameters(self, filter_attr, filter_func):
+        """Verify the filter parameters for the MapperLifting class.
+
+        Parameters
+        ----------
+        filter_attr : str
+            Name of the filter functional to filter data to 1-dimensional subspace.
+        filter_func : object
+            Filter function used for Mapper construction.
+        """
         if filter_func is None:
             assert (
                 self.filter_attr in filter_dict
@@ -241,8 +251,17 @@ class MapperLifting(Graph2HypergraphLifting):
             ), f"{filter_attr} must be a string."
 
     def _filter(self, data):
-        """Applies 1-dimensional filter function to
-        torch_geometric.Data.data.
+        """Apply 1-dimensional filter function to torch_geometric.Data.
+
+        Parameters
+        ----------
+        data : torch_geometric.data.Data
+            The input data to be filtered.
+
+        Returns
+        -------
+        torch.Tensor
+            Filtered data of size (n_samples, 1).
         """
         if self.filter_attr in filter_dict:
             transform = filter_dict[self.filter_attr]
@@ -269,10 +288,26 @@ class MapperLifting(Graph2HypergraphLifting):
         return filtered_data
 
     def _cluster(self, data, cover_mask):
-        """Finds clusters in each cover set within cover_mask.
+        """Find clusters in each cover set within cover_mask.
+
+        Extended Summary
+        ----------------
         For each cover set, a cluster is a
         distinct connected component.
         Clusters are stored in the dictionary, self.clusters.
+
+        Parameters
+        ----------
+        data : torch_geometric.data.Data
+            The input data to be lifted.
+        cover_mask : (n_samples, resolution) bool Tensor
+            Mask which identifies which data points are
+            in each cover set.
+
+        Returns
+        -------
+        dict
+            Dictionary of clusters in each.
         """
         mapper_clusters = {}
         num_clusters = 0
@@ -321,7 +356,7 @@ class MapperLifting(Graph2HypergraphLifting):
         return mapper_clusters
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a graph to hypergraph domain by Mapper on Graphs.
+        r"""Lift the topology of a graph to hypergraph domain by Mapper on Graphs.
 
         Parameters
         ----------

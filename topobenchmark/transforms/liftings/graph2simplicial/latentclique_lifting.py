@@ -1,3 +1,5 @@
+"""This module implements the LatentCliqueLifting class, which lifts graphs to simplicial complexes."""
+
 import numpy as np
 import torch
 import torch_geometric
@@ -13,7 +15,7 @@ from topobenchmark.transforms.liftings.graph2simplicial.clique_lifting import (
 
 
 class LatentCliqueLifting(Graph2SimplicialLifting):
-    r"""Lifts graphs to cell complexes by identifying the cycles as 2-cells.
+    r"""Lift graphs to cell complexes by identifying the cycles as 2-cells.
 
     Parameters
     ----------
@@ -53,7 +55,7 @@ class LatentCliqueLifting(Graph2SimplicialLifting):
     def lift_topology(
         self, data: torch_geometric.data.Data, verbose: bool = False
     ) -> dict:
-        r"""Finds the cycles of a graph and lifts them to 2-cells.
+        r"""Find the cycles of a graph and lifts them to 2-cells.
 
         Parameters
         ----------
@@ -96,21 +98,19 @@ class LatentCliqueLifting(Graph2SimplicialLifting):
 
 
 class _LatentCliqueModel:
-    """Latent clique cover model for network data corresponding to the
-    Partial Observability Setting of the Random Clique Cover (Williamson & Tec, 2020) paper.
+    """Latent clique cover model for network data in the Partial Observability Setting.
 
-    Williamson & Tec (2020). "Random clique covers for graphs with local density and global sparsity". UAI 2020.
-    http://proceedings.mlr.press/v115/williamson20a/williamson20a.pdf
-    The model is based on the Stable Beta-Indian Buffet Process (SB-IBP). See Teh and Gorur (2010),
-    "Indian Buffet Processes with Power-Law Behavior", NIPS 2010 for additional reference.
+    Extended Summary
+    ----------------
+    This model corresponds to the Partial Observability Setting of the Random Clique Cover
+    (Williamson & Tec, 2020) and is based on the Stable Beta-Indian Buffet Process (SB-IBP).
 
-    The model depends on four parameters: alpha, sigma, c, and pie. The parameters
-    alpha, sigma and c arepart of the SB-IBP and are described in Williamson & Tec (2020) and
-    Teh & Gorur (2010) with the same names. The parameter pie is was introduced by Williamson & Tec (2020)
-    and is a parameter for the model that determines the prior probability that an edge is unobserved.
+    Williamson & Tec (2020). "Random clique covers for graphs with local density and global sparsity".
+    UAI 2020. http://proceedings.mlr.press/v115/williamson20a/williamson20a.pdf
 
-    The following properties of a Random Clique Cover model are useful to interpret the
-    parameters alpha, c, and sigma.
+    The model relies on four parameters: alpha, sigma, c, and pie. Parameters alpha, sigma, and c
+    come from the SB-IBP (Teh & Gorur, 2010), while pie determines the prior probability of edge
+    unobservability. This setup helps model graphs with local density and global sparsity.
 
     Parameters
     ----------
@@ -125,6 +125,8 @@ class _LatentCliqueModel:
         where edge_prob_var must be in [0, inf). When edge_prob_var > 0, the value of pie is sampled.
     init : str, optional
         Initialization method for the clique cover matrix, by default "edges".
+    seed : int, optional
+        Random seed for reproducibility, by default None.
 
     Attributes
     ----------
@@ -150,10 +152,12 @@ class _LatentCliqueModel:
         Probability of an edge observation.
     lamb : float
         Rate parameter of the Poisson distribution for the number of cliques.
-        It does not influence parameter learning. But is sampled for the
+        It does not influence parameter learning but is sampled for the
         likelihood computation.
 
-    **Note**: The values of (K, N) are used interchanged from the paper notation.
+    Notes
+    -----
+    The values of (K, N) are used interchangeably from the paper notation.
     """
 
     def __init__(
@@ -192,6 +196,17 @@ class _LatentCliqueModel:
         self.edge_prob = 0.98
 
     def _init_hyperparams(self, edge_prob_mean, edge_prob_var):
+        """Initialize the hyperparameters of the model.
+
+        Parameters
+        ----------
+        edge_prob_mean : float
+            Mean of the prior distribution of pie ~ Beta
+            where edge_prob_mean must be in (0, 1).
+        edge_prob_var : float
+            Uncertainty of the prior distribution of pie ~ Beta(a, b)
+            where edge_prob_var must be in [0, inf).
+        """
         # Validate the edge probability parameters
         assert 0 < edge_prob_mean <= 1
         assert edge_prob_var >= 0
@@ -298,7 +313,7 @@ class _LatentCliqueModel:
         sigma : float, optional
             Sigma parameter, by default None.
         c : float, optional
-            c parameter, by default None.
+            Parameter, by default None.
         alpha_only : bool, optional
             Whether to compute likelihood with alpha only, by default False.
         include_K : bool, optional
@@ -768,9 +783,9 @@ def _sample_from_ibp(K, alpha, sigma, c, seed=None):
     sigma : float
         Sigma parameter of the IBP.
     c : float
-        c parameter of the IBP.
-    pie : float
-        Probability of an edge obervation. 1 - pie is the probability that an edge is unobserved.
+        Parameter of the IBP.
+    seed : int, optional
+        Random seed, by default None.
 
     Returns
     -------

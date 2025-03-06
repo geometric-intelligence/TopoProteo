@@ -1,3 +1,5 @@
+"""This module implements the HypergraphFormanRicciCurvatureLifting class."""
+
 import math
 
 import networkx as nx
@@ -11,21 +13,21 @@ from topobenchmark.transforms.liftings.graph2hypergraph.base import (
 
 
 class HypergraphFormanRicciCurvatureLifting(Graph2HypergraphLifting):
-    r"""Lifts graphs to hypergraph domain using Forman-Ricci curvature based backbone estimation.
+    """Lift graphs to hypergraph domain using Forman-Ricci curvature based backbone estimation.
 
     This lifting identifies a network's structure-preserving, coarse geometry, i.e. its backbones, which lend themselves specifically to model information flows across wide areas of the network via hyperedges. To identify this coarse geometry we apply Forman-Ricci curvature to the original graph. Forman-Ricci curvature defines an edge-based network characteristic that reveals properties of a graph's community structure. In particular high absolute Forman-Ricci curvature exhibits a network's backbone, a coarse, structure preserving graph geometry that forms connections between major communities, most suitable to form hyperedges. In addition, Forman-Ricci curvature was found to be especially useful for network analysis since its intuitive notion allows for efficient computation that scales to large networks sizes.
 
     Parameters
     ----------
-    network_type : str
+    network_type : str, optional
         Network type may be weighted or unweighted. Default is "weighted".
-    threshold_type : str
-        type of threshold (either based on quantile or absolute). Default is "quantile".
-    threshold_direction : str
-        direction whether to prune values above or below  threshold. Default is "above".
-    threshold: float
-        Absolute value or quantile to estimate cutoff threshold from Forman-Ricci curvature distribution to prune network and reveal backbone. Default is 0.1
-    **kwargs : optional
+    threshold_type : str, optional
+        Type of threshold (either based on quantile or absolute). Default is "quantile".
+    threshold_direction : str, optional
+        Direction whether to prune values above or below threshold. Default is "above".
+    threshold : float, optional
+        Absolute value or quantile to estimate cutoff threshold from Forman-Ricci curvature distribution to prune network and reveal backbone. Default is 0.1.
+    **kwargs : dict, optional
         Additional arguments for the class.
     """
 
@@ -44,7 +46,7 @@ class HypergraphFormanRicciCurvatureLifting(Graph2HypergraphLifting):
         self.threshold = threshold
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a graph to hypergraph domain using Forman-Ricci curvature based backbone estimation.
+        r"""Lift the topology of a graph to hypergraph domain using Forman-Ricci curvature based backbone estimation.
 
         Parameters
         ----------

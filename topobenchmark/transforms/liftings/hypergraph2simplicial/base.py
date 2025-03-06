@@ -1,4 +1,6 @@
-from topobenchmark.transforms.liftings.lifting import HypergraphLifting
+"""Abstract class for lifting pointcloud to simplicial complexes."""
+
+from topobenchmark.transforms.liftings.liftings import HypergraphLifting
 
 
 class Hypergraph2SimplicialLifting(HypergraphLifting):

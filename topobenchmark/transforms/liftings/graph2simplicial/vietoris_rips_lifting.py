@@ -1,3 +1,5 @@
+"""This module implements the SimplicialVietorisRipsLifting class, which lifts graphs to simplicial complexes."""
+
 from itertools import combinations
 
 import networkx as nx
@@ -10,7 +12,7 @@ from topobenchmark.transforms.liftings.graph2simplicial.base import (
 
 
 class SimplicialVietorisRipsLifting(Graph2SimplicialLifting):
-    r"""Lifts graphs to simplicial complex domain using the Vietoris-Rips complex based on pairwise distances.
+    r"""Lift graphs to simplicial complex domain using the Vietoris-Rips complex based on pairwise distances.
 
     Parameters
     ----------
@@ -25,7 +27,7 @@ class SimplicialVietorisRipsLifting(Graph2SimplicialLifting):
         self.distance_threshold = distance_threshold
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a graph to a simplicial complex using the Vietoris-Rips complex.
+        r"""Lift topology of a graph to a simplicial complex using the Vietoris-Rips complex.
 
         Parameters
         ----------
