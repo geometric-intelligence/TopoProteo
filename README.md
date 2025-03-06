@@ -240,7 +240,7 @@ We enumerate below the structural liftings currently implemented in `TopoBench` 
 
 ## :books: Datasets
 
-### Graphs
+### Graph
 | Dataset | Task | Description | Reference |
 | --- | --- | --- | --- |
 | Cora | Classification | Cocitation dataset. | [Source](https://link.springer.com/article/10.1023/A:1009953814988) |
@@ -260,7 +260,13 @@ We enumerate below the structural liftings currently implemented in `TopoBench` 
 | US-county-demos | Regression | In turn each node attribute is used as the target label. | [Source](https://arxiv.org/pdf/2002.08274) |
 | ZINC | Regression | Graph-level regression. | [Source](https://pubs.acs.org/doi/10.1021/ci3001277) |
 
-### Hypergraphs
+
+### Simplicial
+| Dataset | Task | Description | Reference |
+| --- | --- | --- | --- |
+| Mantra |  Classification, Multi-label Classification  |  Predict topological attributes of manifold triangulations |  [Source](https://github.com/aidos-lab/MANTRA)  |
+
+### Hypergraph
 | Dataset | Task | Description | Reference |
 | --- | --- | --- | --- |
 | Cora-Cocitation | Classification | Cocitation dataset. | [Source](https://proceedings.neurips.cc/paper_files/paper/2019/file/1efa39bcaec6f3900149160693694536-Paper.pdf) |
