@@ -1,3 +1,5 @@
+"""This module implements the SimplicialPathsLifting class."""
+
 import networkx as nx
 import numpy as np
 import pyflagsercount as pfc
@@ -11,6 +13,36 @@ from topobenchmark.transforms.liftings.graph2combinatorial.base import (
 
 
 class SimplicialPathsLifting(Graph2CombinatorialLifting):
+    """Lift graphs to combinatorial complex domain by identifying simplicial paths as simplices.
+
+    This method constructs a combinatorial complex by identifying paths in a graph that correspond to simplices of varying dimensions. The lifting process enables the representation of higher-order relationships in the graph structure.
+
+    Parameters
+    ----------
+    d1 : int
+        The minimum dimension of simplicial paths to consider.
+    d2 : int
+        The maximum dimension of simplicial paths to consider.
+    q : float
+        A parameter controlling path selection criteria, such as quality or weight.
+    i : int
+        Starting node index for path identification.
+    j : int
+        Ending node index for path identification.
+    complex_dim : int, optional
+        The maximum dimension of the combinatorial complex. Default is 2.
+    chunk_size : int, optional
+        The size of chunks for processing large graphs. Default is 1024.
+    threshold : float, optional
+        A threshold value to filter paths based on specific criteria. Default is 1.
+    **kwargs : dict, optional
+        Additional keyword arguments for customization.
+
+    Notes
+    -----
+    This lifting approach is useful for analyzing higher-order structures in networks by extending beyond pairwise relationships to simplicial complexes. It can be applied to study topological prop
+    """
+
     def __init__(
         self,
         d1,

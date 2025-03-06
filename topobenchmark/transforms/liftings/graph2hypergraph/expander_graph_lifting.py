@@ -1,3 +1,5 @@
+"""This module implements the ExpanderGraphLifting class."""
+
 import warnings
 
 import networkx
@@ -10,7 +12,7 @@ from topobenchmark.transforms.liftings.graph2hypergraph.base import (
 
 
 class ExpanderGraphLifting(Graph2HypergraphLifting):
-    r"""Lifts graphs to expander (hyper)graph. More precisely, the expander is a random Ramanujan graph.
+    r"""Lift graphs to expander (hyper)graph. More precisely, the expander is a random Ramanujan graph.
 
     Parameters
     ----------
@@ -28,7 +30,7 @@ class ExpanderGraphLifting(Graph2HypergraphLifting):
         self.node_degree = node_degree
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a graph to an expander hypergraph.
+        r"""Lift the topology of a graph to an expander hypergraph.
 
         Parameters
         ----------
