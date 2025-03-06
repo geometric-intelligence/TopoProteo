@@ -80,8 +80,8 @@ dev = ["TopoBenchmark[test, lint]"]
 all = ["TopoBenchmark[dev, doc]"]
 
 [project.urls]
-homepage="https://github.com/pyt-team/TopoBenchmarkX"
-repository="https://github.com/pyt-team/TopoBenchmarkX"
+homepage="https://geometric-intelligence.github.io/topobench/index.html"
+repository="https://github.com/geometric-intelligence/TopoBench"
 
 [tool.black]
 line-length = 79  # PEP 8 standard for maximum line length
