@@ -155,14 +155,15 @@ We list the neural networks trained and evaluated by `TopoBench`, organized by t
 
 We list the liftings used in `TopoBench` to transform datasets. Here, a _lifting_ refers to a function that transforms a dataset defined on a topological domain (_e.g._, on a graph) into the same dataset but supported on a different topological domain (_e.g._, on a simplicial complex). 
 
-<details>
-<summary><b> Structural Liftings </b></summary>
+### Structural Liftings
 
-We enumerate below the structural liftings currently implemented in `TopoBench` --taxonomized by source and destination topological domains. Please check out the provided description links for further details. 
+The structural lifting is responsible for the transformation of the underlying relationships or elements of the data. For instance, it might determine how nodes and edges in a graph are mapped into triangles and tetrahedra in a simplicial complex. This structural transformation can be further categorized into connectivity-based, where the mapping relies solely on the existing connections within the data, and feature-based, where the data's inherent properties or features guide the new structure.
+
+We enumerate below the structural liftings currently implemented in `TopoBench`; please check out the provided description links for further details. 
 
 **Remark:**: Most of these liftings are adaptations of winner submissions of the ICML TDL Challenge 2024 ([paper](https://proceedings.mlr.press/v251/bernardez24a.html) | [repo](https://github.com/pyt-team/challenge-icml-2024)); see the [Structural Liftings wiki](https://github.com/geometric-intelligence/TopoBench/wiki/Structural-Liftings) for a complete list of compatible liftings.
 
-### Graph to Simplicial Complex
+#### Graph to Simplicial Complex
 | Name | Type | Description |
 | --- | --- | --- |
 |   DnD Lifting  |   Feature-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/DnD-Lifting-(Graph-to-Simplicial))   |
@@ -175,14 +176,14 @@ We enumerate below the structural liftings currently implemented in `TopoBench` 
 | Clique Lifting | Connectivity-based | [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Clique-Lifting-(Graph-to-Simplicial)) |
 | K-hop Lifting | Connectivity-based | [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/KHop-Lifting-(Graph-to-Simplicial)) |
 
-### Graph to Cell Complex
+#### Graph to Cell Complex
 | Name | Type | Description |
 | --- | --- | --- |
 |  Discrete Configuration Complex  | Connectivity-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Discrete-Configuration-Complex-(Graph-to-Cell))  |
 |  Cycle Lifting  | Connectivity-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Cycle-Lifting-(Graph-to-Cell))  |
 
 
-### Graph to Hypergraph
+#### Graph to Hypergraph
 | Name | Type | Description |
 | --- | --- | --- |
 |  Expander Hypergraph Lifting  | Connectivity-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Expander-Hypergraph-Lifting-(Graph-to-Hypergraph))  |
@@ -193,44 +194,42 @@ We enumerate below the structural liftings currently implemented in `TopoBench` 
 |  K-hop Lifting  |  Connectivity-based |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/KHop-Lifting-(Graph-to-Hypergraph))  |
 
 
-### Pointcloud to Simplicial
+#### Pointcloud to Simplicial
 | Name | Type | Description |
 | --- | --- | --- |
 |  Delaunay Lifting  | Feature-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Delaunay-Lifting-(Pointcloud-to-Simplicial))  |
 |  Random Flag Complex  |  Feature-based |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Random-Flag-Complex-(Pointcloud-to-Simplicial))  |
 
 
-### Pointcloud to Hypergraph
+#### Pointcloud to Hypergraph
 | Name | Type | Description |
 | --- | --- | --- |
 |  Mixture of Gaussians MST lifting  |  Feature-based |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Mixture-of-Gaussians---MST-lifting-(Pointcloud-to-Hypergraph))  |
 |  PointNet Lifting  | Feature-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/PointNet--Lifting-(Pointcloud-to-Hypergraph))  |
 |  Voronoi Lifting  | Feature-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Voronoi-Lifting-(Pointcloud-to-Hypergraph))  |
 
-### Simplicial to Combinatorial
+#### Simplicial to Combinatorial
 | Name | Type | Description |
 | --- | --- | --- |
 | Coface Lifting | Connectivity-based | [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Coface-Lifting-(Simplicial-to-Combinatorial)) |
 
-### Hypergraph to Combinatorial
+#### Hypergraph to Combinatorial
 | Name | Type | Description |
 | --- | --- | --- |
 |  Universal Strict Lifting  | Connectivity-based  |  [Wiki page](https://github.com/geometric-intelligence/TopoBench/wiki/Universal-Strict-Lifting-(Hypergraph-to-Combinatorial))  |
 
-</details>
+### Feature Liftings
 
-<details>
-  <summary><b> Feature Liftings <b></summary>
+Feature liftings address the transfer of data attributes or features during mapping, ensuring that the properties associated with the data elements are consistently preserved in the new representation.
 
 | Name                | Description                                                                 | Supported Domains |
 |---------------------|-----------------------------------------------------------------------------|-------------------|
 | ProjectionSum       | Projects r-cell features of a graph to r+1-cell structures utilizing incidence matrices \(B_{r}\). | All  |
 | ConcatenationLifting | Concatenate r-cell features to obtain r+1-cell features.                   | Simplicial        |
 
-</details>
+### Data Transformations 
 
-<details>
-  <summary><b> Data Transformations <b></summary>
+Specially useful in pre-processing steps, these are the general data manipulations currently implemented in `TopoBench`:
 
 | Transform | Description | 
 | --- | --- |
