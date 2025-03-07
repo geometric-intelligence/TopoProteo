@@ -13,11 +13,11 @@ for transform in transforms_experiments:
         command = [
             "python",
             "topobench/run.py",
-            f"model=cell/topotune",
-            f"dataset=hypergraph/cocitation_cora",
-            f"trainer.max_epochs=2",
-            f"trainer.min_epochs=1",
-            f"trainer.check_val_every_n_epoch=1",
+            "model=cell/topotune",
+            "dataset=hypergraph/cocitation_cora",
+            "trainer.max_epochs=2",
+            "trainer.min_epochs=1",
+            "trainer.check_val_every_n_epoch=1",
             f"transforms={transform}",
             f"logger.wandb.project={project_name}",
         ]
