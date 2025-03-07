@@ -1,7 +1,6 @@
 # numpydoc ignore=GL08
-import test
-
 import configs
+import test
 import topobench
 
 __all__ = [
