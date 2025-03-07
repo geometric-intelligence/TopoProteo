@@ -20,7 +20,7 @@ transforms_experiments=(exp_combinatorial/g2c_simplicial_paths)
 # do
 #     for dataset in ${DATASETS[*]}
 #     do
-#             python topobenchmark/run.py\
+#             python topobench/run.py\
 #             model=cell/topotune\
 #             dataset=graph/$dataset\
 #             trainer.max_epochs=2\
@@ -46,7 +46,7 @@ transforms_experiments=(exp_combinatorial/g2c_simplicial_paths)
 # do
 #     for dataset in ${DATASETS[*]}
 #     do
-#             python topobenchmark/run.py\
+#             python topobench/run.py\
 #             model=simplicial/scn\
 #             dataset=graph/$dataset\
 #             trainer.max_epochs=2\
@@ -71,7 +71,7 @@ transforms_experiments=(exp_combinatorial/g2c_simplicial_paths)
 # do
 #     for dataset in ${DATASETS[*]}
 #     do
-#             python topobenchmark/run.py\
+#             python topobench/run.py\
 #             model=hypergraph/unignn2\
 #             dataset=graph/$dataset\
 #             trainer.max_epochs=2\
@@ -96,7 +96,7 @@ transforms_experiments=(exp_combinatorial/g2c_simplicial_paths)
 # do
 #     for dataset in ${DATASETS[*]}
 #     do
-#             python topobenchmark/run.py\
+#             python topobench/run.py\
 #             model=cell/cwn\
 #             dataset=graph/$dataset\
 #             trainer.max_epochs=2\
@@ -120,7 +120,7 @@ transforms_experiments=(exp_combinatorial/g2c_simplicial_paths)
 # do
 #     for dataset in ${DATASETS[*]}
 #     do
-#             python topobenchmark/run.py\
+#             python topobench/run.py\
 #             model=simplicial/scn\
 #             dataset=graph/$dataset\
 #             trainer.max_epochs=2\
@@ -144,7 +144,7 @@ transforms_experiments=(exp_combinatorial/g2c_simplicial_paths)
 # do
 #     for dataset in ${DATASETS[*]}
 #     do
-#             python topobenchmark/run.py\
+#             python topobench/run.py\
 #             model=hypergraph/unignn2\
 #             dataset=pointcloud/$dataset\
 #             trainer.max_epochs=2\
@@ -169,7 +169,7 @@ transforms_experiments=(exp_combinatorial/g2c_simplicial_paths)
 # do
 #     for dataset in ${DATASETS[*]}
 #     do
-#             python topobenchmark/run.py\
+#             python topobench/run.py\
 #             model=simplicial/scn\
 #             dataset=pointcloud/$dataset\
 #             trainer.max_epochs=2\
@@ -194,7 +194,7 @@ for transform in ${transforms_experiments[*]}
 do
     for dataset in ${DATASETS[*]}
     do
-            python topobenchmark/run.py\
+            python topobench/run.py\
             model=cell/topotune\
             dataset=hypergraph/cocitation_cora\
             trainer.max_epochs=2\

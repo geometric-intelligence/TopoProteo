@@ -12,7 +12,7 @@ for transform in transforms_experiments:
     for dataset in datasets:
         command = [
             "python",
-            "topobenchmark/run.py",
+            "topobench/run.py",
             f"model=cell/topotune",
             f"dataset=hypergraph/cocitation_cora",
             f"trainer.max_epochs=2",
