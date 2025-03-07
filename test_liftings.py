@@ -9,7 +9,7 @@ transforms_experiments = ["exp_combinatorial/h2c_universal_strict"]
 
 # Run the commands in Python
 for transform in transforms_experiments:
-    for dataset in datasets:
+    for _ in datasets:
         command = [
             "python",
             "topobench/run.py",
