@@ -1,3 +1,5 @@
+"""Abstract class for lifting graphs to combinatorial complexes."""
+
 from collections.abc import Iterable
 import torch_geometric
 from topobenchmark.transforms.liftings.liftings import (
@@ -11,7 +13,7 @@ class Graph2CombinatorialLifting(GraphLifting):
     Parameters
     ----------
     *liftings : optional
-        the topological liftings needed to go from a graph to a combinatorial complex
+        The topological liftings needed to go from a graph to a combinatorial complex.
     **kwargs : optional
         Additional arguments for the class.
     """
@@ -22,7 +24,7 @@ class Graph2CombinatorialLifting(GraphLifting):
         self.liftings: Iterable[AbstractLifting] = liftings
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a graph to a combinatorial complex. This is modified so that we can define multiple liftings.
+        r"""Lift the topology of a graph to a combinatorial complex. This is modified so that we can define multiple liftings.
 
         Parameters
         ----------
