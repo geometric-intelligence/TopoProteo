@@ -3,7 +3,7 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "TopoBenchmark"
+name = "TopoBench"
 dynamic = ["version"]
 authors = [
     {name = "Topological Intelligence Team Authors", email = "tlscabinet@gmail.com"}
@@ -76,8 +76,8 @@ test = [
     "pytest-mock"
 ]
 
-dev = ["TopoBenchmark[test, lint]"]
-all = ["TopoBenchmark[dev, doc]"]
+dev = ["TopoBench[test, lint]"]
+all = ["TopoBench[dev, doc]"]
 
 [project.urls]
 homepage="https://geometric-intelligence.github.io/topobench/index.html"
@@ -135,12 +135,12 @@ convention = "numpy"
 "tests/*" = ["D"]
 
 [tool.setuptools.dynamic]
-version = {attr = "topobenchmark.__version__"}
+version = {attr = "topobench.__version__"}
 
 [tool.setuptools.packages.find]
 include = [
-    "topobenchmark",
-    "topobenchmark.*"
+    "topobench",
+    "topobench.*"
 ]
 
 [tool.mypy]
