@@ -1,9 +1,10 @@
 """Abstract class for lifting hypergraphs to combinatorial complexes."""
 
-import torch
 from toponetx.classes import CombinatorialComplex
 
-from topobenchmark.data.utils.utils import get_complex_connectivity
+from topobenchmark.data.utils.utils import (
+    get_combinatorial_complex_connectivity,
+)
 from topobenchmark.transforms.liftings.liftings import HypergraphLifting
 
 
@@ -35,7 +36,7 @@ class Hypergraph2CombinatorialLifting(HypergraphLifting):
         dict
             The lifted topology.
         """
-        lifted_topology = get_complex_connectivity(
+        lifted_topology = get_combinatorial_complex_connectivity(
             combinatorial_complex,
             self.complex_dim,
             neighborhoods=self.neighborhoods,
