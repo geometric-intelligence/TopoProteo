@@ -80,7 +80,7 @@ dev = ["TopoBench[test, lint]"]
 all = ["TopoBench[dev, doc]"]
 
 [project.urls]
-homepage="https://github.com/geometric-intelligence/TopoBench"
+homepage="https://geometric-intelligence.github.io/topobench/index.html"
 repository="https://github.com/geometric-intelligence/TopoBench"
 
 [tool.black]
