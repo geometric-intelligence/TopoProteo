@@ -1,0 +1,160 @@
+# Files
+root_dir: "/home/lcornelis/code/proteo"
+data_dir: "/scratch/lcornelis/data/data_louisa"
+output_dir: "/scratch/lcornelis/outputs"
+
+# When train.py is run
+# Logs
+wandb_tmp_dir: "/scratch/lcornelis/tmp"
+# Results with checkpoints:
+checkpoint_dir: "/scratch/lcornelis/outputs/checkpoints"  # only when using train
+
+# When main.py is run, wandb logs in wandb_tmp_dir
+# Logs
+ray_tmp_dir: "/scratch/lcornelis/tmp" 
+# Results with checkpoints:
+ray_results_dir: "/scratch/lcornelis/outputs/ray_results"
+
+# Paths below are relative to root_dir
+wandb_api_key_path: "wandb_api_key.txt"
+
+# GPU
+use_gpu: true
+
+
+# Dataset
+dataset_name: "ftd"  # 352 subjects in train, 89 in val
+raw_file_name: "merged_dataset_2_22.csv"
+# Y Value ("carrier", "nfl", "disease_age", "global_cog_slope", "executive_function", "memory", "clinical_dementia_rating", "cog_z_score", "clinical_dementia_rating_global", "clinical_dementia_rating_binary")
+y_val: "nfl"
+# Plasma or CSF
+modality: "csf"
+# List of all the mutations you want included in the dataset
+mutation: ['GRN', 'MAPT','C9orf72','CTL']  
+# ['M'], ['F'],['M', 'F'] 
+sex: ['M', 'F']
+use_weights: False
+random_state: 42
+
+# WandB
+project: "proteo"
+wandb_offline: false
+# Controls the frequency of logging within training, 
+# by specifying how many training steps should occur between each logging event.
+log_every_n_steps: 10
+
+# Dataset
+num_nodes: 7258  # Every graph has same num_nodes. FIXME: This should not be hardcoded, this dictates number of top proteins to take, max for csf is 7258, for plasma is 7247
+adj_thresh: 0.5  #0.08 
+
+# Only used for WGCNA analysis, not dataset creation:
+wgcna_minModuleSize: 10
+wgcna_mergeCutHeight: 0.25
+# Note: nb of edges depends on adj_thresh as: 
+# n_edges(0.5) = 138188; n_edges(0.7) = 31805; n_edges(0.8) = 11367; n_edges(0.9)= 7467; n_edges(0.95)= 7303
+
+# Model
+model: gat-v4
+dropout: 0  # dropout of the gconvs
+act: relu  # act of the gconvs
+fc_dim: [64, 128, 128, 32]
+fc_dropout: 0.1
+fc_act: relu
+which_layer: ['layer1', 'layer2', 'layer3', 'sex', 'mutation', 'age'] #USE THIS FOR PRE ENCODER GRAPH LEVEL
+use_feature_encoder: false
+
+gat-v4:
+  hidden_channels: [8, 16]
+  heads: [2, 3]
+  use_layer_norm: true
+  # Note - if you want to encode sex, mutation and age at the graph level, they need to be included in which_layer
+  weight_initializer: uniform
+
+gat:  
+  num_layers: 2
+  hidden_channels: 256  # needs to be divisible by heads
+  heads: 4
+  v2: true
+
+gcn:
+  num_layers: 3
+  hidden_channels: 32
+
+mlp:
+  channel_list: [1028, 256, 128, 64]
+
+# Training
+batch_size: 8 #for one off training
+epochs: 1000
+num_workers: 16
+sync_batchnorm: false
+precision: "32-true"
+accumulate_grad_batches: 1
+lr: 0.0001
+weight_decay: 0 #0.1
+l1_lambda: 0.00001
+optimizer: Adam
+lr_scheduler: LambdaLR
+
+# k-fold evaluation
+kfold: true
+num_folds: 5
+fold: 0
+
+# GPUs
+devices: [0, 1, 2, 3, 4, 5, 6, 7]
+trainer_accelerator: "gpu"
+seed: 42
+
+# Miscellaneous
+use_progress_bar: true
+nodes_count: 1
+pin_memory: true
+
+# Hyperparameter search
+# Nb of trials = len(model_grid_search) * num_samples
+num_samples: 200
+grace_period: 20  # Each training is run at least this nb of epochs.
+reduction_factor: 6
+num_to_keep: 1  # Nb of checkpoints to keep. High value -> checkpoints overwritten less often.
+checkpoint_every_n_epochs_train: 1  # Nb of iterations between checkpoints. If 0: no checkpointing. This is for one off training so should be one to save absolute min val_loss checkpoint
+# Nb of trainings run in parallel is the maximum amount 
+# possible with this distribution of resources, knowing that there are 128 CPUs and 8 GPUs total
+q_gpu: True
+cpu_per_worker: 1
+gpu_per_worker: 1
+#lr_min: 0.00001
+#lr_max: 0.001
+model_grid_search: ['mlp', 'gat-v4']
+# Choices
+batch_size_choices: [8, 32, 50]  # note: 352 train and 89 val --> 3 val batch for bs = 32
+lr_scheduler_choices: ['CosineAnnealingLR'] #'LambdaLR', 'ReduceLROnPlateau', 
+dropout_choices: [0.1, 0.5]
+#l1_lambda_min: 0.00001 #remove for kfold
+#l1_lambda_max: 0.1
+act_choices: ['tanh', 'elu']
+num_nodes_choices: [7258] #[10, 30, 150, 1000, 7000]
+adj_thresh_choices: [0.5, 0.7, 0.9]
+mutation_choices: [['GRN', 'MAPT','C9orf72','CTL']] #,['MAPT'], ['C9orf72']],['CTL']#[['C9orf72', 'MAPT', 'GRN', 'CTL'],['MAPT'], ['GRN'], ['C9orf72'], ['CTL']]
+sex_choices: [['M', 'F']]
+modality_choices: ['csf']
+y_val_choices: ['nfl'] #['nfl','disease_age','clinical_dementia_rating_global', 'clinical_dementia_rating'] #'executive_function', 'memory', 'clinical_dementia_rating', 'nfl'] #"clinical_dementia_rating_global"]
+fc_dim_choices: [[128, 256, 256, 64], [64, 128, 128, 32]]
+fc_dropout_choices: [0.1]
+fc_act_choices: ['tanh', 'elu']
+use_feature_encoder_choices: [true, false]
+
+# GAT-v4
+gat_v4_hidden_channels: [[8, 16], [64, 128]]
+gat_v4_heads: [[2, 2], [4, 4]]
+gat_v4_weight_initializer: ['xavier'] #'kaiming', 'truncated_normal'
+
+# GAT
+gat_num_layers: [2, 4]  #6, 12  only for GAT and GCN
+gat_hidden_channels: [8, 32, 64] #1024
+gat_heads: [2, 4]
+# GCN
+gcn_num_layers: [2, 4, 6]  # only for GAT and GCN
+gcn_hidden_channels: [8, 32, 128]
+#MLP:
+mlp_channel_lists: [[1028,128], [1028,256,64], [1028,256,128,64]]
