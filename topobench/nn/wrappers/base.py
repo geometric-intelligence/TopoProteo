@@ -13,18 +13,21 @@ class AbstractWrapper(ABC, torch.nn.Module):
     ----------
     backbone : torch.nn.Module
         Backbone model.
+    features_to_keep : list, optional
+        List of features to keep in the output. If None, no features are kept.
     **kwargs : dict
         Additional arguments for the class. It should contain the following keys:
         - out_channels (int): Number of output channels.
         - num_cell_dimensions (int): Number of cell dimensions.
     """
 
-    def __init__(self, backbone, **kwargs):
+    def __init__(self, backbone, features_to_keep=None, **kwargs):
         super().__init__()
         self.backbone = backbone
         out_channels = kwargs["out_channels"]
         self.dimensions = range(kwargs["num_cell_dimensions"])
         self.residual_connections = kwargs.get("residual_connections", True)
+        self.features_to_keep = features_to_keep if features_to_keep else []
 
         for i in self.dimensions:
             setattr(
@@ -57,6 +60,9 @@ class AbstractWrapper(ABC, torch.nn.Module):
             if self.residual_connections
             else model_out
         )
+        # Add the features to keep to the model output, if any
+        for feature in self.features_to_keep:
+            model_out[feature] = batch[feature]
         return model_out
 
     def residual_connection(self, model_out, batch):

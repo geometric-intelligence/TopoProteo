@@ -155,7 +155,9 @@ def collate_fn(batch):
         assert torch.all(batch["batch_0"] == batch.pop("batch")), (
             "batch['batch_0'] and batch['batch] should match in the number of nodes"
         )
-        # batch["batch_0"] = batch.pop("batch")
+
+    if batch.get("batch_0") is None:
+        batch["batch_0"] = batch["batch"]
 
     # Ensure shape is torch.Tensor
     # "shape" describes the number of n_cells in each graph

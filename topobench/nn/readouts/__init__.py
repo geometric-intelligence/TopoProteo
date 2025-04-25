@@ -1,6 +1,7 @@
 """This module contains the readout classes that are used by the library."""
 
 from .base import AbstractZeroCellReadOut
+from .ftd_readout import FTDReadOut
 from .identical import NoReadOut
 from .propagate_signal_down import PropagateSignalDown
 
@@ -12,6 +13,7 @@ from .propagate_signal_down import PropagateSignalDown
 # Export all readouts and the dictionary
 __all__ = [
     "AbstractZeroCellReadOut",
+    "FTDReadOut",
     "NoReadOut",
     "PropagateSignalDown",
     # "OtherReadout1",

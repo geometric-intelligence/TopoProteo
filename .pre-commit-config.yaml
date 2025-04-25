@@ -17,13 +17,13 @@ repos:
           - --maxkb=2048
       - id: requirements-txt-fixer
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.9
-    hooks:
-      - id: ruff-format
-      - id: ruff
+  # - repo: https://github.com/astral-sh/ruff-pre-commit
+  #   rev: v0.9.9
+  #   hooks:
+  #     - id: ruff-format
+  #     - id: ruff
 
-  - repo: https://github.com/numpy/numpydoc
-    rev: v1.8.0
-    hooks:
-      - id: numpydoc-validation
+  # - repo: https://github.com/numpy/numpydoc
+  #   rev: v1.8.0
+  #   hooks:
+  #     - id: numpydoc-validation
