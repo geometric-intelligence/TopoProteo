@@ -1,6 +1,5 @@
 import os
 
-os.environ["RPY2_RINTERFACE_SIGINT"] = "FALSE"
 import os.path as osp
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
@@ -18,6 +17,14 @@ from scipy.signal.windows import triang
 from scipy.ndimage import convolve1d
 from sklearn.model_selection import KFold
 from typing import Callable, Sequence
+
+from topobench.data.utils.compute_adjacency_utils import (
+    calculate_wgcna_matrix,
+    # calculate_maximal_information_coefficient_matrix,
+    calculate_spearman_correlation_matrix,
+    calculate_distance_correlation_matrix,
+    calculate_mutual_information_matrix,
+)
 
 
 LABEL_DIM_MAP = {
@@ -148,29 +155,43 @@ class FTDDataset(InMemoryDataset):
             assert len(config.mutation) > 1 and "CTL" in config.mutation
 
         self.config = config
+        self.adj_metric = config.adj_metric
         self.adj_str = f"adj_thresh_{config.adj_thresh}"
         self.y_val_str = f"y_val_{config.y_val}"
         self.num_nodes_str = f"num_nodes_{config.num_nodes}"
         self.mutation_str = f"mutation_{','.join(config.mutation)}"
         self.modality_str = f"{config.modality}"
         self.sex_str = f"sex_{','.join(config.sex)}"
-        self.hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_{self.config.num_folds}fold_{self.config.fold}_histogram.jpg"
-        self.orig_hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_{self.config.num_folds}fold_{self.config.fold}_orig_histogram.jpg"
-
+        self.hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_{self.config.num_folds}fold_{self.config.fold}_histogram.jpg"
+        self.orig_hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_{self.config.num_folds}fold_{self.config.fold}_orig_histogram.jpg"
+    
         super(FTDDataset, self).__init__(
             root, transform=None, pre_transform=None
         )
+        self.adj_path = os.path.join(
+            self.processed_dir,
+            f"adjacency_num_nodes_{config.num_nodes}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}.csv",
+        )
         self.feature_dim = 1  # protein concentration is a scalar, ie, dim 1
         self.label_dim = LABEL_DIM_MAP[self.config.y_val]
+            
         if self.kfold:
             path = os.path.join(
                 self.processed_dir,
                 f"{self.experiment_id}_{self.split}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}.pt",
             )
+            self.adj_path = os.path.join(
+                self.processed_dir,
+                f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}.csv",
+            )
         else:
             path = os.path.join(
                 self.processed_dir,
                 f"{self.experiment_id}_{self.split}_random_state_{self.config.random_state}.pt",
+            )
+            self.adj_path = os.path.join(
+                self.processed_dir,
+                f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}.csv",
             )
         print("Loading data from:", path)
         self.load(path)
@@ -201,7 +222,7 @@ class FTDDataset(InMemoryDataset):
         --------
         https://github.com/pyg-team/pytorch_geometric/blob/master/torch_geometric/data/dataset.py
         """
-        self.experiment_id = f"{self.name}_{self.y_val_str}_{self.adj_str}_{self.num_nodes_str}_{self.mutation_str}_{self.modality_str}_{self.sex_str}"
+        self.experiment_id = f"{self.name}_{self.y_val_str}_{self.adj_metric}_{self.adj_str}_{self.num_nodes_str}_{self.mutation_str}_{self.modality_str}_{self.sex_str}"
         if self.kfold:
             files = [
                 f"{self.experiment_id}_train_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}.pt",
@@ -388,6 +409,7 @@ class FTDDataset(InMemoryDataset):
         val_path = f"{self.processed_paths[1]}"
         self.save(train_data_list, train_path)
         self.save(val_data_list, val_path)
+        
 
     # -----------------------------FUNCTIONS TO GET LABELS---------------------------------#
     def load_y_vals(self, filtered_data):
@@ -581,27 +603,36 @@ class FTDDataset(InMemoryDataset):
             val_age.shape,
         )
         # Calculate adjacency matrix
-        adj_path = os.path.join(
-            self.processed_dir,
-            f"adjacency_num_nodes_{config.num_nodes}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}.csv",
-        )
+        if self.kfold:
+            adj_path = os.path.join(
+                self.processed_dir,
+                f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}.csv",
+            )
+        else:
+            adj_path = os.path.join(
+                self.processed_dir,
+                f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}.csv",
+            )
+            
+        self.adj_path = adj_path
+        adj_matrix = None
         # Calculate and save adjacency matrix
         if not os.path.exists(adj_path):
-            calculate_adjacency_matrix(
+            adj_matrix = compute_adjacency_matrix(
                 config, train_features_for_adj, save_to=adj_path
             )
-
-        adj_matrix = self.load_adjacency_matrix(
-            adj_path, config.adj_thresh, config
+        # get the adjacency matrix after applying the threshold
+        adj_matrix = self.get_adjacency_matrix(
+            adj_path, config.adj_thresh, config, adj_matrix=adj_matrix
         )
         # Plot and save adjacency matrix as jpg
-        self.plot_adj_matrix(
-            adj_matrix,
-            os.path.join(
-                self.processed_dir,
-                f"adjacency_{config.adj_thresh}_num_nodes_{config.num_nodes}_adjthresh_{config.adj_thresh}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_{config.num_folds}fold_{config.fold}.jpg",
-            ),
-        )
+        # self.plot_adj_matrix(
+        #     adj_matrix,
+        #     os.path.join(
+        #         self.processed_dir,
+        #         f"adjacency_{config.adj_thresh}_num_nodes_{config.num_nodes}_adjthresh_{config.adj_thresh}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_{config.num_folds}fold_{config.fold}.jpg",
+        #     ),
+        # )
         return (
             train_features,
             train_labels_norm,
@@ -616,7 +647,7 @@ class FTDDataset(InMemoryDataset):
             adj_matrix,
         )
 
-    def load_adjacency_matrix(self, path, adj_thresh, config):
+    def get_adjacency_matrix(self, path, adj_thresh, config, adj_matrix=None):
         """
         Load and threshold an adjacency matrix.
 
@@ -627,10 +658,11 @@ class FTDDataset(InMemoryDataset):
         Returns:
         - adj_matrix: Thresholded adjacency matrix as a torch FloatTensor.
         """
-        print(f"Loading adjacency matrix from: {path}...")
-        adj_matrix = np.array(pd.read_csv(path, header=None)).astype(float)
+        if adj_matrix is None:
+            print(f"Loading adjacency matrix from: {path}...")
+            adj_matrix = np.array(pd.read_csv(path, header=None)).astype(float)
         adj_matrix = torch.FloatTensor(
-            np.where(adj_matrix > adj_thresh, 1, 0)
+            np.where(adj_matrix >= adj_thresh, 1, 0)
         )  # Thresholding
         print("Adjacency matrix shape:", adj_matrix.shape)
         expected_shape = (
@@ -668,56 +700,53 @@ def remove_nfl_columns(config, csv_data):
     return csv_data
 
 
-def calculate_adjacency_matrix(config, protein_data, save_to):
-    import rpy2.robjects as ro
-    from rpy2.robjects import pandas2ri
-    from rpy2.robjects import r as R
-    from rpy2.robjects.packages import importr
 
-    pandas2ri.activate()
-    wgcna = importr("WGCNA")
-    """Calculate and save adjacency matrix using R's WGCNA."""
-    # Convert the input `protein_data` (NumPy array) to a pandas DataFrame if necessary
-    if not isinstance(protein_data, pd.DataFrame):
-        protein_data_df = pd.DataFrame(protein_data)
+def compute_adjacency_matrix(config, dataset, save_to):
+    """
+    Compute the adjacency matrix for a given dataset using R's igraph package.
+
+    Parameters
+    ----------
+    config : dict
+        Configuration parameters for the dataset.
+    dataset : object
+        The dataset object containing the graph data.
+    save_to : str
+        Path to save the computed adjacency matrix.
+
+    Returns
+    -------
+    None
+    """
+    if config["adj_metric"] == 'wgcna':
+        adjacency_matrix = calculate_wgcna_matrix(config, dataset)
+    elif config["adj_metric"] == 'mutual_information':
+        adjacency_matrix = calculate_mutual_information_matrix(dataset)
+    elif config["adj_metric"] == 'spearman_correlation':
+        adjacency_matrix = calculate_spearman_correlation_matrix(dataset)
+    elif config["adj_metric"] == 'distance_correlation':
+        adjacency_matrix = calculate_distance_correlation_matrix(dataset)
+    # elif config["adj_metric"] == 'maximal_information_coefficient':
+    #     calculate_maximal_information_coefficient_matrix(dataset)
     else:
-        protein_data_df = protein_data
-
-    # Convert pandas DataFrame to R DataFrame
-    r_protein_data = pandas2ri.py2rpy(protein_data_df)
-
-    # Call R's `pickSoftThreshold` function to determine the soft thresholding power
-    soft_threshold_result = wgcna.pickSoftThreshold(
-        r_protein_data, corFnc="bicor", networkType="signed"
-    )
-    soft_threshold_power = soft_threshold_result.rx2("powerEstimate")[
-        0
-    ]  # Extract the estimated power
-    if config.modality == "csf" and all(
-        mut in config.mutation for mut in ["C9orf72", "MAPT", "GRN", "CTL"]
-    ):
-        soft_threshold_power = 9  # went over values w Rowan and selected this.
-    print(f"Soft threshold power: {soft_threshold_power}")
-
-    # Call R's `adjacency` function using the chosen power and the desired correlation function (bicor)
-    adjacency_matrix_r = wgcna.adjacency(
-        r_protein_data,
-        power=soft_threshold_power,
-        type="signed",  # Specify network type
-        corFnc="bicor",  # Use biweight midcorrelation
-    )
-
-    # Convert the resulting adjacency matrix from R back to a NumPy array
-    adjacency_matrix = adjacency_matrix_r
-
-    print("Adjacency matrix shape:", adjacency_matrix.shape)
-
+        raise ValueError(f"Unknown adjacency metric: {config['adj_metric']}")
+    
+    # Set diagonal to zero to avoid self-edges
+    np.fill_diagonal(adjacency_matrix, 0)
+    # Normalize by the maximum value (avoid division by zero)
+    max_val = adjacency_matrix.max()
+    assert max_val > 0, "Adjacency matrix has no positive values to normalize."
+    adjacency_matrix = adjacency_matrix / max_val
+    
     # Save the adjacency matrix to the specified file path
     adjacency_df = pd.DataFrame(adjacency_matrix)
     with open(save_to, "w") as f:
         adjacency_df.to_csv(f, header=None, index=False)
     print(f"Adjacency matrix saved to: {save_to}")
-
+    
+    return adjacency_matrix
+    
+    
 
 # ----------------------- HELPER FUNCTIONS--------------------------
 
