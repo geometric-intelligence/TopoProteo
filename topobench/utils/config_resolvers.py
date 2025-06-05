@@ -4,6 +4,23 @@ import os
 
 import omegaconf
 
+def get_gatv4_output_dim(num_nodes, num_layers=3):
+    r"""Get the output dimension for GATv4 based on the number of nodes and layers.
+
+    Parameters
+    ----------
+    num_nodes : int
+        Hidden dimension for the first layer.
+    num_layers : int
+        Number of layers in the GATv4 model.
+
+    Returns
+    -------
+    list
+        List of hidden dimensions for each layer.
+    """
+    return num_nodes * num_layers
+
 
 def get_default_transform(dataset, model):
     r"""Get default transform for a given data domain and model.

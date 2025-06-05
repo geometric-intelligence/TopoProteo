@@ -86,13 +86,10 @@ class FTDReadOut(AbstractZeroCellReadOut):
             return nn.Identity()
 
     def encode_features(self, data):
-        sex = data.sex
-        mutation = data.mutation
-        age = data.age
         encoded_features = []
         for feature in self.which_layer:
             if feature in ["sex", "mutation", "age"]:
-                feature_value = locals().get(feature)
+                feature_value = data.get(feature)
                 encoded_features.append(self.feature_encoder(feature_value))
         return torch.cat(encoded_features, dim=1)
 

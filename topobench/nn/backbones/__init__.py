@@ -10,6 +10,7 @@ from .graph import (
     IdentityGCN,
     IdentityGIN,
     IdentitySAGE,
+    GATv4,
 )
 from .hypergraph import EDGNN
 from .simplicial import SCCNNCustom

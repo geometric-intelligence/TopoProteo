@@ -20,9 +20,11 @@ from .identity_gnn import (
     IdentityGIN,
     IdentitySAGE,
 )
+from .gat_v4 import GATv4
 
 __all__ = [
     "GAT",
+    "GATv4",
     "GCN",
     "GIN",
     "MLP",
