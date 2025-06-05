@@ -8,6 +8,7 @@ loader:
     # Dataset
     dataset_name: "ftd"  # 352 subjects in train, 89 in val
     raw_file_name: "ALLFTD_dataset_for_nina_louisa_071124_age_adjusted.csv" #"2pass_filtered_merged_dataset_3_21.csv"
+    error_protein_file_name: "bimodal_aptamers_for_removal.xlsx"
     # Y Value ("carrier", "nfl", "disease_age", "global_cog_slope", "executive_function", "memory", "clinical_dementia_rating", "cog_z_score", "clinical_dementia_rating_global", "clinical_dementia_rating_binary")
     y_val: "nfl"
     # Plasma or CSF
