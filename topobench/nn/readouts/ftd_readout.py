@@ -22,19 +22,19 @@ class FTDReadOut(AbstractZeroCellReadOut):
         fc_act=None,
         out_channels=None,
         use_feature_encoder=True,
-        feature_output_dim=None, #64
+        feature_encoder_dim=None, #64
         graph_encoder_dim=None, #256
         **kwargs,
     ):
         super().__init__(out_channels=out_channels, **kwargs)
         self.hidden_dim = kwargs["hidden_dim"]
-        self.feature_output_dim = feature_output_dim
+        self.feature_encoder_dim = feature_encoder_dim
         self.graph_encoder_dim = graph_encoder_dim
         self.which_layer = which_layer
         self.fc_dim = fc_dim
         self.fc_dropout = fc_dropout
         self.fc_act = fc_act
-        self.fc_input_dim = graph_encoder_dim + feature_output_dim * 3
+        self.fc_input_dim = graph_encoder_dim + feature_encoder_dim * 3
         self.out_channels = out_channels  # 1
         self.use_feature_encoder = use_feature_encoder
         self.readout_layers = self.build_readout_layers()
@@ -46,7 +46,7 @@ class FTDReadOut(AbstractZeroCellReadOut):
    
     def build_feature_encoder(self):
         if self.use_feature_encoder:
-            return nn.Linear(1, self.feature_output_dim)
+            return nn.Linear(1, self.feature_encoder_dim)
         else:
             return nn.Identity()
 

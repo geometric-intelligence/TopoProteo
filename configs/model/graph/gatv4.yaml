@@ -49,6 +49,8 @@ readout:
   fc_dropout: 0.4
   fc_act: relu
   fc_input_dim: ${model.backbone_wrapper.out_channels}
+  graph_encoder_dim: 256
+  feature_encoder_dim: 64
   # dropout: 0  # dropout of the gconvs
   # act: relu  # act of the gconvs
   # fc_dim: [64, 128, 128, 32]
