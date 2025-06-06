@@ -142,7 +142,7 @@ class FTDDataset(InMemoryDataset):
     """
 
     def __init__(self, root, config, split):
-        self.name = "ftd"
+        self.name = "FTD"
         self.root = root
         self.split = split
         self.kfold = config.kfold
@@ -176,23 +176,20 @@ class FTDDataset(InMemoryDataset):
         self.label_dim = LABEL_DIM_MAP[self.config.y_val]
             
         if self.kfold:
-            path = os.path.join(
-                self.processed_dir,
-                f"{self.experiment_id}_{self.split}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}.pt",
-            )
-            self.adj_path = os.path.join(
-                self.processed_dir,
-                f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}.csv",
-            )
+            config_tag = f"{self.experiment_id}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}"
+            adj_config_tag = f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}"
         else:
-            path = os.path.join(
-                self.processed_dir,
-                f"{self.experiment_id}_{self.split}_random_state_{self.config.random_state}.pt",
-            )
-            self.adj_path = os.path.join(
-                self.processed_dir,
-                f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}.csv",
-            )
+            config_tag = f"{self.experiment_id}_random_state_{self.config.random_state}"
+            adj_config_tag = f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}"
+        self.config_tag = config_tag  
+        path = os.path.join(
+            self.processed_dir,
+            f"{config_tag}_{self.split}.pt",
+        )
+        self.adj_path = os.path.join(
+            self.processed_dir,
+            f"{adj_config_tag}.csv",
+        )
         print("Loading data from:", path)
         self.load(path)
 
@@ -225,13 +222,13 @@ class FTDDataset(InMemoryDataset):
         self.experiment_id = f"{self.name}_{self.y_val_str}_{self.adj_metric}_{self.adj_str}_{self.num_nodes_str}_{self.mutation_str}_{self.modality_str}_{self.sex_str}"
         if self.kfold:
             files = [
-                f"{self.experiment_id}_train_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}.pt",
-                f"{self.experiment_id}_val_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}.pt",
+                f"{self.experiment_id}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_train.pt",
+                f"{self.experiment_id}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_val.pt",
             ]
         else:
             files = [
-                f"{self.experiment_id}_train_random_state_{self.config.random_state}.pt",
-                f"{self.experiment_id}_val_random_state_{self.config.random_state}.pt",
+                f"{self.experiment_id}_random_state_{self.config.random_state}_train.pt",
+                f"{self.experiment_id}_random_state_{self.config.random_state}_val.pt",
             ]
         print("Processed file names:", files)
         return files

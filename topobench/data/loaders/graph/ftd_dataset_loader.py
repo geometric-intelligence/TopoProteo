@@ -1,5 +1,5 @@
 """Loaders for US County Demos dataset."""
-
+import os
 from pathlib import Path
 
 from omegaconf import DictConfig
@@ -43,10 +43,21 @@ class FTDDatasetLoader(AbstractLoader):
         split_idx = self._prepare_split_idx()
         combined_dataset = self._combine_splits()
         combined_dataset.split_idx = split_idx
+        self.config_tag = self.datasets[0].config_tag
         return combined_dataset
         # dataset = self._initialize_dataset()
         # self.data_dir = self._redefine_data_dir(dataset)
         # return dataset
+        
+    def get_data_dir(self):
+        """Get the data directory.
+
+        Returns
+        -------
+        Path
+            The path to the dataset directory.
+        """
+        return os.path.join(self.root_data_dir, "processed", self.config_tag)
 
     # def _initialize_dataset(self) -> FTDDataset:
     #     """Initialize the US County Demos dataset.
