@@ -7,7 +7,7 @@ feature_encoder:
   _target_: topobench.nn.encoders.${model.feature_encoder.encoder_name}
   encoder_name: AllCellFeatureEncoder
   in_channels: ${infer_in_channels:${dataset},${oc.select:transforms,null}} 
-  out_channels: 32
+  out_channels: 16
   proj_dropout: 0.0
 
 backbone:
@@ -15,7 +15,7 @@ backbone:
   in_channels: ${model.feature_encoder.out_channels}
   hidden_channels: ${model.feature_encoder.out_channels}
   #out_channels: 1 #${model.feature_encoder.out_channels}
-  num_layers: 1
+  num_layers: 2
   dropout: 0.0
   act: relu
 
@@ -32,7 +32,7 @@ readout:
   _target_: topobench.nn.readouts.${model.readout.readout_name}
   readout_name: FTDReadOut #FTDReadOut #  Use <NoReadOut> in case readout is not needed Options: PropagateSignalDown
   num_cell_dimensions: ${infer_num_cell_dimensions:${oc.select:model.feature_encoder.selected_dimensions,null},${model.feature_encoder.in_channels}} # The highest order of cell dimensions to consider
-  hidden_dim: ${model.feature_encoder.out_channels}
+  hidden_dim: ${get_flattened_feature_matrix_dim:${dataset.loader.parameters.num_nodes},${model.backbone_wrapper.out_channels}}
   out_channels: ${dataset.parameters.num_classes}
   task_level: ${dataset.parameters.task_level}
   pooling_type: sum
@@ -45,6 +45,8 @@ readout:
   fc_dropout: 0.4
   fc_act: relu
   fc_input_dim: ${model.backbone_wrapper.out_channels}
+  graph_encoder_dim: 256
+  feature_encoder_dim: 64
   # dropout: 0  # dropout of the gconvs
   # act: relu  # act of the gconvs
   # fc_dim: [64, 128, 128, 32]
