@@ -19,7 +19,7 @@ backbone:
   dropout: 0
   act: relu
   which_layer: ['layer1', 'layer2', 'layer3', 'sex', 'mutation', 'age']
-  use_layer_norm: false
+  use_layer_norm: true
   num_nodes: ${dataset.loader.parameters.num_nodes}
   weight_initializer: 'xavier'
 
