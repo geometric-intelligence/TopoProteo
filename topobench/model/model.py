@@ -33,7 +33,7 @@ class TBModel(LightningModule):
 
     def __init__(
         self,
-        backbone: torch.nn.Module,
+        backbone: torch.nn.Module | None,
         backbone_wrapper: torch.nn.Module,
         readout: torch.nn.Module,
         loss: torch.nn.Module,

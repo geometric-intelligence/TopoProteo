@@ -25,7 +25,7 @@ class AbstractWrapper(ABC, torch.nn.Module):
         super().__init__()
         self.backbone = backbone
         out_channels = kwargs["out_channels"]
-        self.dimensions = range(kwargs["num_cell_dimensions"])
+        self.dimensions = range(kwargs.get("num_cell_dimensions",1))
         self.residual_connections = kwargs.get("residual_connections", True)
         self.features_to_keep = features_to_keep if features_to_keep else []
 

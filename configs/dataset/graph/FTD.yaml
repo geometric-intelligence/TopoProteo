@@ -30,7 +30,7 @@ loader:
     fold: 0
     use_weights: False
     random_state: 42
-    data_dir: ${paths.data_dir}
+    data_dir: ${paths.data_dir}/FTD
 
 # Dataset parameters
 parameters:
@@ -40,7 +40,7 @@ parameters:
   loss_type: mse
   monitor_metric: mae
   task_level: graph
-  features_to_keep: ['age', 'sex', 'mutation']
+  # features_to_keep: ['age', 'sex', 'mutation']
 
 #splits
 split_params:

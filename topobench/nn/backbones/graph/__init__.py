@@ -14,6 +14,7 @@ from torch_geometric.nn.models import (
 )
 
 from .graph_mlp import GraphMLP
+from .identity import Identity
 from .identity_gnn import (
     IdentityGAT,
     IdentityGCN,
@@ -33,6 +34,7 @@ __all__ = [
     "EdgeCNN",
     "GraphMLP",
     "GraphSAGE",
+    "Identity",
     "IdentityGAT",
     "IdentityGCN",
     "IdentityGIN",

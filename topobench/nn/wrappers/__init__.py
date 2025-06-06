@@ -8,7 +8,7 @@ from topobench.nn.wrappers.cell import (
     CWNWrapper,
 )
 from topobench.nn.wrappers.combinatorial import TuneWrapper
-from topobench.nn.wrappers.graph import GNNWrapper, GraphMLPWrapper, GATv4Wrapper
+from topobench.nn.wrappers.graph import GNNWrapper, GraphMLPWrapper, GATv4Wrapper, IdentityWrapper
 from topobench.nn.wrappers.hypergraph import HypergraphWrapper
 from topobench.nn.wrappers.simplicial import (
     SANWrapper,
@@ -33,6 +33,7 @@ __all__ = [
     "GATv4Wrapper",
     "GNNWrapper",
     "GraphMLPWrapper",
+    "IdentityWrapper",
     "HypergraphWrapper",
     "SANWrapper",
     "SCCNNWrapper",

@@ -6,6 +6,7 @@ from .cell import (
 from .combinatorial import TopoTune, TopoTune_OneHasse
 from .graph import (
     GraphMLP,
+    Identity,
     IdentityGAT,
     IdentityGCN,
     IdentityGIN,
@@ -19,6 +20,7 @@ __all__ = [
     "CCCN",
     "EDGNN",
     "GraphMLP",
+    "Identity",
     "IdentityGAT",
     "IdentityGCN",
     "IdentityGIN",

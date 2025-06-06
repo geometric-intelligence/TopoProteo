@@ -26,6 +26,7 @@ from topobench.utils import (
 from topobench.utils.config_resolvers import (
     get_default_metrics,
     get_default_transform,
+    get_flattened_feature_matrix_dim,
     get_gatv4_output_dim,
     get_monitor_metric,
     get_monitor_mode,
@@ -58,6 +59,9 @@ OmegaConf.register_new_resolver(
 )
 OmegaConf.register_new_resolver(
     "get_default_transform", get_default_transform, replace=True
+)
+OmegaConf.register_new_resolver(
+    "get_flattened_feature_matrix_dim", get_flattened_feature_matrix_dim, replace=True
 )
 OmegaConf.register_new_resolver(
     "get_gatv4_output_dim", get_gatv4_output_dim, replace=True
