@@ -21,11 +21,11 @@ python -m topobench \
     optimizer.parameters.lr=0.001,0.0001 \
     dataset.split_params.data_seed=0 \
     trainer.max_epochs=1000 \
-    trainer.min_epochs=50 \
+    trainer.min_epochs=200 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[0\] \
     logger.wandb.project=TopoProteo \
-    callbacks.early_stopping.patience=25 \
+    callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
 
@@ -52,11 +52,11 @@ python -m topobench \
     optimizer.parameters.lr=0.001,0.0001 \
     dataset.split_params.data_seed=0 \
     trainer.max_epochs=1000 \
-    trainer.min_epochs=50 \
+    trainer.min_epochs=200 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[1\] \
     logger.wandb.project=TopoProteo \
-    callbacks.early_stopping.patience=25 \
+    callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
 
@@ -83,11 +83,11 @@ python -m topobench \
     optimizer.parameters.lr=0.001,0.0001 \
     dataset.split_params.data_seed=0 \
     trainer.max_epochs=1000 \
-    trainer.min_epochs=50 \
+    trainer.min_epochs=200 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[2\] \
     logger.wandb.project=TopoProteo \
-    callbacks.early_stopping.patience=25 \
+    callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
 
@@ -114,11 +114,11 @@ python -m topobench \
     optimizer.parameters.lr=0.001,0.0001 \
     dataset.split_params.data_seed=0 \
     trainer.max_epochs=1000 \
-    trainer.min_epochs=50 \
+    trainer.min_epochs=200 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[3\] \
     logger.wandb.project=TopoProteo \
-    callbacks.early_stopping.patience=25 \
+    callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
 
@@ -126,16 +126,16 @@ python -m topobench \
 python -m topobench \
     dataset=graph/FTD \
     model=graph/gcn \
-    data-set.loader.parameters.adj_metric=spearman_correlation \
+    dataset.loader.parameters.adj_metric=spearman_correlation \
     dataset.loader.parameters.adj_thresh=0.4,0.45,0.5 \
     dataset.loader.parameters.kfold=true \
     dataset.loader.parameters.num_folds=5 \
     dataset.loader.parameters.fold=0,1,2,3,4 \
     dataset.dataloader_params.batch_size=8,32,64 \
-    model.feature_encoder.out_channels=8,16 \
+    model.feature_encoder.out_channels=4 \
     model.backbone.dropout=0.1,0.3 \
     model.backbone.act=relu,tanh \
-    model.backbone.num_layers=2,4 \
+    model.backbone.num_layers=2 \
     model.readout.graph_encoder_dim=256,128 \
     model.readout.feature_encoder_dim=64 \
     model.readout.fc_dim=\[128,64,32\],\[256,128,64\] \
@@ -144,11 +144,11 @@ python -m topobench \
     optimizer.parameters.lr=0.001,0.0001 \
     dataset.split_params.data_seed=0 \
     trainer.max_epochs=1000 \
-    trainer.min_epochs=50 \
+    trainer.min_epochs=200 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[4\] \
     logger.wandb.project=TopoProteo \
-    callbacks.early_stopping.patience=25 \
+    callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
 
@@ -156,16 +156,16 @@ python -m topobench \
 python -m topobench \
     dataset=graph/FTD \
     model=graph/gcn \
-    data-set.loader.parameters.adj_metric=wgcna \
+    dataset.loader.parameters.adj_metric=wgcna \
     dataset.loader.parameters.adj_thresh=0.2,0.25,0.3 \
     dataset.loader.parameters.kfold=true \
     dataset.loader.parameters.num_folds=5 \
     dataset.loader.parameters.fold=0,1,2,3,4 \
     dataset.dataloader_params.batch_size=8,32,64 \
-    model.feature_encoder.out_channels=8,16 \
+    model.feature_encoder.out_channels=4 \
     model.backbone.dropout=0.1,0.3 \
     model.backbone.act=relu,tanh \
-    model.backbone.num_layers=2,4 \
+    model.backbone.num_layers=2 \
     model.readout.graph_encoder_dim=256,128 \
     model.readout.feature_encoder_dim=64 \
     model.readout.fc_dim=\[128,64,32\],\[256,128,64\] \
@@ -174,18 +174,18 @@ python -m topobench \
     optimizer.parameters.lr=0.001,0.0001 \
     dataset.split_params.data_seed=0 \
     trainer.max_epochs=1000 \
-    trainer.min_epochs=50 \
+    trainer.min_epochs=200 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[5\] \
     logger.wandb.project=TopoProteo \
-    callbacks.early_stopping.patience=25 \
+    callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
 
 python -m topobench \
     dataset=graph/FTD \
     model=graph/mlp \
-    data-set.loader.parameters.adj_metric=spearman_correlation \
+    dataset.loader.parameters.adj_metric=spearman_correlation \
     dataset.loader.parameters.adj_thresh=0.4,0.45,0.5 \
     dataset.loader.parameters.kfold=true \
     dataset.loader.parameters.num_folds=5 \
@@ -193,24 +193,24 @@ python -m topobench \
     dataset.dataloader_params.batch_size=8,32,64 \
     model.readout.graph_encoder_dim=\[512,256\],\[256,128\] \
     model.readout.feature_encoder_dim=64 \
-    model.readout.fc_dim=\[128,64,32\],\[256,128,64\] \
+    model.readout.fc_dim=\[128,64,32\],\[512,512,256,128\],\[1024,1024,512,256\] \
     model.readout.fc_dropout=0.25 \
     model.readout.fc_act=relu,tanh \
     optimizer.parameters.lr=0.001,0.0001 \
     dataset.split_params.data_seed=0 \
     trainer.max_epochs=1000 \
-    trainer.min_epochs=50 \
+    trainer.min_epochs=200 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[6\] \
     logger.wandb.project=TopoProteo \
-    callbacks.early_stopping.patience=25 \
+    callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
 
 python -m topobench \
     dataset=graph/FTD \
     model=graph/mlp \
-    data-set.loader.parameters.adj_metric=wgcna \
+    dataset.loader.parameters.adj_metric=wgcna \
     dataset.loader.parameters.adj_thresh=0.2,0.25,0.3 \
     dataset.loader.parameters.kfold=true \
     dataset.loader.parameters.num_folds=5 \
@@ -218,16 +218,16 @@ python -m topobench \
     dataset.dataloader_params.batch_size=8,32,64 \
     model.readout.graph_encoder_dim=\[512,256\],\[256,128\] \
     model.readout.feature_encoder_dim=64\
-    model.readout.fc_dim=\[128,64,32\],\[256,128,64\] \
+    model.readout.fc_dim=\[128,64,32\],\[512,512,256,128\],\[1024,1024,512,256\] \
     model.readout.fc_dropout=0.25 \
     model.readout.fc_act=relu,tanh \
     optimizer.parameters.lr=0.001,0.0001 \
     dataset.split_params.data_seed=0 \
     trainer.max_epochs=1000 \
-    trainer.min_epochs=50 \
+    trainer.min_epochs=200 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[7\] \
     logger.wandb.project=TopoProteo \
-    callbacks.early_stopping.patience=25 \
+    callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
