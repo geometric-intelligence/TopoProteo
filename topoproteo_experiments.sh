@@ -24,7 +24,7 @@ python -m topobench \
     trainer.min_epochs=200 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[0\] \
-    logger.wandb.project=TopoProteo \
+    logger.wandb.project=TopoProteo2 \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
@@ -55,7 +55,7 @@ python -m topobench \
     trainer.min_epochs=200 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[1\] \
-    logger.wandb.project=TopoProteo \
+    logger.wandb.project=TopoProteo2 \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
@@ -86,7 +86,7 @@ python -m topobench \
     trainer.min_epochs=200 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[2\] \
-    logger.wandb.project=TopoProteo \
+    logger.wandb.project=TopoProteo2 \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
@@ -117,7 +117,7 @@ python -m topobench \
     trainer.min_epochs=200 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[3\] \
-    logger.wandb.project=TopoProteo \
+    logger.wandb.project=TopoProteo2 \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
@@ -147,7 +147,7 @@ python -m topobench \
     trainer.min_epochs=200 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[4\] \
-    logger.wandb.project=TopoProteo \
+    logger.wandb.project=TopoProteo2 \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
@@ -177,7 +177,7 @@ python -m topobench \
     trainer.min_epochs=200 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[5\] \
-    logger.wandb.project=TopoProteo \
+    logger.wandb.project=TopoProteo2 \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
@@ -202,7 +202,7 @@ python -m topobench \
     trainer.min_epochs=200 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[6\] \
-    logger.wandb.project=TopoProteo \
+    logger.wandb.project=TopoProteo2 \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
@@ -227,7 +227,7 @@ python -m topobench \
     trainer.min_epochs=200 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[7\] \
-    logger.wandb.project=TopoProteo \
+    logger.wandb.project=TopoProteo2 \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
