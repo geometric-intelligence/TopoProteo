@@ -7,16 +7,16 @@ feature_encoder:
   _target_: topobench.nn.encoders.${model.feature_encoder.encoder_name}
   encoder_name: AllCellFeatureEncoder
   in_channels: ${infer_in_channels:${dataset},${oc.select:transforms,null}} 
-  out_channels: 32
+  out_channels: 1
   proj_dropout: 0.0
 
 backbone:
   _target_: topobench.nn.backbones.${model.model_name}
   in_channels: ${model.feature_encoder.out_channels}
-  hidden_channels: [16, 32]
+  hidden_channels: [64, 128]
   out_channels: 1
-  heads: [2, 3]
-  dropout: 0
+  heads: [3, 3]
+  dropout: 0.25
   act: relu
   which_layer: ['layer1', 'layer2', 'layer3', 'sex', 'mutation', 'age']
   use_layer_norm: true

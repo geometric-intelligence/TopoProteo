@@ -19,7 +19,7 @@ loader:
     sex: ['M', 'F']
     num_nodes: 7258  # Every graph has same num_nodes. FIXME: This should not be hardcoded, this dictates number of top proteins to take, max for csf is 7258, for plasma is 7247
     adj_metric: "spearman_correlation"  # "mutual_information", "wgcna", "maximal_information_coefficient", "distance_correlation", "spearman_correlation"
-    adj_thresh: 0.75
+    adj_thresh: 0.6
     split: "train"
     # Only used for WGCNA analysis, not dataset creation:
     wgcna_minModuleSize: 10
@@ -53,7 +53,7 @@ split_params:
 
 # Dataloader parameters
 dataloader_params:
-  batch_size: 32 
+  batch_size: 4 
   num_workers: 0
   pin_memory: False
 
