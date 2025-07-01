@@ -73,7 +73,7 @@ def get_mean_std(cfg):
     return mean, std
 
 
-def load_results_dataframe(wandb_username, wandb_project, original_units=True, csv_filename="proteo_results.csv", filters={}):
+def load_results_dataframe(wandb_username, wandb_project, original_units=True, metric="mse", csv_filename="proteo_results.csv", filters={}):
     """
     Load results from W&B and return a DataFrame with the relevant metrics.
 
@@ -85,8 +85,12 @@ def load_results_dataframe(wandb_username, wandb_project, original_units=True, c
         W&B project name.
     original_units : bool
         Whether to convert metrics back to original units.
+    metric : str, optional
+        The metric to extract from W&B runs (default is "mse").
     csv_filename : str, optional
         If provided, load results from this CSV file instead of W&B.
+    filters : dict, optional
+        Filters to apply when fetching runs from W&B.
 
     Returns:
     --------
@@ -108,7 +112,7 @@ def load_results_dataframe(wandb_username, wandb_project, original_units=True, c
             
             cfg = flatten_config(cfg)
             # Attempt to extract metrics—skip if missing
-            if ("val/mae" not in run.summary) or ("val/mae" not in run.summary):
+            if ("test/"+metric not in run.summary) or ("test/"+metric not in run.summary):
                 continue
             # "dataset.loader.parameters.data_name", "model.backbone._target_", "dataset.split_params.data_seed"
             # Get mean and std used for normalization
@@ -118,12 +122,12 @@ def load_results_dataframe(wandb_username, wandb_project, original_units=True, c
             
             if original_units:
                 # Convert validation and test metrics back to original units
-                val_mae = run.summary["val/mae"] * std + mean
-                test_mae = run.summary["val/mae"] * std + mean
+                val_mae = run.summary["test/"+metric] * std 
+                test_mae = run.summary["test/"+metric] * std 
             else:
                 # Keep metrics in normalized units
-                val_mae  = run.summary["val/mae"]
-                test_mae = run.summary["val/mae"]
+                val_mae  = run.summary["test/"+metric]
+                test_mae = run.summary["test/"+metric]
             dataset  = cfg.get("dataset.loader.parameters.adj_metric", None)
             model    = cfg.get("model.model_name",   None)
             fold     = cfg.get("dataset.loader.parameters.fold",    None)
