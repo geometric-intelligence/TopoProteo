@@ -122,8 +122,13 @@ def load_results_dataframe(wandb_username, wandb_project, original_units=True, m
             
             if original_units:
                 # Convert validation and test metrics back to original units
-                val_mae = run.summary["test/"+metric] * std 
-                test_mae = run.summary["test/"+metric] * std 
+                if metric == "mse":
+                    val_mae  = np.sqrt(run.summary["test/"+metric]) * std 
+                    test_mae = np.sqrt(run.summary["test/"+metric]) * std
+                else:
+                    # For other metrics, just multiply by std
+                    val_mae = run.summary["test/"+metric] * std 
+                    test_mae = run.summary["test/"+metric] * std 
             else:
                 # Keep metrics in normalized units
                 val_mae  = run.summary["test/"+metric]
