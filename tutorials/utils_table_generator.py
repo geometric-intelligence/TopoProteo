@@ -73,7 +73,7 @@ def get_mean_std(cfg):
     return mean, std
 
 
-def load_results_dataframe(wandb_username, wandb_project, original_units=True, metric="mse", csv_filename="proteo_results.csv", filters={}):
+def load_results_dataframe(wandb_username, wandb_project, original_units=True, metric="mse", csv_filename="proteo_results.csv", save_csv=True, filters={}):
     """
     Load results from W&B and return a DataFrame with the relevant metrics.
 
@@ -89,6 +89,8 @@ def load_results_dataframe(wandb_username, wandb_project, original_units=True, m
         The metric to extract from W&B runs (default is "mse").
     csv_filename : str, optional
         If provided, load results from this CSV file instead of W&B.
+    save_csv : bool
+        Whether to save the results to a CSV file (default is True).
     filters : dict, optional
         Filters to apply when fetching runs from W&B.
 
@@ -136,6 +138,8 @@ def load_results_dataframe(wandb_username, wandb_project, original_units=True, m
             dataset  = cfg.get("dataset.loader.parameters.adj_metric", None)
             model    = cfg.get("model.model_name",   None)
             fold     = cfg.get("dataset.loader.parameters.fold",    None)
+            checkpoint = run.summary.get("checkpoint",None)
+            
 
             # If any of these is None, we might want to skip as well:
             if (dataset is None) or (model is None) or (fold is None):
@@ -151,14 +155,34 @@ def load_results_dataframe(wandb_username, wandb_project, original_units=True, m
                 "fold": fold,
                 "val_mae":  val_mae,
                 "test_mae": test_mae,
+                "checkpoint": checkpoint,
             }
             row.update(hyperparams)
             records.append(row)
 
         df = pd.DataFrame(records)
-        df.to_csv(csv_filename, index=False)
+        if save_csv:
+            df.to_csv(csv_filename, index=False)
     print("▶ After building df, df.shape =", df.shape)
     return df
+
+def filter_dataframe(df, columns):
+    """
+    Filter the DataFrame to only include specified columns.
+
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        The DataFrame to filter.
+    columns : list of str
+        List of column names to keep in the DataFrame.
+
+    Returns:
+    --------
+    pd.DataFrame
+        Filtered DataFrame containing only the specified columns.
+    """
+    return df[columns] if all(col in df.columns for col in columns) else df
 
 
 def generate_table(df, save_csv=False, csv_filename="proteo_results.csv"):
