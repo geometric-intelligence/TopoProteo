@@ -199,6 +199,10 @@ def run(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
         trainer.fit(
             model=model, datamodule=datamodule, ckpt_path=cfg.get("ckpt_path")
         )
+        # Log the best model checkpoint path into wandb
+        for logger in logger:
+            if isinstance(logger, L.pytorch.loggers.wandb.WandbLogger) and hasattr(logger, "experiment"):
+                logger.experiment.log({"checkpoint": trainer.checkpoint_callback.best_model_path})
 
     train_metrics = trainer.callback_metrics
 
