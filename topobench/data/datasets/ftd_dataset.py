@@ -153,6 +153,10 @@ class FTDDataset(InMemoryDataset):
         assert config.y_val in LABEL_DIM_MAP
         if config.y_val == "carrier":
             assert len(config.mutation) > 1 and "CTL" in config.mutation
+            
+        # If adj_metric is set to pointcloud, the adjacency matrix is the identity
+        # and adj_thresh is irrelevant (by default set to 1)
+        config.adj_thresh = 1.0 if config.adj_metric == "pointcloud" else config.adj_thresh
 
         self.config = config
         self.adj_metric = config.adj_metric
@@ -727,6 +731,8 @@ def compute_adjacency_matrix(config, dataset, save_to):
         adjacency_matrix = calculate_spearman_correlation_matrix(dataset)
     elif config["adj_metric"] == 'distance_correlation':
         adjacency_matrix = calculate_distance_correlation_matrix(dataset)
+    elif config["adj_metric"] == 'pointcloud':
+        adjacency_matrix = np.zeros((config["num_nodes"], config["num_nodes"]))
     # elif config["adj_metric"] == 'maximal_information_coefficient':
     #     calculate_maximal_information_coefficient_matrix(dataset)
     else:
@@ -734,10 +740,13 @@ def compute_adjacency_matrix(config, dataset, save_to):
     
     # Set diagonal to zero to avoid self-edges
     np.fill_diagonal(adjacency_matrix, 0)
+    #Exept in pointcloud setting, where we want to keep the diagonal as 1
+    if config["adj_metric"] == 'pointcloud':
+        np.fill_diagonal(adjacency_matrix, 1.0)
     # Normalize by the maximum value (avoid division by zero)
     max_val = adjacency_matrix.max()
-    assert max_val > 0, "Adjacency matrix has no positive values to normalize."
-    adjacency_matrix = adjacency_matrix / max_val
+    if max_val > 0:
+        adjacency_matrix = adjacency_matrix / max_val
     
     # Save the adjacency matrix to the specified file path
     adjacency_df = pd.DataFrame(adjacency_matrix)
