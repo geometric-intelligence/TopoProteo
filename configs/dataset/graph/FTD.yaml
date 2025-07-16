@@ -38,7 +38,7 @@ parameters:
   num_classes: 1
   task: regression
   loss_type: mse
-  monitor_metric: mae
+  monitor_metric: mse
   task_level: graph
   # features_to_keep: ['age', 'sex', 'mutation']
 
