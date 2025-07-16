@@ -8,7 +8,7 @@ python -m topobench \
     dataset.loader.parameters.adj_thresh=0.60 \
     dataset.loader.parameters.kfold=false \
     dataset.loader.parameters.num_folds=5 \
-    dataset.loader.parameters.fold=0,1,2,3,4 \
+    dataset.loader.parameters.fold=0 \
     dataset.dataloader_params.batch_size=32 \
     model.feature_encoder.out_channels=4 \
     model.backbone.dropout=0.25 \
@@ -38,7 +38,7 @@ python -m topobench \
     dataset.loader.parameters.adj_thresh=0.2 \
     dataset.loader.parameters.kfold=false \
     dataset.loader.parameters.num_folds=5 \
-    dataset.loader.parameters.fold=0,1,2,3,4 \
+    dataset.loader.parameters.fold=0 \
     dataset.dataloader_params.batch_size=8 \
     model.feature_encoder.out_channels=4 \
     model.backbone.dropout=0.25 \
@@ -67,7 +67,7 @@ python -m topobench \
     dataset.loader.parameters.adj_thresh=0.50 \
     dataset.loader.parameters.kfold=false \
     dataset.loader.parameters.num_folds=5 \
-    dataset.loader.parameters.fold=0,1,2,3,4 \
+    dataset.loader.parameters.fold=0 \
     dataset.dataloader_params.batch_size=16 \
     model.readout.graph_encoder_dim=\[512,256\] \
     model.readout.feature_encoder_dim=64 \
