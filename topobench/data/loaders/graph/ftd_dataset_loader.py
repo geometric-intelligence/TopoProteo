@@ -59,25 +59,16 @@ class FTDDatasetLoader(AbstractLoader):
         """
         return os.path.join(self.root_data_dir, "processed", self.config_tag)
 
-    # def _initialize_dataset(self) -> FTDDataset:
-    #     """Initialize the US County Demos dataset.
+    def get_splits(self) -> list:
+        """Get the dataset splits.
 
-    #     Returns
-    #     -------
-    #     FTDDataset
-    #         The initialized dataset instance.
-    #     """
-    #     train_dataset = FTDDataset(
-    #             root=str(self.root_data_dir),
-    #             config=self.parameters,
-    #             split="train",
-    #         )
-    #     val_dataset = FTDDataset(
-    #             root=str(self.root_data_dir),
-    #             config=self.parameters,
-    #             split="val",
-    #         )
-    #     return (train_dataset, val_dataset)
+        Returns
+        -------
+        list
+            A list containing the train, validation, and test datasets.
+        """
+        self._load_splits()
+        return self.datasets
 
     def _load_splits(self) -> None:
         """Load the dataset splits for the specified dataset."""
