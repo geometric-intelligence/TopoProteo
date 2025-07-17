@@ -33,8 +33,8 @@ class TBModel(LightningModule):
 
     def __init__(
         self,
-        backbone: torch.nn.Module | None,
-        backbone_wrapper: torch.nn.Module,
+        backbone: torch.nn.Module,
+        backbone_wrapper: torch.nn.Module | None,
         readout: torch.nn.Module,
         loss: torch.nn.Module,
         feature_encoder: torch.nn.Module | None = None,
@@ -91,14 +91,14 @@ class TBModel(LightningModule):
             Dictionary containing the model output, which includes the logits and other relevant information.
         """
         # Feature Encoder
-        model_out = self.feature_encoder(batch)
+        if self.feature_encoder is not None:
+            model_out = self.feature_encoder(batch)
 
         # Domain model
         model_out = self.backbone(model_out)
 
         # Readout
-        if self.readout is not None:
-            model_out = self.readout(model_out=model_out, batch=batch)
+        model_out = self.readout(model_out=model_out, batch=batch)
         
         return model_out
 
