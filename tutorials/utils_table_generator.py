@@ -36,7 +36,7 @@ def get_mean_std(cfg):
     fold = cfg.get("dataset.loader.parameters.fold",None)
     adj_metric = cfg.get("dataset.loader.parameters.adj_metric",None)
     adj_thresh = cfg.get("dataset.loader.parameters.adj_thresh",None)
-    adj_str = f"adj_thresh_{adj_thresh}"
+    adj_str = "adj_thresh_1.0" if adj_thresh==1 else f"adj_thresh_{adj_thresh}"
     y_val = cfg.get("dataset.loader.parameters.y_val",None)
     y_val_str = f"y_val_{y_val}" if y_val is not None else "y_val_None"
     num_nodes = cfg.get("dataset.loader.parameters.num_nodes",None)
@@ -73,7 +73,7 @@ def get_mean_std(cfg):
     return mean, std
 
 
-def load_results_dataframe(wandb_username, wandb_project, original_units=True, metric="mse", csv_filename="proteo_results.csv", save_csv=True, filters={}):
+def load_results_dataframe(wandb_username, wandb_project, original_units=True, metric="mse", csv_filename="proteo_results.csv", force_load=False, save_csv=True, filters={}):
     """
     Load results from W&B and return a DataFrame with the relevant metrics.
 
@@ -89,6 +89,8 @@ def load_results_dataframe(wandb_username, wandb_project, original_units=True, m
         The metric to extract from W&B runs (default is "mse").
     csv_filename : str, optional
         If provided, load results from this CSV file instead of W&B.
+    force_load : bool, optional
+        Whether to force load results from W&B even if the CSV file exists (default is False).
     save_csv : bool
         Whether to save the results to a CSV file (default is True).
     filters : dict, optional
@@ -99,9 +101,9 @@ def load_results_dataframe(wandb_username, wandb_project, original_units=True, m
     pd.DataFrame
         DataFrame containing the results.
     """
-    try:
+    if os.path.exists(csv_filename) and not force_load:
         df = pd.read_csv(csv_filename)
-    except FileNotFoundError:
+    else:
         # ── A) CONFIGURE YOUR W&B ACCESS ────────────────────────────────────────────
         api = wandb.Api()
         runs = api.runs(f"{wandb_username}/{wandb_project}", filters=filters)
@@ -198,6 +200,8 @@ def generate_table(df, save_csv=False, csv_filename="proteo_results.csv"):
     csv_filename : str, optional
         If provided, save the grouped results to this CSV filename (adding "grouped_").
     """
+    # Remove checkpoint column, not wanted here
+    df = df.drop(columns=['checkpoint'])
     # Remove columns with only one unique value, except those in exclude_cols
     exclude_cols = ["dataset", "model", "fold", "val_mae", "test_mae"]
     nunique = df.nunique()
@@ -251,7 +255,7 @@ def generate_table(df, save_csv=False, csv_filename="proteo_results.csv"):
         .reset_index()
     )
     # Remove grouped rows with n_folds < 5 for models 'mlp' and 'gcn'
-    mask = ~((grouped["model"].isin(["mlp", "gcn"])) & (grouped["n_folds"] < 5))
+    mask = ~(grouped["n_folds"] < 5)
     grouped = grouped[mask].reset_index(drop=True)
     print("▶ After grouping, grouped.shape =", grouped.shape)
 

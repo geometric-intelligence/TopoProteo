@@ -1,19 +1,18 @@
-
-
-
 python -m topobench \
     dataset=graph/FTD \
-    model=graph/gcn \
-    dataset.loader.parameters.adj_metric=spearman_correlation \
-    dataset.loader.parameters.adj_thresh=0.60 \
+    model=graph/gat \
+    dataset.loader.parameters.adj_metric=wgcna \
+    dataset.loader.parameters.adj_thresh=0.25 \
     dataset.loader.parameters.kfold=false \
     dataset.loader.parameters.num_folds=5 \
     dataset.loader.parameters.fold=0 \
-    dataset.dataloader_params.batch_size=32 \
+    dataset.dataloader_params.batch_size=8 \
     model.feature_encoder.out_channels=4 \
-    model.backbone.dropout=0.25 \
+    model.backbone.dropout=0.3 \
     model.backbone.act=tanh \
     model.backbone.num_layers=2 \
+    model.backbone.v2=true \
+    model.backbone.heads=4 \
     model.readout.graph_encoder_dim=128 \
     model.readout.feature_encoder_dim=64 \
     model.readout.fc_dim=\[256,128,64\] \
@@ -24,24 +23,23 @@ python -m topobench \
     trainer.max_epochs=1000 \
     trainer.min_epochs=100 \
     trainer.check_val_every_n_epoch=1 \
-    trainer.devices=\[4\] \
-    logger.wandb.project=ProteoFinal \
+    trainer.devices=\[1\] \
+    logger.wandb.project=ProteoFinalAll \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
-
 
 python -m topobench \
     dataset=graph/FTD \
     model=graph/gcn \
     dataset.loader.parameters.adj_metric=wgcna \
-    dataset.loader.parameters.adj_thresh=0.2 \
+    dataset.loader.parameters.adj_thresh=0.3 \
     dataset.loader.parameters.kfold=false \
     dataset.loader.parameters.num_folds=5 \
     dataset.loader.parameters.fold=0 \
     dataset.dataloader_params.batch_size=8 \
     model.feature_encoder.out_channels=4 \
-    model.backbone.dropout=0.25 \
+    model.backbone.dropout=0.1 \
     model.backbone.act=relu \
     model.backbone.num_layers=2 \
     model.readout.graph_encoder_dim=128 \
@@ -54,8 +52,8 @@ python -m topobench \
     trainer.max_epochs=1000 \
     trainer.min_epochs=100 \
     trainer.check_val_every_n_epoch=1 \
-    trainer.devices=\[5\] \
-    logger.wandb.project=ProteoFinal \
+    trainer.devices=\[1\] \
+    logger.wandb.project=ProteoFinalAll \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
@@ -63,49 +61,55 @@ python -m topobench \
 python -m topobench \
     dataset=graph/FTD \
     model=graph/mlp \
-    dataset.loader.parameters.adj_metric=spearman_correlation \
-    dataset.loader.parameters.adj_thresh=0.50 \
+    dataset.loader.parameters.adj_metric=pointcloud \
+    dataset.loader.parameters.adj_thresh=1.0 \
     dataset.loader.parameters.kfold=false \
     dataset.loader.parameters.num_folds=5 \
     dataset.loader.parameters.fold=0 \
-    dataset.dataloader_params.batch_size=16 \
+    dataset.dataloader_params.batch_size=64 \
     model.readout.graph_encoder_dim=\[512,256\] \
     model.readout.feature_encoder_dim=64 \
     model.readout.fc_dim=\[128,64,32\] \
-    model.readout.fc_dropout=0.25 \
+    model.readout.fc_dropout=0.2 \
     model.readout.fc_act=tanh \
     optimizer.parameters.lr=0.001 \
     dataset.split_params.data_seed=0 \
     trainer.max_epochs=1000 \
     trainer.min_epochs=100 \
     trainer.check_val_every_n_epoch=1 \
-    trainer.devices=\[7\] \
-    logger.wandb.project=ProteoFinal \
+    trainer.devices=\[3\] \
+    logger.wandb.project=ProteoFinalAll \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
 
-# python -m topobench \
-#     dataset=graph/FTD \
-#     model=graph/mlp \
-#     dataset.loader.parameters.adj_metric=wgcna \
-#     dataset.loader.parameters.adj_thresh=0.2,0.25,0.3 \
-#     dataset.loader.parameters.kfold=true \
-#     dataset.loader.parameters.num_folds=5 \
-#     dataset.loader.parameters.fold=0,1,2,3,4 \
-#     dataset.dataloader_params.batch_size=8,16,32 \
-#     model.readout.graph_encoder_dim=\[512,256\],\[256,128\] \
-#     model.readout.feature_encoder_dim=64\
-#     model.readout.fc_dim=\[128,64,32\],\[512,512,256,128\],\[1024,1024,512,256\] \
-#     model.readout.fc_dropout=0.25 \
-#     model.readout.fc_act=relu,tanh \
-#     optimizer.parameters.lr=0.001,0.0001 \
-#     dataset.split_params.data_seed=0 \
-#     trainer.max_epochs=1000 \
-#     trainer.min_epochs=100 \
-#     trainer.check_val_every_n_epoch=1 \
-#     trainer.devices=\[7\] \
-#     logger.wandb.project=ProteoFinal \
-#     callbacks.early_stopping.patience=50 \
-#     tags="[TopoProteoGridSearch]" \
-#     --multirun &
+python -m topobench \
+    dataset=graph/FTD \
+    model=graph/gatv4 \
+    dataset.loader.parameters.adj_metric=wgcna \
+    dataset.loader.parameters.adj_thresh=0.2 \
+    dataset.loader.parameters.kfold=false \
+    dataset.loader.parameters.num_folds=5 \
+    dataset.loader.parameters.fold=0 \
+    dataset.dataloader_params.batch_size=2 \
+    model.feature_encoder.out_channels=1 \
+    model.backbone.hidden_channels=\[64,128\] \
+    model.backbone.heads=\[3,3\] \
+    model.backbone.dropout=0.25 \
+    model.backbone.act=tanh \
+    model.backbone.weight_initializer=xavier \
+    model.readout.graph_encoder_dim=128 \
+    model.readout.feature_encoder_dim=64 \
+    model.readout.fc_dim=\[128,64,32\] \
+    model.readout.fc_dropout=0.25 \
+    model.readout.fc_act=tanh \
+    optimizer.parameters.lr=0.0001 \
+    dataset.split_params.data_seed=0 \
+    trainer.max_epochs=1000 \
+    trainer.min_epochs=100 \
+    trainer.check_val_every_n_epoch=1 \
+    trainer.devices=\[3\] \
+    logger.wandb.project=ProteoFinalAll \
+    callbacks.early_stopping.patience=50 \
+    tags="[TopoProteoGridSearch]" \
+    --multirun &
