@@ -1,4 +1,5 @@
 import os
+import types
 import torch
 import torch_geometric
 from torch_geometric.explain import Explainer, CaptumExplainer
@@ -15,62 +16,122 @@ from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 from sklearn.model_selection import train_test_split
 # Custom imports from proteo
-from proteo.datasets.ftd_folds import FTDDataset
-import train as proteo_train
+from topobench.data.datasets.ftd_dataset import FTDDataset
+from topobench.data.utils.utils import construct_datasets
 import plotly.graph_objs as go
 from matplotlib.lines import Line2D
 from sklearn.preprocessing import StandardScaler
+from tutorials.utils_final_results import load_model_checkpoint
+from topobench.model.model import TBModel
+from omegaconf import OmegaConf
+from hydra.utils import instantiate
 
 #############FUNCTIONS TO GET EXPLANATIONS AND COMPILE RESULTS####################
-def load_config(module):
-    '''Load the config from the module  and return it'''
-    config = module.config
-    return config
+def load_checkpoint(ckpt_path: str, map_location="cpu"):
+    # 1) load raw ckpt and pull YAML string
+    ckpt = torch.load(ckpt_path, map_location=map_location)
+    hp = ckpt.get("hyper_parameters", {})
+    if "cfg" not in hp or not isinstance(hp["cfg"], str):
+        raise KeyError("Checkpoint missing YAML config under 'hyper_parameters[\"cfg\"]'.")
 
-#Load model checkpoint - Note when the wrapper class is not necessary you can use this function from checkpoint_analysis.py
-def load_checkpoint(relative_checkpoint_path):
-    '''Load the checkpoint as a module. Note levels_up depends on the directory structure of the ray_results folder'''
-    # Construct the full path to the checkpoint
-    checkpoint_path = os.path.join(relative_checkpoint_path, 'checkpoint.ckpt')
-    print("checkpoint_path", checkpoint_path)
+    cfg_yaml = hp["cfg"]                 # <-- YAML string
+    cfg = OmegaConf.create(cfg_yaml)     # DictConfig for instantiate()
 
-    # Check if the file exists to avoid errors
-    if not os.path.isfile(checkpoint_path):
-        raise FileNotFoundError(f"Checkpoint file not found: {checkpoint_path}")
-    
-    # Load the checkpoint dictionary using PyTorch directly to modify the config
-    checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
-    
-    # Ensure that the 'use_master_nodes' attribute is in the checkpoint's config
-    if not hasattr(checkpoint['hyper_parameters']['config'], 'kfold') or not hasattr(checkpoint['hyper_parameters']['config'], 'num_folds') or not hasattr(checkpoint['hyper_parameters']['config'], 'fold'):
-        checkpoint['hyper_parameters']['config'].kfold = False
-        checkpoint['hyper_parameters']['config'].num_folds = 1
-        checkpoint['hyper_parameters']['config'].fold = 0
-    
-    if not hasattr(checkpoint['hyper_parameters']['config'], 'random_state'):
-        checkpoint['hyper_parameters']['config'].random_state = 42
-        
-    torch.save(checkpoint, checkpoint_path)
-    checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
-    module = proteo_train.Proteo.load_from_checkpoint(checkpoint_path)
+    # 2) build the model (DON'T pass cfg itself; pass the inert YAML string)
+    model = instantiate(
+        cfg.model,
+        evaluator=cfg.evaluator,
+        optimizer=cfg.optimizer,
+        loss=cfg.loss,
+        cfg_yaml=cfg_yaml,   # safe payload to keep in future ckpts
+    )
 
+    # 3) load weights
+    missing, unexpected = model.load_state_dict(ckpt["state_dict"], strict=False)
+    if missing or unexpected:
+        print("missing:", missing)
+        print("unexpected:", unexpected)
 
-    original_forward = module.model.forward
-    # Redefine the forward method of module.model to return only pred
-    def new_forward(self, x, edge_index=None, data=None):
-        pred, _ = original_forward(x, edge_index, data)
-        return pred
-    
-    module.model.forward = new_forward.__get__(module.model)
-    return module
+    # 4) if backbone is GATv4, make forward return only predictions
+    tgt = str(getattr(cfg.model.backbone, "_target_", "")).lower()
+    orig_forward = model.forward
 
+    def pred_only_forward(self, x, edge_index, data, **kwargs):
+        from topobench.dataloader.utils import collate_fn
+        batch = torch_geometric.data.Data(x_0=x, edge_index=edge_index, batch_0=torch.zeros(x.size(0), dtype=torch.int32, device=x.device), sex=data.sex, mutation=data.mutation, age=data.age)
+        batch = torch_geometric.data.Batch.from_data_list([batch])
+        # batch = collate_fn(batch)
+        out = orig_forward(batch)
+        if isinstance(out, dict):
+            return out.get("logits", next(v for v in out.values() if torch.is_tensor(v)))
+        if isinstance(out, (tuple, list)):
+            return next(v for v in out if torch.is_tensor(v))
+        return out
+
+    model.forward = types.MethodType(pred_only_forward, model)
+
+    model.eval()
+    return model, cfg
+
+def to_legacy_config(cfg):
+    """
+    Convert the current nested Hydra cfg into a flat config with attributes like
+    data_dir, random_state, sex, mutation, num_nodes, adj_metric, adj_thresh, etc.
+
+    Parameters
+    ----------
+    cfg : DictConfig
+        Full Hydra config you saved in the checkpoint under 'cfg'.
+
+    Returns
+    -------
+    DictConfig
+        Flattened config compatible with existing access patterns, e.g.:
+        config.data_dir, config.random_state, config.sex, ...
+    """
+    # Short-hand to the common nested block
+    p = cfg.dataset.loader.parameters
+
+    flat = {
+        # Top-level paths & seeds
+        "data_dir":        cfg.paths.data_dir,
+        "random_state":    p.get("random_state", cfg.get("seed", 0)),
+
+        # K-fold controls
+        "kfold":        p.get("kfold", False),
+        "num_folds":    p.get("num_folds", 5),
+        "fold":         p.get("fold", 0),
+
+        # Dataset selection knobs
+        "raw_file_name":           p.raw_file_name,
+        "error_protein_file_name": p.error_protein_file_name,
+        "y_val":                   p.y_val,
+        "modality":                p.modality,
+        "mutation":                p.mutation,   # list
+        "sex":                     p.sex,        # list
+
+        # Graph construction knobs
+        "num_nodes":   p.num_nodes,
+        "adj_metric":  p.adj_metric,
+        "adj_thresh":  p.adj_thresh,
+
+        # Extras used elsewhere
+        "wgcna_minModuleSize":  p.get("wgcna_minModuleSize", 10),
+        "wgcna_mergeCutHeight": p.get("wgcna_mergeCutHeight", 0.25),
+    }
+
+    # Preserve your prior behavior: pointcloud => identity graph with thresh 1.0
+    if flat["adj_metric"] == "pointcloud":
+        flat["adj_thresh"] = 1.0
+
+    return OmegaConf.create(flat)
 
 def get_explainer_baseline(config):
     '''Function to get the baseline normal expression data to use for explainer results'''
     # Get the Scaler we use to transform all the data
     root = config.data_dir
     random_state = config.random_state
-    train_dataset = FTDDataset(root, "train", config)
+    train_dataset = FTDDataset(root, config, "train")
     features, _, top_protein_columns, _, _, _, _, _ = train_dataset.load_csv_data_pre_pt_files(config)
     train_features, test_features = train_test_split(features, test_size=0.20, random_state=random_state)
     combined_features = np.concatenate((train_features, test_features), axis=0)
@@ -87,15 +148,14 @@ def get_explainer_baseline(config):
     proteins_ctl_scaled = scaler.transform(proteins_ctl)
     # Calculate the mean for each protein
     baseline_mean = proteins_ctl_scaled.mean(axis=0)
-    return baseline_mean, train_features
-
+    return baseline_mean, combined_features
 
 
 #Load protein ids
 def get_protein_ids(config):
     # Make an instance of the FTDDataset class to get the top proteins
     root = config.data_dir
-    train_dataset = FTDDataset(root, "train", config)
+    train_dataset = FTDDataset(root, config, "train")
     _, _, top_protein_columns, _, _, _, _, _ = train_dataset.load_csv_data_pre_pt_files(config)
     return np.array(top_protein_columns)
 
@@ -103,11 +163,16 @@ def get_sex_mutation_age_distribution(config):
     # Make an instance of the FTDDataset class to get the top proteins
     root = config.data_dir
     random_state = config.random_state
-    train_dataset = FTDDataset(root, "train", config)
+    train_dataset = FTDDataset(root, config, "train")
     _, _, _, filtered_sex_col, filtered_mutation_col, filtered_age_col, filtered_did_col, filtered_gene_col= train_dataset.load_csv_data_pre_pt_files(config)
     # Splitting indices only
     train_sex_labels, test_sex_labels, train_mutation_labels, test_mutation_labels, train_age_labels, test_age_labels, train_did_labels, test_did_labels, train_gene_col, test_gene_col = train_test_split(filtered_sex_col, filtered_mutation_col, filtered_age_col, filtered_did_col, filtered_gene_col, test_size=0.20, random_state=random_state)
-    return train_sex_labels, train_mutation_labels, train_age_labels, train_did_labels, train_gene_col
+    total_sex_labels = np.concatenate((train_sex_labels, test_sex_labels))
+    total_mutation_labels = np.concatenate((train_mutation_labels, test_mutation_labels))
+    total_age_labels = np.concatenate((train_age_labels, test_age_labels))
+    total_did_labels = np.concatenate((train_did_labels, test_did_labels))
+    total_gene_labels = np.concatenate((train_gene_col, test_gene_col))
+    return total_sex_labels, total_mutation_labels, total_age_labels, total_did_labels, train_did_labels, test_did_labels, total_gene_labels
 
 # Helper function to plot importance values
 def plot_importance_scores(explanations, labels, filename, title, ylabel):
@@ -202,24 +267,26 @@ def run_explainer_single_dataset(dataset, explainer, protein_ids, dids, filename
     # Return both raw and percent importance scores, along with other info
     return sum_node_importance_raw, sum_node_importance_percent, positive_percent_by_protein, negative_percent_by_protein, protein_count, all_raw_importances, all_percent_importances, all_top_proteins
 
-def run_explainer_train(checkpoint_path):
-    module = load_checkpoint(checkpoint_path)
-    config = load_config(module)
-    print(config)
+def run_explainer_train_and_test(checkpoint_path):
+    model, config = load_checkpoint(checkpoint_path)
+    config = to_legacy_config(config)
+    print("here is the config", config)
     # Load datasets and labels
-    train_sex_labels, train_mutation_labels, train_age_labels, train_did_labels, train_gene_labels = get_sex_mutation_age_distribution(config)
-    train_dataset, test_dataset = proteo_train.construct_datasets(config)
+    total_sex_labels, total_mutation_labels, total_age_labels, total_did_labels, train_did, test_did, total_gene_col= get_sex_mutation_age_distribution(config)
+    train_dataset, test_dataset = construct_datasets(config)
     print("dim train_dataset", len(train_dataset))
+    print("dim test_dataset", len(test_dataset))
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     train_dataset.to(device)
+    test_dataset.to(device)
 
-    baseline_mean, train_features = get_explainer_baseline(config)
+    baseline_mean, features = get_explainer_baseline(config)
     baseline_mean_tensor = torch.tensor(baseline_mean, dtype=torch.float32).to(device)
     baseline_mean_tensor = baseline_mean_tensor.unsqueeze(0).unsqueeze(2)
     # Construct Explainer and set parameters
     explainer = Explainer(
-        model=module.model.to(device),
+        model=model.to(device),
         algorithm=CaptumExplainer('IntegratedGradients'), #, baselines=baseline_mean_tensor),
         explanation_type='model',
         model_config=dict(
@@ -229,48 +296,71 @@ def run_explainer_train(checkpoint_path):
         ),
         node_mask_type= 'attributes', #'object', # Generate masks that indicate the importance of individual node features
         edge_mask_type=None,
-        threshold_config=dict( #keep only the top 7258 most important proteins and set the rest to 0
+        threshold_config=dict( 
             threshold_type='topk',
-            value=7258,
+            value=config.num_nodes,
         ),
     )
     protein_ids = get_protein_ids(config)
 
-    pattern = r'/(model=.*?)(/checkpoint_\d+)?$'
-    model_name = re.search(pattern, checkpoint_path).group(1)
+    model_name = checkpoint_path.split("/")[-1] #re.search(pattern, checkpoint_path).group(1)
     
     # Run explainer for both training and testing datasets
-    train_sum_node_importance_raw, train_sum_node_importance_percent, train_positive_percent, train_negative_percent, train_protein_count, all_raw_importances_train, all_percent_importances_train, all_top_proteins_train = run_explainer_single_dataset(train_dataset, explainer, protein_ids, train_did_labels,  filename=model_name + "_train.png")
+    train_sum_node_importance_raw, train_sum_node_importance_percent, train_positive_percent, train_negative_percent, train_protein_count, all_raw_importances_train, all_percent_importances_train, all_top_proteins_train = run_explainer_single_dataset(train_dataset, explainer, protein_ids, train_did,  filename=model_name + "_train.png")
+    test_sum_node_importance_raw, test_sum_node_importance_percent,  test_positive_percent, test_negative_percent, test_protein_count, all_raw_importances_test, all_percent_importances_test, all_top_proteins_test = run_explainer_single_dataset(test_dataset, explainer, protein_ids, test_did, filename=model_name + "_test.png")
+
+    # Combine sum_node_importance for train and test datasets
+    combined_sum_node_importance_raw = {key: train_sum_node_importance_raw.get(key, 0) + test_sum_node_importance_raw.get(key, 0)
+                                    for key in set(train_sum_node_importance_raw) | set(test_sum_node_importance_raw)}
+    
+    combined_sum_node_importance_percent = {key: train_sum_node_importance_percent.get(key, 0) + test_sum_node_importance_percent.get(key, 0)
+                                    for key in set(train_sum_node_importance_percent) | set(test_sum_node_importance_percent)}
+    
+    combined_sum_node_importance_positive = {key: train_positive_percent.get(key, 0) + test_positive_percent.get(key, 0)
+                                    for key in set(train_positive_percent) | set(test_positive_percent)}
+    
+    combined_sum_node_importance_negative = {key: train_negative_percent.get(key, 0) + test_negative_percent.get(key, 0)
+                                    for key in set(train_negative_percent) | set(test_negative_percent)}
+
+    
+    # Combine protein_count for train and test datasets
+    combined_protein_count = train_protein_count + test_protein_count
 
     # Combine raw and percent importance scores
-    print("train shape (raw importance):", np.array(all_raw_importances_train).shape)
-    print("train shape (percent importance):", np.array(all_percent_importances_train).shape)
+    all_raw_importances = all_raw_importances_train + all_raw_importances_test
+    all_percent_importances = all_percent_importances_train + all_percent_importances_test
+    print("all_explanations shape (raw importance):", np.array(all_raw_importances).shape)
+    print("all_explanations shape (percent importance):", np.array(all_percent_importances).shape)
 
     # Save to a csv with model name appended to the filename
     model_name_suffix = f"_{model_name}.csv"
 
-    df_percent_importances = pd.DataFrame(all_percent_importances_train, index=train_did_labels, columns=protein_ids[0:np.array(all_raw_importances_train).shape[1]])
-    df_percent_importances.insert(0, "SEX", train_sex_labels)
-    df_percent_importances.insert(1, "AGE", train_age_labels)
-    df_percent_importances.insert(2, "Mutation", train_mutation_labels)
-    df_percent_importances.insert(3, "Gene.Dx", train_gene_labels)
+    df_percent_importances = pd.DataFrame(all_percent_importances, index=total_did_labels, columns=protein_ids[0:np.array(all_raw_importances).shape[1]])
+    df_percent_importances.insert(0, "SEX", total_sex_labels)
+    df_percent_importances.insert(1, "AGE", total_age_labels)
+    df_percent_importances.insert(2, "Mutation", total_mutation_labels)
+    df_percent_importances.insert(3, "Gene.Dx", total_gene_col)
     df_percent_importances.to_csv(f"percent_importances{model_name_suffix}")
 
-    df_raw_importances = pd.DataFrame(all_raw_importances_train, index=train_did_labels, columns=protein_ids[0:np.array(all_raw_importances_train).shape[1]])
-    df_raw_importances.insert(0, "SEX", train_sex_labels)
-    df_raw_importances.insert(1, "AGE", train_age_labels)
-    df_raw_importances.insert(2, "Mutation", train_mutation_labels)
-    df_raw_importances.insert(3, "Gene.Dx", train_gene_labels)
+    df_raw_importances = pd.DataFrame(all_raw_importances, index=total_did_labels, columns=protein_ids[0:np.array(all_raw_importances).shape[1]])
+    df_raw_importances.insert(0, "SEX", total_sex_labels)
+    df_raw_importances.insert(1, "AGE", total_age_labels)
+    df_raw_importances.insert(2, "Mutation", total_mutation_labels)
+    df_raw_importances.insert(3, "Gene.Dx", total_gene_col)
     df_raw_importances.to_csv(f"raw_importances{model_name_suffix}")
 
-    df_raw_expression = pd.DataFrame(train_features, index=train_did_labels, columns=protein_ids[0:np.array(all_raw_importances_train).shape[1]])
-    df_raw_expression.insert(0, "SEX", train_sex_labels)
-    df_raw_expression.insert(1, "AGE", train_age_labels)
-    df_raw_expression.insert(2, "Mutation", train_mutation_labels)
-    df_raw_expression.insert(3, "Gene.Dx", train_gene_labels)
+    df_raw_expression = pd.DataFrame(features, index=total_did_labels, columns=protein_ids[0:np.array(all_raw_importances).shape[1]])
+    df_raw_expression.insert(0, "SEX", total_sex_labels)
+    df_raw_expression.insert(1, "AGE", total_age_labels)
+    df_raw_expression.insert(2, "Mutation", total_mutation_labels)
+    df_raw_expression.insert(3, "Gene.Dx", total_gene_col)
     df_raw_expression.to_csv("raw_expression.csv")
 
-    return train_sum_node_importance_raw, train_sum_node_importance_percent, train_positive_percent, train_negative_percent, train_protein_count, config, all_raw_importances_train, all_percent_importances_train, all_top_proteins_train, protein_ids
+
+    # Combine top proteins for both train and test datasets
+    all_top_proteins = all_top_proteins_train + all_top_proteins_test
+    
+    return combined_sum_node_importance_raw, combined_sum_node_importance_percent, combined_sum_node_importance_positive, combined_sum_node_importance_negative, combined_protein_count, config, all_raw_importances, all_percent_importances, all_top_proteins, protein_ids
 
 ##############FUNCTIONS TO PLOT AND VISUALIZE RESULTS############################
 ### CLUSTERING FUNCTIONS ###
@@ -648,8 +738,7 @@ def plot_explainer_results(config, all_explanations_percent, protein_ids, filena
 
 def create_protein_plots(combined_sum_node_importance_raw, combined_sum_node_importance_percent, combined_positive_percent, combined_negative_percent, combined_protein_count, all_percent_importances, protein_ids, config, checkpoint_path):
     """Creates a set of plots for protein importance and PCA analysis."""
-    pattern = r'/(model=.*?)(/checkpoint_\d+)?$'
-    model_name = re.search(pattern, checkpoint_path).group(1)
+    model_name = checkpoint_path.split("/")[-1]
     sum_node_importance_avg_percent = divide_dict_values(combined_protein_count, combined_sum_node_importance_percent)
 
     plot_bar_chart(

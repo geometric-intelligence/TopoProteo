@@ -8,7 +8,31 @@ import omegaconf
 import torch
 import torch_geometric
 from topomodelx.utils.sparse import from_sparse
+import os
 
+
+def construct_datasets(config):
+    from topobench.data.datasets.ftd_dataset import FTDDataset
+    root = config.data_dir
+    print(f"Loading datasets from {root}")
+    print(f"Absolute path: {os.path.abspath(root)}")
+    print(f"Directory contents: {os.listdir(root)}")
+    
+    try:
+        train_dataset = FTDDataset(root, config, "train")
+        print("Train dataset loaded successfully")
+    except Exception as e:
+        print(f"Error loading train dataset: {str(e)}")
+        raise
+    
+    try:
+        test_dataset = FTDDataset(root, config, "val")
+        print("Test dataset loaded successfully")
+    except Exception as e:
+        print(f"Error loading test dataset: {str(e)}")
+        raise
+    
+    return train_dataset, test_dataset
 
 def get_routes_from_neighborhoods(neighborhoods):
     """Get the routes from the neighborhoods.
@@ -687,3 +711,4 @@ def load_manual_simplicial_complex():
         num_nodes=len(one_cells),
         y=torch.tensor(y),
     )
+

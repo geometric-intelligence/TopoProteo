@@ -40,7 +40,7 @@ class TBModel(LightningModule):
         feature_encoder: torch.nn.Module | None = None,
         evaluator: Any = None,
         optimizer: Any = None,
-        cfg_container: Any = None,
+        cfg_yaml: Any = None,
         **kwargs,
     ) -> None:
         super().__init__()
@@ -50,9 +50,9 @@ class TBModel(LightningModule):
         self.save_hyperparameters(
             logger=False, ignore=["backbone", "readout", "feature_encoder"]
         )
-        if cfg_container is not None:
+        if cfg_yaml is not None:
             self.save_hyperparameters(
-                {"cfg": cfg_container},
+                {"cfg": cfg_yaml},
                 logger=False,
         )
 

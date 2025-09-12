@@ -278,7 +278,7 @@ def generate_table(df, save_csv=False, csv_filename="proteo_results.csv"):
     best_configs = (
         grouped_sorted
         .groupby(["dataset", "model"], as_index=False)
-        .first()
+        .head(n=5)
     )
     print("▶ best_configs.shape =", best_configs.shape)
 
@@ -305,9 +305,27 @@ def generate_table(df, save_csv=False, csv_filename="proteo_results.csv"):
                         "matched the chosen best_configs.\n"
                         "Check if the config_key logic is correct.")
 
+    group_cols = [
+        "dataset", "model",
+        "dataset.dataloader_params.batch_size",
+        "dataset.loader.parameters.adj_thresh",
+        "model.backbone.hidden_channels",
+        "model.backbone.in_channels",
+        "model.backbone_wrapper.out_channels",
+        "model.feature_encoder.out_channels",
+        "model.readout.fc_dim",
+        "model.readout.fc_input_dim",
+        "model.readout.graph_encoder_dim",
+        "model.readout.in_channels",
+        "model/params/total",
+        "model/params/trainable",
+        "optimizer.parameters.lr",
+        "trainer.devices",
+    ]
+
     summary = (
         df_best_runs
-        .groupby(["dataset", "model"])
+        .groupby(group_cols)
         .agg(
             mean_test_mae = ("test_mae", "mean"),
             std_test_mae  = ("test_mae", "std"),
@@ -317,13 +335,13 @@ def generate_table(df, save_csv=False, csv_filename="proteo_results.csv"):
     print("▶ summary.shape =", summary.shape)
 
     # ── H) MERGE HYPERPARAMS BACK INTO summary FOR FINAL TABLE ────────────────────
-    hyperparam_summary = best_configs[["dataset", "model"] + hyperparam_cols].copy()
-    final_table = summary.merge(
-        hyperparam_summary,
-        on=["dataset", "model"],
-        how="left"
-    )
-
+    # hyperparam_summary = best_configs[["dataset", "model"] + hyperparam_cols].copy()
+    # final_table = summary.merge(
+    #     hyperparam_summary,
+    #     on=["dataset", "model"],
+    #     how="left"
+    # )
+    final_table = summary.copy()
     final_cols = ["dataset", "model"] + hyperparam_cols + ["mean_test_mae", "std_test_mae"]
     final_table = final_table[final_cols]
     print("▶ final_table.shape =", final_table.shape)
@@ -337,22 +355,41 @@ def generate_table(df, save_csv=False, csv_filename="proteo_results.csv"):
     )
 
     # 2) Now pivot:
-    pivot_table = summary.pivot(
-        index="dataset",
-        columns="model",
-        values="mean_std"
+    # Rank the top-k within each (dataset, model) by mean_test_mae (best first)
+    summary["rank"] = (
+        summary.sort_values(["dataset","model","mean_test_mae"])
+            .groupby(["dataset","model"])
+            .cumcount() + 1
     )
 
-    # 3) (Optional) If you want the columns in a specific order, you can reindex:
-    #    e.g. all_datasets = ["CIFAR10", "ImageNet", ...]
-    # pivot_table = pivot_table.reindex(columns=all_datasets)
+    # Pretty string
+    summary["mean_std"] = summary.apply(
+        lambda r: f"{r['mean_test_mae']:.4f} ± {r['std_test_mae']:.4f}", axis=1
+    )
 
-    # 4) Reset the index (so “model” becomes a column instead of the index), if you prefer:
-    pivot_table = pivot_table.reset_index()
+    # Pivot with two columns levels: model and rank
+    pivot_table = summary.pivot(index="dataset", columns=["model","rank"], values="mean_std")
 
-    # 5) Finally, print as Markdown:
-    print("\n=== Test‐mae (mean ± std) with models as rows, datasets as columns ===\n")
-    print(pivot_table.to_markdown(index=False))
+    # Optional: order the ranks as 1..k
+    pivot_table = pivot_table.sort_index(axis=1, level=[0,1])
+
+    print(pivot_table.reset_index().to_markdown(index=False))
+    # pivot_table = summary.pivot(
+    #     index="dataset",
+    #     columns="model",
+    #     values="mean_std"
+    # )
+
+    # # 3) (Optional) If you want the columns in a specific order, you can reindex:
+    # #    e.g. all_datasets = ["CIFAR10", "ImageNet", ...]
+    # # pivot_table = pivot_table.reindex(columns=all_datasets)
+
+    # # 4) Reset the index (so “model” becomes a column instead of the index), if you prefer:
+    # pivot_table = pivot_table.reset_index()
+
+    # # 5) Finally, print as Markdown:
+    # print("\n=== Test‐mae (mean ± std) with models as rows, datasets as columns ===\n")
+    # print(pivot_table.to_markdown(index=False))
     
     return df, grouped, best_configs, summary, pivot_table
 

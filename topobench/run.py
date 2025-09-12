@@ -165,7 +165,7 @@ def run(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
         evaluator=cfg.evaluator,
         optimizer=cfg.optimizer,
         loss=cfg.loss,
-        cfg_container=OmegaConf.to_yaml(cfg),
+        cfg_yaml=OmegaConf.to_yaml(cfg),
     )
 
     log.info("Instantiating callbacks...")
