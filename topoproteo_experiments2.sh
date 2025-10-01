@@ -1,34 +1,3 @@
-# python -m topobench \
-#     dataset=graph/FTD \
-#     model=graph/gatv4 \
-#     dataset.loader.parameters.adj_metric=spearman_correlation \
-#     dataset.loader.parameters.adj_thresh=0.5 \
-#     dataset.loader.parameters.kfold=true \
-#     dataset.loader.parameters.num_folds=5 \
-#     dataset.loader.parameters.fold=0,1,2,3,4 \
-#     dataset.dataloader_params.batch_size=16 \
-#     model.feature_encoder.out_channels=1 \
-#     model.backbone.hidden_channels=\[8,16\] \
-#     model.backbone.heads=\[3,3\] \
-#     model.backbone.dropout=0.25 \
-#     model.backbone.act=tanh \
-#     model.backbone.weight_initializer=xavier \
-#     model.readout.graph_encoder_dim=128 \
-#     model.readout.feature_encoder_dim=64 \
-#     model.readout.fc_dim=\[128,64,32\] \
-#     model.readout.fc_dropout=0.25 \
-#     model.readout.fc_act=tanh \
-#     optimizer.parameters.lr=0.0001 \
-#     dataset.split_params.data_seed=0 \
-#     trainer.max_epochs=1000 \
-#     trainer.min_epochs=100 \
-#     trainer.check_val_every_n_epoch=1 \
-#     trainer.devices=\[0\] \
-#     logger.wandb.project=TopoProteoGatV4 \
-#     callbacks.early_stopping.patience=50 \
-#     tags="[TopoProteoGridSearch]" \
-#     --multirun &
-
 python -m topobench \
     dataset=graph/FTD \
     model=graph/gatv4 \
@@ -444,6 +413,37 @@ python -m topobench \
 #     trainer.min_epochs=100 \
 #     trainer.check_val_every_n_epoch=1 \
 #     trainer.devices=\[7\] \
+#     logger.wandb.project=TopoProteoGatV4 \
+#     callbacks.early_stopping.patience=50 \
+#     tags="[TopoProteoGridSearch]" \
+#     --multirun &
+
+# python -m topobench \
+#     dataset=graph/FTD \
+#     model=graph/gatv4 \
+#     dataset.loader.parameters.adj_metric=spearman_correlation \
+#     dataset.loader.parameters.adj_thresh=0.5 \
+#     dataset.loader.parameters.kfold=true \
+#     dataset.loader.parameters.num_folds=5 \
+#     dataset.loader.parameters.fold=0,1,2,3,4 \
+#     dataset.dataloader_params.batch_size=16 \
+#     model.feature_encoder.out_channels=1 \
+#     model.backbone.hidden_channels=\[8,16\] \
+#     model.backbone.heads=\[3,3\] \
+#     model.backbone.dropout=0.25 \
+#     model.backbone.act=tanh \
+#     model.backbone.weight_initializer=xavier \
+#     model.readout.graph_encoder_dim=128 \
+#     model.readout.feature_encoder_dim=64 \
+#     model.readout.fc_dim=\[128,64,32\] \
+#     model.readout.fc_dropout=0.25 \
+#     model.readout.fc_act=tanh \
+#     optimizer.parameters.lr=0.0001 \
+#     dataset.split_params.data_seed=0 \
+#     trainer.max_epochs=1000 \
+#     trainer.min_epochs=100 \
+#     trainer.check_val_every_n_epoch=1 \
+#     trainer.devices=\[0\] \
 #     logger.wandb.project=TopoProteoGatV4 \
 #     callbacks.early_stopping.patience=50 \
 #     tags="[TopoProteoGridSearch]" \
