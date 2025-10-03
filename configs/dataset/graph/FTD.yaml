@@ -7,7 +7,7 @@ loader:
     data_name: FTD
     # Dataset
     dataset_name: "ftd"  # 352 subjects in train, 89 in val
-    raw_file_name: "ALLFTD_dataset_for_nina_louisa_071124_age_adjusted.csv" #"2pass_filtered_merged_dataset_3_21.csv"
+    raw_file_name: "cleanDat.Soma.CSFneat.5SDWinsor_merged.csv" #"2pass_filtered_merged_dataset_3_21.csv"
     error_protein_file_name: "bimodal_aptamers_for_removal.xlsx"
     # Y Value ("carrier", "nfl", "disease_age", "global_cog_slope", "executive_function", "memory", "clinical_dementia_rating", "cog_z_score", "clinical_dementia_rating_global", "clinical_dementia_rating_binary")
     y_val: "nfl"
@@ -18,14 +18,14 @@ loader:
     # ['M'], ['F'],['M', 'F'] 
     sex: ['M', 'F']
     num_nodes: 7258  # Every graph has same num_nodes. FIXME: This should not be hardcoded, this dictates number of top proteins to take, max for csf is 7258, for plasma is 7247
-    adj_metric: "spearman_correlation"  # "mutual_information", "wgcna", "maximal_information_coefficient", "distance_correlation", "spearman_correlation"
-    adj_thresh: 0.6
+    adj_metric: "wgcna"  # "mutual_information", "wgcna", "maximal_information_coefficient", "distance_correlation", "spearman_correlation"
+    adj_thresh: 0.612
     split: "train"
     # Only used for WGCNA analysis, not dataset creation:
     wgcna_minModuleSize: 10
     wgcna_mergeCutHeight: 0.25
     # k-fold evaluation
-    kfold: false
+    kfold: true
     num_folds: 5
     fold: 0
     use_weights: False
