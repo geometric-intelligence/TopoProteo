@@ -3,6 +3,7 @@ import os
 import os.path as osp
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
+import math
 import numpy as np
 import pandas as pd
 import PyWGCNA
@@ -15,7 +16,7 @@ from torch_geometric.data import Data, InMemoryDataset
 from scipy.ndimage import gaussian_filter1d
 from scipy.signal.windows import triang
 from scipy.ndimage import convolve1d
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, StratifiedKFold
 from typing import Callable, Sequence
 
 from topobench.data.utils.compute_adjacency_utils import (
@@ -319,14 +320,18 @@ class FTDDataset(InMemoryDataset):
             assert self.config.fold < self.config.num_folds, (
                 f"Invalid fold index {self.config.fold}, should be lower than the number of folds {self.config.num_folds}"
             )
-            kf = KFold(
+            num_bins = math.floor(len(train_val_labels) / self.config.num_folds)
+            y_binned = pd.qcut(train_val_labels, q=num_bins, labels=False, duplicates="drop")
+
+            skf = StratifiedKFold(
                 n_splits=self.config.num_folds,
                 shuffle=True,
                 random_state=self.config.random_state,
             )
+
             train_index, val_index = next(
                 split
-                for fold, split in enumerate(kf.split(train_val_features))
+                for fold, split in enumerate(skf.split(train_val_features, y_binned))
                 if fold == self.config.fold
             )
 
