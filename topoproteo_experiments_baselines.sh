@@ -192,9 +192,9 @@ python -m topobench \
     dataset.loader.parameters.num_folds=5 \
     dataset.loader.parameters.fold=0,1,2,3,4 \
     dataset.dataloader_params.batch_size=8,32,64 \
-    model.readout.graph_encoder_dim=\[512,256\],\[256,128\] \
+    model.readout.graph_encoder_dim=\[16,8\],\[32,16\] \
     model.readout.feature_encoder_dim=64\
-    model.readout.fc_dim=\[128,64,32\],\[512,512,256,128\],\[1024,1024,512,256\] \
+    model.readout.fc_dim=\[128,32,32\],\[32,16,16,8\],\[64,32,32,16\] \
     model.readout.fc_dropout=0.1,0.2,0.3 \
     model.readout.fc_act=relu,tanh \
     optimizer.parameters.lr=0.001,0.0001 \
