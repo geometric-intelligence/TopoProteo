@@ -134,6 +134,11 @@ def run(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
     np.random.seed(cfg.seed)
     # Seed for python random
     random.seed(cfg.seed)
+    
+    # Enable deterministic algorithms for reproducibility
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    torch.use_deterministic_algorithms(True, warn_only=True)
 
     # Instantiate and load dataset
     log.info(f"Instantiating loader <{cfg.dataset.loader._target_}>")

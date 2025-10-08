@@ -24,6 +24,7 @@ python -m topobench \
     trainer.min_epochs=100 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[1\] \
+    trainer.deterministic=true \
     logger.wandb.project=ProteoFinalAll \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
@@ -53,6 +54,7 @@ python -m topobench \
     trainer.min_epochs=100 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[1\] \
+    trainer.deterministic=true \
     logger.wandb.project=ProteoFinalAll \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
@@ -78,6 +80,7 @@ python -m topobench \
     trainer.min_epochs=100 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[3\] \
+    trainer.deterministic=true \
     logger.wandb.project=ProteoFinalAll \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
@@ -109,6 +112,7 @@ python -m topobench \
     trainer.min_epochs=100 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[3\] \
+    trainer.deterministic=true \
     logger.wandb.project=ProteoFinalAll \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \

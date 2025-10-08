@@ -94,7 +94,7 @@ def to_legacy_config(cfg):
 
     flat = {
         # Top-level paths & seeds
-        "data_dir":        cfg.paths.data_dir,
+        "data_dir":        p.get("data_dir"),
         "random_state":    p.get("random_state", cfg.get("seed", 0)),
 
         # K-fold controls
