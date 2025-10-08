@@ -7,7 +7,7 @@ python -m topobench \
     dataset.loader.parameters.num_folds=5 \
     dataset.loader.parameters.fold=0,1,2,3,4 \
     dataset.dataloader_params.batch_size=8,32,64 \
-    model.feature_encoder.out_channels=2 \
+    model.feature_encoder.out_channels=8 \
     model.backbone.dropout=0.1,0.3 \
     model.backbone.act=relu,tanh \
     model.backbone.num_layers=2 \
@@ -24,7 +24,7 @@ python -m topobench \
     trainer.min_epochs=100 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[0\] \
-    logger.wandb.project=Proteo_small \
+    logger.wandb.project=Proteo_new_variable \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
@@ -38,7 +38,7 @@ python -m topobench \
     dataset.loader.parameters.num_folds=5 \
     dataset.loader.parameters.fold=0,1,2,3,4 \
     dataset.dataloader_params.batch_size=8,32,64 \
-    model.feature_encoder.out_channels=2 \
+    model.feature_encoder.out_channels=8 \
     model.backbone.dropout=0.1,0.3 \
     model.backbone.act=relu,tanh \
     model.backbone.num_layers=2 \
@@ -55,7 +55,7 @@ python -m topobench \
     trainer.min_epochs=100 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[1\] \
-    logger.wandb.project=Proteo_small \
+    logger.wandb.project=Proteo_new_variable \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
@@ -72,7 +72,7 @@ python -m topobench \
     dataset.loader.parameters.num_folds=5 \
     dataset.loader.parameters.fold=0,1,2,3,4 \
     dataset.dataloader_params.batch_size=8,32,64 \
-    model.feature_encoder.out_channels=2 \
+    model.feature_encoder.out_channels=8 \
     model.backbone.dropout=0.1,0.3 \
     model.backbone.act=relu,tanh \
     model.backbone.num_layers=2 \
@@ -87,7 +87,7 @@ python -m topobench \
     trainer.min_epochs=100 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[2\] \
-    logger.wandb.project=Proteo_small \
+    logger.wandb.project=Proteo_new_variable \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
@@ -101,7 +101,7 @@ python -m topobench \
     dataset.loader.parameters.num_folds=5 \
     dataset.loader.parameters.fold=0,1,2,3,4 \
     dataset.dataloader_params.batch_size=8,32,64 \
-    model.feature_encoder.out_channels=2 \
+    model.feature_encoder.out_channels=8 \
     model.backbone.dropout=0.1,0.3 \
     model.backbone.act=relu,tanh \
     model.backbone.num_layers=2 \
@@ -116,7 +116,7 @@ python -m topobench \
     trainer.min_epochs=100 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[3\] \
-    logger.wandb.project=Proteo_small \
+    logger.wandb.project=Proteo_new_variable \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
@@ -131,18 +131,18 @@ python -m topobench \
     dataset.loader.parameters.num_folds=5 \
     dataset.loader.parameters.fold=0,1,2,3,4 \
     dataset.dataloader_params.batch_size=8,32,64 \
-    model.readout.graph_encoder_dim=\[64,32\],\[32,16\] \
-    model.readout.feature_encoder_dim=8,4 \
+    model.readout.graph_encoder_dim=\[256,64\],\[128,32\],\[64,16\] \
+    model.readout.feature_encoder_dim=16,8,4 \
     model.readout.fc_dim=\[128,32,16\],\[32,16,8\],\[64,32,16\] \
     model.readout.fc_dropout=0.1,0.2,0.3 \
     model.readout.fc_act=relu,tanh \
-    optimizer.parameters.lr=0.001,0.0001 \
+    optimizer.parameters.lr=0.001 \
     dataset.split_params.data_seed=0 \
     trainer.max_epochs=1000 \
     trainer.min_epochs=100 \
     trainer.check_val_every_n_epoch=1 \
     trainer.devices=\[4\] \
-    logger.wandb.project=Proteo_small \
+    logger.wandb.project=Proteo_new_variable \
     callbacks.early_stopping.patience=50 \
     tags="[TopoProteoGridSearch]" \
     --multirun &
