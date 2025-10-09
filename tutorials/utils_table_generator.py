@@ -200,8 +200,37 @@ def generate_table(df, save_csv=False, csv_filename="proteo_results.csv"):
     csv_filename : str, optional
         If provided, save the grouped results to this CSV filename (adding "grouped_").
     """
+    # Filter to only keep runs with adj_thresh = 0.5
+    # adj_thresh_col = "dataset.loader.parameters.adj_thresh"
+    # if adj_thresh_col in df.columns:
+    #     df = df[df[adj_thresh_col] == 0.3].copy()
+    #     print(f"▶ Filtered to adj_thresh=0.5, df.shape = {df.shape}")
+    # else:
+    #     print(f"⚠ Warning: Column '{adj_thresh_col}' not found in datafrasme")
+    
     # Remove checkpoint column, not wanted here
     df = df.drop(columns=['checkpoint'])
+
+    # ── C) ENSURE ALL CELLS ARE HASHABLE FIRST ────────────────────────────────────
+    def ensure_hashable(x):
+        try:
+            hash(x)
+            return x
+        except TypeError:
+            if isinstance(x, np.ndarray):
+                return tuple(x.tolist())
+            elif isinstance(x, list):
+                return tuple(x)
+            elif isinstance(x, dict):
+                return tuple(sorted(x.items()))
+            else:
+                return str(x)
+
+    # Apply to all object columns to make them hashable before nunique()
+    for col in df.columns:
+        if df[col].dtype == object:
+            df[col] = df[col].apply(ensure_hashable)
+
     # Remove columns with only one unique value, except those in exclude_cols
     exclude_cols = ["dataset", "model", "fold", "val_mae", "test_mae"]
     nunique = df.nunique()
@@ -218,27 +247,11 @@ def generate_table(df, save_csv=False, csv_filename="proteo_results.csv"):
         raise RuntimeError("DataFrame `df` is empty. Check that runs actually contained "
                         "`dataset`, `model`, `fold`, `val/accuracy`, `test/accuracy`.")
 
-    # ── D) ENSURE ALL “group key” CELLS ARE HASHABLE ─────────────────────────────
-    def ensure_hashable(x):
-        try:
-            hash(x)
-            return x
-        except TypeError:
-            if isinstance(x, np.ndarray):
-                return tuple(x.tolist())
-            elif isinstance(x, list):
-                return tuple(x)
-            elif isinstance(x, dict):
-                return tuple(sorted(x.items()))
-            else:
-                return str(x)
-
-    # Apply to dataset/model too, in case they’re arrays or lists
+        # Convert tuples to strings for display purposes (hashable conversion done earlier)
     for col in ["dataset", "model"] + hyperparam_cols:
-        if col in df.columns and df[col].dtype == object:
-            df[col] = df[col].apply(ensure_hashable)
-        if df[col].apply(lambda x: isinstance(x, (tuple, list))).any():
-            df[col] = df[col].apply(str)
+        if col in df.columns:
+            if df[col].apply(lambda x: isinstance(x, (tuple, list))).any():
+                df[col] = df[col].apply(str)
 
     # ── E) GROUP BY (dataset, model, hyperparams) ─────────────────────────────────
     group_cols = ["dataset", "model"] + hyperparam_cols
@@ -254,8 +267,8 @@ def generate_table(df, save_csv=False, csv_filename="proteo_results.csv"):
         )
         .reset_index()
     )
-    # Remove grouped rows with n_folds < 5 for models 'mlp' and 'gcn'
-    mask = ~(grouped["n_folds"] < 5)
+    # Remove grouped rows with n_folds < 3 for models 'mlp' and 'gcn'
+    mask = ~(grouped["n_folds"] < 2)
     grouped = grouped[mask].reset_index(drop=True)
     print("▶ After grouping, grouped.shape =", grouped.shape)
 
@@ -278,7 +291,7 @@ def generate_table(df, save_csv=False, csv_filename="proteo_results.csv"):
     best_configs = (
         grouped_sorted
         .groupby(["dataset", "model"], as_index=False)
-        .head(n=5)
+        .head(n=1)
     )
     print("▶ best_configs.shape =", best_configs.shape)
 
@@ -305,27 +318,12 @@ def generate_table(df, save_csv=False, csv_filename="proteo_results.csv"):
                         "matched the chosen best_configs.\n"
                         "Check if the config_key logic is correct.")
 
-    group_cols = [
-        "dataset", "model",
-        "dataset.dataloader_params.batch_size",
-        "dataset.loader.parameters.adj_thresh",
-        "model.backbone.hidden_channels",
-        "model.backbone.in_channels",
-        "model.backbone_wrapper.out_channels",
-        "model.feature_encoder.out_channels",
-        "model.readout.fc_dim",
-        "model.readout.fc_input_dim",
-        "model.readout.graph_encoder_dim",
-        "model.readout.in_channels",
-        "model/params/total",
-        "model/params/trainable",
-        "optimizer.parameters.lr",
-        "trainer.devices",
-    ]
+    # Group only by dataset and model to get one result per combination
+    summary_group_cols = ["dataset", "model"]
 
     summary = (
         df_best_runs
-        .groupby(group_cols)
+        .groupby(summary_group_cols)
         .agg(
             mean_test_mae = ("test_mae", "mean"),
             std_test_mae  = ("test_mae", "std"),
@@ -335,13 +333,13 @@ def generate_table(df, save_csv=False, csv_filename="proteo_results.csv"):
     print("▶ summary.shape =", summary.shape)
 
     # ── H) MERGE HYPERPARAMS BACK INTO summary FOR FINAL TABLE ────────────────────
-    # hyperparam_summary = best_configs[["dataset", "model"] + hyperparam_cols].copy()
-    # final_table = summary.merge(
-    #     hyperparam_summary,
-    #     on=["dataset", "model"],
-    #     how="left"
-    # )
-    final_table = summary.copy()
+    # Merge hyperparameters from best_configs into the summary
+    hyperparam_summary = best_configs[["dataset", "model"] + hyperparam_cols].copy()
+    final_table = summary.merge(
+        hyperparam_summary,
+        on=["dataset", "model"],
+        how="left"
+    )
     final_cols = ["dataset", "model"] + hyperparam_cols + ["mean_test_mae", "std_test_mae"]
     final_table = final_table[final_cols]
     print("▶ final_table.shape =", final_table.shape)
