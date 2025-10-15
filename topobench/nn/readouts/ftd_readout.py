@@ -23,6 +23,7 @@ class FTDReadOut(AbstractZeroCellReadOut):
         fc_dropout=None,
         fc_act=None,
         out_channels=None,
+        use_features=True,
         use_feature_encoder=True,
         feature_encoder_dim=None, #64
         graph_encoder_dim=None, #256
@@ -30,17 +31,19 @@ class FTDReadOut(AbstractZeroCellReadOut):
     ):
         super().__init__(out_channels=out_channels, hidden_dim=hidden_dim, **kwargs)
         self.hidden_dim = hidden_dim
-        self.feature_encoder_dim = feature_encoder_dim
+        self.feature_encoder_dim = feature_encoder_dim if use_feature_encoder else 1
         self.graph_encoder_dim = [graph_encoder_dim] if isinstance(graph_encoder_dim, int) else list(graph_encoder_dim)
         self.which_layer = which_layer
         self.fc_dim = fc_dim
         self.fc_dropout = fc_dropout
         self.fc_act = fc_act
-        self.fc_input_dim = self.graph_encoder_dim[-1] + feature_encoder_dim * 3
         self.out_channels = out_channels  # 1
+        self.use_features = use_features
         self.use_feature_encoder = use_feature_encoder
+        self.fc_input_dim = self.graph_encoder_dim[-1] + self.feature_encoder_dim * 3 if self.use_features else self.graph_encoder_dim[-1]
         self.readout_layers = self.build_readout_layers()
-        self.feature_encoder = self.build_feature_encoder()
+        if self.use_features:
+            self.feature_encoder = self.build_feature_encoder()
         self.graph_encoder = self.build_graph_encoder()
 
     def build_graph_encoder(self):
@@ -84,8 +87,11 @@ class FTDReadOut(AbstractZeroCellReadOut):
     def forward(self, model_out, batch):
         flattened_features = model_out["x_0"].view(batch.batch_size, -1)
         encoded_graph = self.graph_encoder(flattened_features)
-        demographic_features = self.encode_features(batch)
-        total_features = torch.cat([encoded_graph, demographic_features], dim=1)
+        if self.use_features:
+            demographic_features = self.encode_features(batch)
+            total_features = torch.cat([encoded_graph, demographic_features], dim=1)
+        else:
+            total_features = encoded_graph
         model_out["x_0"] = self.readout_layers(total_features)
         return model_out
 
