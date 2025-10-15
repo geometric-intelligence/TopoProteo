@@ -1,4 +1,4 @@
-"""Loaders for Citation Hypergraph dataset."""
+"""Loaders for Mantra dataset as simplicial."""
 
 from omegaconf import DictConfig
 

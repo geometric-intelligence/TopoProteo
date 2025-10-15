@@ -15,12 +15,12 @@ class TBModel(LightningModule):
     ----------
     backbone : torch.nn.Module
         The backbone model to train.
-    backbone_wrapper : torch.nn.Module
-        The backbone wrapper class.
     readout : torch.nn.Module
         The readout class.
     loss : torch.nn.Module
         The loss class.
+    backbone_wrapper : torch.nn.Module, optional
+        The backbone wrapper class (default: None).
     feature_encoder : torch.nn.Module, optional
         The feature encoder (default: None).
     evaluator : Any, optional
@@ -34,9 +34,9 @@ class TBModel(LightningModule):
     def __init__(
         self,
         backbone: torch.nn.Module,
-        backbone_wrapper: torch.nn.Module | None,
         readout: torch.nn.Module,
         loss: torch.nn.Module,
+        backbone_wrapper: torch.nn.Module | None = None,
         feature_encoder: torch.nn.Module | None = None,
         evaluator: Any = None,
         optimizer: Any = None,
@@ -56,7 +56,11 @@ class TBModel(LightningModule):
                 logger=False,
         )
 
-        self.feature_encoder = feature_encoder
+        self.feature_encoder = (
+            feature_encoder
+            if feature_encoder is not None
+            else torch.nn.Identity()
+        )
         if backbone_wrapper is None:
             self.backbone = backbone
         else:
@@ -228,17 +232,17 @@ class TBModel(LightningModule):
         dict
             Dictionary containing the updated model output.
         """
-        # Get the correct mask
-        if self.state_str == "Training":
-            mask = batch.train_mask
-        elif self.state_str == "Validation":
-            mask = batch.val_mask
-        elif self.state_str == "Test":
-            mask = batch.test_mask
-        else:
-            raise ValueError("Invalid state_str")
-
         if self.task_level == "node":
+            # Get the correct mask
+            if self.state_str == "Training":
+                mask = batch.train_mask
+            elif self.state_str == "Validation":
+                mask = batch.val_mask
+            elif self.state_str == "Test":
+                mask = batch.test_mask
+            else:
+                raise ValueError("Invalid state_str")
+
             # Keep only train data points
             for key, val in model_out.items():
                 if key in ["logits", "labels"]:

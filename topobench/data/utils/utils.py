@@ -7,8 +7,10 @@ import numpy as np
 import omegaconf
 import torch
 import torch_geometric
+import torch_geometric.utils
 from topomodelx.utils.sparse import from_sparse
 import os
+from toponetx.classes import SimplicialComplex
 
 
 def construct_datasets(config):
@@ -152,7 +154,11 @@ def get_combinatorial_complex_connectivity(
     for rank_idx in range(max_rank + 1):
         for connectivity_info in [
             "incidence",
+            "down_laplacian",
+            "up_laplacian",
             "adjacency",
+            "coadjacency",
+            "hodge_laplacian",
         ]:
             try:
                 if connectivity_info == "adjacency":
@@ -492,6 +498,65 @@ def load_manual_graph():
     )
 
 
+def load_manual_graph_second_structure():
+    """Create a manual graph for testing purposes with updated edges and node features.
+
+    Returns
+    -------
+    torch_geometric.data.Data
+        A simple graph data object.
+    """
+    # Define the vertices (12 vertices, based on the highest index in edges)
+    vertices = [i for i in range(12)]
+    y = [0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0]
+
+    # Updated edges
+    edges = [
+        (0, 1),
+        (1, 2),
+        (2, 3),
+        (3, 0),
+        (3, 4),
+        (3, 6),
+        (3, 9),
+        (4, 5),
+        (4, 6),
+        (4, 7),
+        (5, 0),
+        (5, 7),
+        (5, 10),
+        (5, 11),
+        (6, 9),
+        (7, 8),
+        (8, 6),
+        (10, 11),
+    ]
+
+    # Create a graph
+    G = nx.Graph()
+
+    # Add vertices and edges
+    G.add_nodes_from(vertices)
+    G.add_edges_from(edges)
+    G.to_undirected()
+    edge_list = torch.Tensor(list(G.edges())).T.long()
+
+    # Generate updated features (example features for 12 nodes)
+    x = (
+        torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000, 200, 300, 400, 600])
+        .unsqueeze(1)
+        .float()
+    )
+
+    data = torch_geometric.data.Data(
+        x=x,
+        edge_index=edge_list,
+        num_nodes=len(vertices),
+        y=torch.tensor(y),
+    )
+    return data
+
+
 def ensure_serializable(obj):
     """Ensure that the object is serializable.
 
@@ -516,7 +581,10 @@ def ensure_serializable(obj):
     elif isinstance(obj, str | int | float | bool | type(None)):
         return obj
     elif isinstance(obj, omegaconf.dictconfig.DictConfig):
-        return dict(obj)
+        from omegaconf import OmegaConf
+
+        obj = OmegaConf.to_container(obj, resolve=False)
+        return obj
     else:
         return None
 
@@ -712,3 +780,107 @@ def load_manual_simplicial_complex():
         y=torch.tensor(y),
     )
 
+
+def data2simplicial(data):
+    """
+    Convert a data dictionary into a SimplicialComplex object.
+
+    Parameters
+    ----------
+    data : dict
+        A dictionary containing at least 'incidence_0', 'adjacency_0', 'incidence_1',
+        'incidence_2', and optionally 'incidence_3' tensors.
+
+    Returns
+    -------
+    SimplicialComplex
+        A SimplicialComplex object constructed from nodes, edges, triangles, and tetrahedrons.
+    """
+    sc = SimplicialComplex()
+
+    # Nodes as single-element lists
+    nodes = [[i] for i in range(data["incidence_0"].shape[1])]
+
+    # Convert edges to a list of pairs
+    edges = torch_geometric.utils.remove_self_loops(
+        data["adjacency_0"].indices()
+    )[0].T.tolist()
+
+    # Detect triangles if incidence_1 and incidence_2 exist
+    triangles = (
+        find_triangles(data["incidence_1"], data["incidence_2"])
+        if "incidence_1" in data and "incidence_2" in data
+        else []
+    )
+
+    # Detect tetrahedrons if incidence_3 exists
+    tetrahedrons = (
+        find_tetrahedrons(
+            data["incidence_1"], data["incidence_2"], data["incidence_3"]
+        )
+        if "incidence_3" in data
+        else []
+    )
+
+    # Add simplices to the complex
+    sc.add_simplices_from(nodes)
+    sc.add_simplices_from(edges)
+    sc.add_simplices_from(triangles)
+    sc.add_simplices_from(tetrahedrons)
+
+    return sc
+
+
+def find_triangles(incidence_1, incidence_2):
+    """
+    Identify triangles in the simplicial complex based on incidence matrices.
+
+    Parameters
+    ----------
+    incidence_1 : torch.Tensor
+        Incidence matrix of edges.
+    incidence_2 : torch.Tensor
+        Incidence matrix of triangles.
+
+    Returns
+    -------
+    list of list
+        List of triangles, where each triangle is a list of three node indices.
+    """
+    triangles = (incidence_1 @ incidence_2).indices()
+    unique_triangles = torch.unique(triangles[1])
+    triangle_list = [
+        [j.item() for j in triangles[0][torch.where(triangles[1] == i)[0]]]
+        for i in unique_triangles
+    ]
+    return triangle_list
+
+
+def find_tetrahedrons(incidence_1, incidence_2, incidence_3):
+    """
+    Identify tetrahedrons in the simplicial complex.
+
+    Parameters
+    ----------
+    incidence_1 : torch.Tensor
+        Incidence matrix of edges.
+    incidence_2 : torch.Tensor
+        Incidence matrix of triangles.
+    incidence_3 : torch.Tensor
+        Incidence matrix of tetrahedrons.
+
+    Returns
+    -------
+    list of list
+        List of tetrahedrons, where each is represented as a list of four node indices.
+    """
+    tetrahedrons = (incidence_1 @ incidence_2 @ incidence_3).indices()
+    unique_tetrahedrons = torch.unique(tetrahedrons[1])
+    tetrahedron_list = [
+        [
+            j.item()
+            for j in tetrahedrons[0][torch.where(tetrahedrons[1] == i)[0]]
+        ]
+        for i in unique_tetrahedrons
+    ]
+    return tetrahedron_list

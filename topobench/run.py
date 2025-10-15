@@ -25,14 +25,17 @@ from topobench.utils import (
 )
 from topobench.utils.config_resolvers import (
     get_default_metrics,
+    get_default_trainer,
     get_default_transform,
     get_flattened_feature_matrix_dim,
     get_gatv4_output_dim,
     get_monitor_metric,
     get_monitor_mode,
+    get_non_relational_out_channels,
     get_required_lifting,
     infer_in_channels,
     infer_num_cell_dimensions,
+    infer_topotune_num_cell_dimensions,
 )
 
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
@@ -58,6 +61,9 @@ OmegaConf.register_new_resolver(
     "get_default_metrics", get_default_metrics, replace=True
 )
 OmegaConf.register_new_resolver(
+    "get_default_trainer", get_default_trainer, replace=True
+)
+OmegaConf.register_new_resolver(
     "get_default_transform", get_default_transform, replace=True
 )
 OmegaConf.register_new_resolver(
@@ -76,10 +82,20 @@ OmegaConf.register_new_resolver(
     "get_monitor_mode", get_monitor_mode, replace=True
 )
 OmegaConf.register_new_resolver(
+    "get_non_relational_out_channels",
+    get_non_relational_out_channels,
+    replace=True,
+)
+OmegaConf.register_new_resolver(
     "infer_in_channels", infer_in_channels, replace=True
 )
 OmegaConf.register_new_resolver(
     "infer_num_cell_dimensions", infer_num_cell_dimensions, replace=True
+)
+OmegaConf.register_new_resolver(
+    "infer_topotune_num_cell_dimensions",
+    infer_topotune_num_cell_dimensions,
+    replace=True,
 )
 OmegaConf.register_new_resolver(
     "parameter_multiplication", lambda x, y: int(int(x) * int(y)), replace=True
@@ -210,10 +226,18 @@ def run(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
             model=model, datamodule=datamodule, ckpt_path=cfg.get("ckpt_path")
         )
         # Log the best model checkpoint path into wandb
-        for logger in logger:
-            if isinstance(logger, L.pytorch.loggers.wandb.WandbLogger) and hasattr(logger, "experiment"):
-                logger.experiment.log({"checkpoint": trainer.checkpoint_callback.best_model_path})
-                logger.experiment.log({"best_monitored_score": trainer.checkpoint_callback.best_model_score})
+        for logger_elem in logger:
+            if isinstance(
+                logger_elem, L.pytorch.loggers.wandb.WandbLogger
+            ) and hasattr(logger_elem, "experiment"):
+                logger_elem.experiment.log(
+                    {"checkpoint": trainer.checkpoint_callback.best_model_path}
+                )
+                logger_elem.experiment.log(
+                    {
+                        "best_monitored_score": trainer.checkpoint_callback.best_model_score
+                    }
+                )
 
     train_metrics = trainer.callback_metrics
 

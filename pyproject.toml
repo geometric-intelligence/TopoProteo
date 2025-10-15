@@ -41,12 +41,14 @@ dependencies=[
     "hydra-colorlog==1.2.0",
     "hydra-optuna-sweeper==1.2.0",
     "wandb",
+    "tensorboard",
     "einops==0.7.0",
     "tabulate",
     "ipykernel",
     "notebook",
     "jupyterlab",
     "rich",
+    "ogb",
     "rootutils",
     "openpyxl",
     "pywgcna",
@@ -64,7 +66,8 @@ doc = [
     "numpydoc",
     "sphinx",
     "sphinx_gallery",
-    "pydata-sphinx-theme"
+    "pydata-sphinx-theme",
+    "myst_parser"
 ]
 lint = [
     "pre-commit",
@@ -117,7 +120,6 @@ select = [
     "SIM", # code simplifications
     "NPY", # numpy rules
     "PERF", # performance rules
-    "RUF", # miscellaneous rules
 ]
 fixable = ["ALL"]
 ignore = [
