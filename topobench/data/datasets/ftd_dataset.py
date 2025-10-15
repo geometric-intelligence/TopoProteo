@@ -292,7 +292,8 @@ class FTDDataset(InMemoryDataset):
         mutation_labels = np.array(
             filtered_mutation_col.astype("category").cat.codes
         )
-
+        num_bins = 10
+        init_bins = pd.qcut(labels, q=num_bins, labels=False, duplicates="drop")
         # Split data into train and val/test sets
         (
             train_val_features,
@@ -313,6 +314,7 @@ class FTDDataset(InMemoryDataset):
             filtered_age_col.values,
             test_size=0.2,
             random_state=self.config.random_state,
+            stratify=init_bins,
         )
 
         if self.kfold:
@@ -493,6 +495,7 @@ class FTDDataset(InMemoryDataset):
         filtered_data = filtered_data[
             y_val_mask
         ]  # Remove rows where y_val is NaN
+        print("final dims of filtered data:", filtered_data.shape)
         # Extract the top proteins (features) for building datasets
 
         # Filter protein columns based on modality
@@ -701,9 +704,10 @@ def remove_erroneous_columns(config, csv_data, raw_dir):
     # Extract column names under "CSF"
     csf_columns = error_proteins_df['CSF'].dropna().tolist()
     columns_to_remove = list(set(csf_columns))
-    columns_to_remove.extend(
-        ['NEFL|P07196|CSF', 'NEFH|P12036|CSF', 'NEFL|P07196|PLASMA', 'NEFH|P12036|PLASMA']
-    )
+    if config.y_val == "nfl":
+        columns_to_remove.extend(
+            ['NEFL|P07196|CSF', 'NEFH|P12036|CSF', 'NEFL|P07196|PLASMA', 'NEFH|P12036|PLASMA']
+        )
     # Remove the columns
     csv_data = csv_data.drop(columns=columns_to_remove, errors='ignore')
     return csv_data
