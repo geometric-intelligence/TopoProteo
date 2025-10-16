@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
 from torch_geometric.nn.models import MLP
-from topobench.nn.readouts import AbstractZeroCellReadOut
+from topobench.nn.readouts.base import AbstractZeroCellReadOut
 from torch_geometric.utils import scatter
 
 

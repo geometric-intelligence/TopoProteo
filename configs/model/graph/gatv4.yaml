@@ -13,7 +13,7 @@ feature_encoder:
 backbone:
   _target_: topobench.nn.backbones.${model.model_name}
   in_channels: ${model.feature_encoder.out_channels}
-  hidden_channels: [64, 128]
+  hidden_channels: [16, 32]
   out_channels: 1
   heads: [3, 3]
   dropout: 0.25
@@ -43,14 +43,15 @@ readout:
 
   in_channels: ${model.backbone_wrapper.out_channels}
   num_nodes: ${dataset.loader.parameters.num_nodes}
+  use_features: false
   use_feature_encoder: true 
   which_layer: ['sex', 'mutation', 'age']
   fc_dim: [128, 64, 32]
   fc_dropout: 0.4
   fc_act: relu
   fc_input_dim: ${model.backbone_wrapper.out_channels}
-  graph_encoder_dim: 256
-  feature_encoder_dim: 64
+  graph_encoder_dim: 64
+  feature_encoder_dim: 16
   # dropout: 0  # dropout of the gconvs
   # act: relu  # act of the gconvs
   # fc_dim: [64, 128, 128, 32]

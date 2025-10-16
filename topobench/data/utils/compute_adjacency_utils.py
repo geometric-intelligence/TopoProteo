@@ -1,4 +1,4 @@
-import rpy2.robjects as ro
+# import rpy2.robjects as ro
 from rpy2.robjects import pandas2ri
 from rpy2.robjects import r as R
 from rpy2.robjects.packages import importr
@@ -10,11 +10,11 @@ import numpy as np
 import torch
 
 from joblib import Parallel, delayed
-from npeet import entropy_estimators as ee
+# from npeet import entropy_estimators as ee
 from torchmetrics.functional import signal_noise_ratio
 from sklearn.metrics import mutual_info_score
 from sklearn.feature_selection import mutual_info_regression
-import dcor
+# import dcor
 from scipy.spatial.distance import pdist, squareform
 from sklearn.metrics import pairwise_distances
 from scipy.stats import spearmanr

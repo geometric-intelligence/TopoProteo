@@ -54,7 +54,7 @@ class PreProcessor(torch_geometric.data.InMemoryDataset):
             self.transform = (
                 dataset.transform if hasattr(dataset, "transform") else None
             )
-            self.data, self.slices = dataset._data, dataset.slices
+            self.load(data_dir + "/data.pt")
             self.data_list = [data for data in dataset]
 
         # Some datasets have fixed splits, and those are stored as split_idx during loading
