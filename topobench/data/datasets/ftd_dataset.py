@@ -167,25 +167,25 @@ class FTDDataset(InMemoryDataset):
         self.mutation_str = f"mutation_{','.join(config.mutation)}"
         self.modality_str = f"{config.modality}"
         self.sex_str = f"sex_{','.join(config.sex)}"
-        self.hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_{self.config.num_folds}fold_{self.config.fold}_histogram.jpg"
-        self.orig_hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_{self.config.num_folds}fold_{self.config.fold}_orig_histogram.jpg"
+        self.hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}_histogram.jpg"
+        self.orig_hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}_orig_histogram.jpg"
     
         super(FTDDataset, self).__init__(
             root, transform=None, pre_transform=None
         )
         self.adj_path = os.path.join(
             self.processed_dir,
-            f"adjacency_num_nodes_{config.num_nodes}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}.csv",
+            f"adjacency_num_nodes_{config.num_nodes}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_two_pass_{config.two_pass}.csv",
         )
         self.feature_dim = 1  # protein concentration is a scalar, ie, dim 1
         self.label_dim = LABEL_DIM_MAP[self.config.y_val]
             
         if self.kfold:
-            config_tag = f"{self.experiment_id}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}"
-            adj_config_tag = f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}"
+            config_tag = f"{self.experiment_id}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}"
+            adj_config_tag = f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}"
         else:
-            config_tag = f"{self.experiment_id}_random_state_{self.config.random_state}"
-            adj_config_tag = f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}"
+            config_tag = f"{self.experiment_id}_random_state_{self.config.random_state}_two_pass_{config.two_pass}"
+            adj_config_tag = f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}_two_pass_{config.two_pass}"
         self.config_tag = config_tag  
         path = os.path.join(
             self.processed_dir,
@@ -227,13 +227,13 @@ class FTDDataset(InMemoryDataset):
         self.experiment_id = f"{self.name}_{self.y_val_str}_{self.adj_metric}_{self.adj_str}_{self.num_nodes_str}_{self.mutation_str}_{self.modality_str}_{self.sex_str}"
         if self.kfold:
             files = [
-                f"{self.experiment_id}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_train.pt",
-                f"{self.experiment_id}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_val.pt",
+                f"{self.experiment_id}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{self.config.two_pass}_train.pt",
+                f"{self.experiment_id}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{self.config.two_pass}_val.pt",
             ]
         else:
             files = [
-                f"{self.experiment_id}_random_state_{self.config.random_state}_train.pt",
-                f"{self.experiment_id}_random_state_{self.config.random_state}_val.pt",
+                f"{self.experiment_id}_random_state_{self.config.random_state}_two_pass_{self.config.two_pass}_train.pt",
+                f"{self.experiment_id}_random_state_{self.config.random_state}_two_pass_{self.config.two_pass}_val.pt",
             ]
         print("Processed file names:", files)
         return files
@@ -255,11 +255,8 @@ class FTDDataset(InMemoryDataset):
         adj_tensor = torch.tensor(adj_matrix)
         # Find the indices where the matrix has non-zero elements
         pairs_indices = torch.nonzero(adj_tensor, as_tuple=False)
-        # Extract the pairs of connected nodes
-        edge_index = torch.tensor(pairs_indices.tolist())
-        edge_index = torch.transpose(
-            edge_index, 0, 1
-        )  # reshape(edge_index, (2, -1))
+        # Extract the pairs of connected nodes - FIXED: directly transpose without conversion
+        edge_index = pairs_indices.t().contiguous()  # Transpose and ensure contiguous memory
         sex = sex.unsqueeze(1)
         mutation = mutation.unsqueeze(1)
         age = age.unsqueeze(1)
@@ -462,7 +459,7 @@ class FTDDataset(InMemoryDataset):
         csv_data = pd.read_csv(csv_path)
 
         # Remove nfl columns
-        csv_data = remove_erroneous_columns(config, csv_data, self.raw_dir)
+        csv_data = remove_erroneous_columns_and_two_pass_error_proteins(config, csv_data, self.raw_dir)
 
         # Get the correct subset of proteins based on the mutation, if they have the correct modality measurements, and sex and then use those to find the top proteins and labels
         condition_sex = csv_data[sex_col].isin(self.config.sex)
@@ -615,12 +612,12 @@ class FTDDataset(InMemoryDataset):
         if self.kfold:
             adj_path = os.path.join(
                 self.processed_dir,
-                f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}.csv",
+                f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}.csv",
             )
         else:
             adj_path = os.path.join(
                 self.processed_dir,
-                f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}.csv",
+                f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}_two_pass_{config.two_pass}.csv",
             )
             
         self.adj_path = adj_path
@@ -697,17 +694,36 @@ class FTDDataset(InMemoryDataset):
         plt.close()
 
 
-def remove_erroneous_columns(config, csv_data, raw_dir):
-    """Remove columns that have bimodal distributions."""
+def remove_erroneous_columns_and_two_pass_error_proteins(config, csv_data, raw_dir):
+    """Remove columns that have bimodal distributions, keeping only two-pass proteins if specified."""
     csv_path = os.path.join(raw_dir, config.error_protein_file_name)
     error_proteins_df = pd.read_excel(csv_path)
     # Extract column names under "CSF"
     csf_columns = error_proteins_df['CSF'].dropna().tolist()
     columns_to_remove = list(set(csf_columns))
+    
+    # Handle two-pass error proteins if config.two_pass is True
+    if config.two_pass:
+        two_pass_csv_path = os.path.join(raw_dir, config.two_pass_error_protein_file_name)
+        two_pass_error_proteins_df = pd.read_csv(two_pass_csv_path)
+        # Get the first column (rows) and append "|CSF" to each
+        two_pass_columns_to_keep = [row + "|CSF" for row in two_pass_error_proteins_df.iloc[:, 0].dropna()]
+        
+        # Remove any two-pass proteins from the original error protein removal list
+        columns_to_remove = [col for col in columns_to_remove if col not in two_pass_columns_to_keep]
+        
+        # Get all protein columns (those ending with |CSF or |PLASMA)
+        all_protein_columns = [col for col in csv_data.columns if col.endswith('|CSF') or col.endswith('|PLASMA')]
+        
+        # Remove all protein columns EXCEPT the two-pass ones
+        columns_to_remove.extend([col for col in all_protein_columns if col not in two_pass_columns_to_keep])
+    
+    # Always remove NFL columns if y_val is "nfl" (regardless of two_pass setting)
     if config.y_val == "nfl":
         columns_to_remove.extend(
             ['NEFL|P07196|CSF', 'NEFH|P12036|CSF', 'NEFL|P07196|PLASMA', 'NEFH|P12036|PLASMA']
         )
+    
     # Remove the columns
     csv_data = csv_data.drop(columns=columns_to_remove, errors='ignore')
     return csv_data

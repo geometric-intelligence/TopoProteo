@@ -145,7 +145,7 @@ def run(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
     # if cfg.get("seed"):
     L.seed_everything(cfg.seed, workers=True)
     # Seed for torch
-    torch.manual_seed(cfg.seed)
+    torch.manual_seed(3) #cfg.seed)
     # Seed for numpy
     np.random.seed(cfg.seed)
     # Seed for python random
