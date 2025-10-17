@@ -28,6 +28,7 @@ class RWSE(BaseTransform):
     def __init__(self, max_pe_dim: int, concat_to_x: bool = True, **kwargs):
         self.max_pe_dim = max_pe_dim
         self.concat_to_x = concat_to_x
+        self.already_computed = False
 
     def forward(self, data: Data) -> Data:
         """Compute the RWSE for the input graph.
@@ -42,7 +43,7 @@ class RWSE(BaseTransform):
         Data
             Graph data object with RWSE added.
         """
-        pe = self._compute_rwse(data.edge_index, data.num_nodes)
+        pe = self.rwse if self.already_computed else self._compute_rwse(data.edge_index, data.num_nodes)
 
         if self.concat_to_x:
             if data.x is None:
@@ -93,5 +94,8 @@ class RWSE(BaseTransform):
         for k in range(1, self.max_pe_dim + 1):
             P_power = P_power @ P
             rwse[:, k - 1] = P_power.diag()  # return probs
+
+        self.already_computed = True
+        self.rwse = rwse
 
         return rwse

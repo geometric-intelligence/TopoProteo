@@ -6,7 +6,7 @@ defaults:
   - _self_
   - dataset: graph/FTD
   - model: graph/gat
-  - transforms: no_transform #${get_default_transform:${dataset},${model}} #no_transform
+  - transforms: ${get_default_transform:${dataset},${model}} #no_transform
   - optimizer: default
   - loss: default
   - evaluator: default
