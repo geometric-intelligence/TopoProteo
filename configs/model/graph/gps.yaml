@@ -17,7 +17,7 @@ backbone:
   num_layers: 2 # SWEEP: [2,4] (3 if we have a lot of time)
   dropout: 0.2 # SWEEP: [0.0, 0.25, 0.5]
   heads: 4 # SWEEP: [4,8]
-  attn_type: multihead # SWEEP: [multihead, performer]
+  attn_type: performer # SWEEP: [multihead, performer] - using performer for large graphs to avoid OOM
   local_conv_type: gin # no sweep. 
 
 backbone_wrapper:
@@ -36,7 +36,6 @@ readout:
   out_channels: ${dataset.parameters.num_classes}
   task_level: ${dataset.parameters.task_level}
   pooling_type: sum
-
   in_channels: ${model.backbone_wrapper.out_channels}
   num_nodes: ${oc.select:dataset.loader.parameters.num_nodes,null}
   use_features: false
