@@ -17,13 +17,14 @@ from pathlib import Path
 import torch
 import torch_geometric
 from torch_geometric.explain import Explainer, CaptumExplainer
+import captum.attr as C
 from torch_geometric.loader import DataLoader
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from collections import defaultdict, Counter
+from collections import defaultdict
 import re
 
 # Imports for dimensionality reduction and clustering
@@ -43,6 +44,16 @@ from omegaconf import OmegaConf
 from hydra.utils import instantiate
 
 
+IntegratedGradients = type(  
+    "IntegratedGradients",
+    (C.IntegratedGradients,),
+    {
+        "__init__": lambda self, forward_func, **kw: C.IntegratedGradients.__init__(
+            self, forward_func, multiply_by_inputs=False, **kw
+        )
+    },
+)
+
 @dataclass
 class ExplainerConfig:
     """Configuration for explainer analysis."""
@@ -51,7 +62,7 @@ class ExplainerConfig:
     node_mask_type: str = 'attributes'
     edge_mask_type: Optional[str] = None
     threshold_type: str = 'topk'
-    top_k: int = 100
+    top_k: int = 7258
     mode: str = 'regression'
     task_level: str = 'graph'
     return_type: str = 'raw'
@@ -175,6 +186,8 @@ class ModelLoader:
             "adj_thresh": p.adj_thresh,
             "wgcna_minModuleSize": p.get("wgcna_minModuleSize", 10),
             "wgcna_mergeCutHeight": p.get("wgcna_mergeCutHeight", 0.25),
+            "two_pass": p.get("two_pass", False),
+            "two_pass_error_protein_file_name": p.get("two_pass_error_protein_file_name", None),
         }
         
         if flat["adj_metric"] == "pointcloud":
@@ -242,17 +255,18 @@ class Plotter:
         self.config = config or PlotConfig()
     
     def plot_importance_scores(self, explanations: List, labels: List, 
-                              filename: str, title: str, ylabel: str) -> None:
+                              filename: str, title: str, ylabel: str, algo: Optional[str] = None) -> None:
         """Plot importance scores for multiple samples."""
         plt.figure()
         for i, importance in enumerate(explanations):
             plt.plot(sorted(importance, reverse=True), label=f'Person {i}')
-        
+
+        full_title = f"{title}  •  Algorithm: {algo}" if algo else title
         plt.legend(labels, loc='center left', bbox_to_anchor=(1, 0.5), 
                   fontsize='small', ncol=1)
         plt.xlabel('Protein')
         plt.ylabel(ylabel)
-        plt.title(title)
+        plt.title(full_title)
         plt.tight_layout(rect=[0, 0, 0.85, 1])
         
         plot_filename = os.path.join('explainer_plots', filename)
@@ -323,18 +337,19 @@ class Plotter:
 class ExplainerAnalyzer:
     """Handles explainer analysis and results processing."""
     
-    def __init__(self, model, config: ExplainerConfig, device: str = 'cuda', plotter: Plotter = None):
+    def __init__(self, model, config: ExplainerConfig, device: str = 'cuda', plotter: Plotter = None, baseline_mean_tensor: torch.Tensor = None):
         self.model = model
         self.config = config
         self.device = device
         self.plotter = plotter or Plotter()
+        self.explainer_baselines = baseline_mean_tensor
         self.explainer = self._create_explainer()
     
     def _create_explainer(self) -> Explainer:
         """Create explainer instance."""
         return Explainer(
             model=self.model.to(self.device),
-            algorithm=CaptumExplainer(self.config.algorithm),
+            algorithm=CaptumExplainer(IntegratedGradients), #'IntegratedGradients', multiply_by_inputs = False), #, abs=False), # baselines=self.explainer_baselines),
             explanation_type=self.config.explanation_type,
             model_config=dict(
                 mode=self.config.mode,
@@ -373,10 +388,6 @@ class ExplainerAnalyzer:
         # Create plots
         self._create_importance_plots(results, filename)
         
-        # Add protein count
-        all_important_proteins = [protein for top_proteins in results['all_top_proteins'] for protein in top_proteins]
-        results['protein_count'] = Counter(all_important_proteins)
-        
         return results
     
     def _initialize_tracking_dicts(self, protein_ids: np.ndarray) -> Dict[str, Any]:
@@ -388,7 +399,6 @@ class ExplainerAnalyzer:
             'negative_percent_by_protein': {protein_id: 0 for protein_id in protein_ids},
             'all_raw_importances': [],
             'all_percent_importances': [],
-            'all_top_proteins': [],
             'all_labels': []
         }
     
@@ -411,7 +421,6 @@ class ExplainerAnalyzer:
         # Get top proteins
         sorted_indices = np.argsort(node_importance)[::-1]
         top_5_proteins = [protein_ids[idx] for idx in sorted_indices[:5]]
-        results['all_top_proteins'].append([protein_ids[idx] for idx in sorted_indices])
         
         # Create label
         if isinstance(patient_ids, pd.Series):
@@ -442,7 +451,8 @@ class ExplainerAnalyzer:
             results['all_labels'], 
             f'{filename}_raw.png',
             'Sorted Raw Node Importance with Top 5 Protein IDs', 
-            'Importance'
+            'Importance',
+            algo=self.config.algorithm
         )
         
         self.plotter.plot_importance_scores(
@@ -450,7 +460,8 @@ class ExplainerAnalyzer:
             results['all_labels'], 
             f'{filename}_percent.png',
             'Sorted Node Importance as Percentage of Total with Top 5 Protein IDs', 
-            'Importance (%)'
+            'Importance (%)',
+            algo=self.config.algorithm
         )
 
 class DataExporter:
@@ -459,7 +470,8 @@ class DataExporter:
     @staticmethod
     def export_to_csv(all_importances: List, protein_ids: np.ndarray, 
                      demographics: Tuple, model_name: str, 
-                     importance_type: str = "percent") -> None:
+                     importance_type: str = "percent",
+                     algo: Optional[str] = None) -> None:
         """Export importance data to CSV files."""
         df = pd.DataFrame(all_importances, 
                          index=demographics[3],  # total_did_labels
@@ -470,8 +482,11 @@ class DataExporter:
         df.insert(1, "AGE", demographics[2])   # total_age_labels
         df.insert(2, "Mutation", demographics[1])  # total_mutation_labels
         df.insert(3, "Gene.Dx", demographics[6])   # total_gene_labels
-        
-        filename = f"{importance_type}_importances_{model_name}.csv"
+        algo_tag = ""
+        if algo:
+            safe_algo = re.sub(r"[^A-Za-z0-9._-]+", "_", algo.strip())
+            algo_tag = f"_{safe_algo}"
+        filename = f"{importance_type}_importances_{model_name}{algo_tag}.csv"
         df.to_csv(filename)
         print(f"Exported {filename}")
 
@@ -511,7 +526,10 @@ def run_explainer_train_and_test(checkpoint_path: str) -> Dict[str, Any]:
     
     # Create explainer
     explainer_config = ExplainerConfig(top_k=config.num_nodes)
-    analyzer = ExplainerAnalyzer(model, explainer_config, device, plotter)
+    baseline_mean, features = data_processor.get_baseline_data()
+    baseline_mean_tensor = torch.tensor(baseline_mean, dtype=torch.float32).to(device)
+    baseline_mean_tensor = baseline_mean_tensor.unsqueeze(0).unsqueeze(2)
+    analyzer = ExplainerAnalyzer(model, explainer_config, device, plotter, baseline_mean_tensor)
     
     # Analyze datasets
     model_name = checkpoint_path.split("/")[-1]
@@ -523,9 +541,9 @@ def run_explainer_train_and_test(checkpoint_path: str) -> Dict[str, Any]:
     
     # Export data
     DataExporter.export_to_csv(combined_results['all_raw_importances'], protein_ids, 
-                              demographics, model_name, "raw")
+                              demographics, model_name, "raw", algo=explainer_config.algorithm)
     DataExporter.export_to_csv(combined_results['all_percent_importances'], protein_ids, 
-                              demographics, model_name, "percent")
+                              demographics, model_name, "percent", algo=explainer_config.algorithm)
     
     return {
         'combined_results': combined_results,
@@ -554,15 +572,15 @@ def create_protein_plots(combined_results: Dict[str, Any], protein_ids: np.ndarr
     model_name = checkpoint_path.split("/")[-1]
     plotter = Plotter()
     
-    # Calculate averages across all people
-    avg_percent = _divide_dict_values(combined_results['combined_protein_count'], 
-                                    combined_results['combined_sum_node_importance_percent'])
-    avg_positive = _divide_dict_values(combined_results['combined_protein_count'], 
-                                     combined_results['combined_positive_percent_by_protein'])
-    avg_negative = _divide_dict_values(combined_results['combined_protein_count'], 
-                                      combined_results['combined_negative_percent_by_protein'])
-    avg_raw = _divide_dict_values(combined_results['combined_protein_count'], 
-                                 combined_results['combined_sum_node_importance_raw'])
+    # Get total number of people
+    total_people = len(combined_results['all_raw_importances'])
+    print(f"total_people = {total_people}")
+    
+    # Calculate averages by dividing by total number of people
+    avg_percent = _divide_dict_by_scalar(combined_results['combined_sum_node_importance_percent'], total_people)
+    avg_positive = _divide_dict_by_scalar(combined_results['combined_positive_percent_by_protein'], total_people)
+    avg_negative = _divide_dict_by_scalar(combined_results['combined_negative_percent_by_protein'], total_people)
+    avg_raw = _divide_dict_by_scalar(combined_results['combined_sum_node_importance_raw'], total_people)
     
     # Create plots
     title_suffix = f"for {config.y_val} {config.sex} {config.mutation} {config.modality}"
@@ -597,26 +615,123 @@ def _combine_results(train_results: Dict[str, Any], test_results: Dict[str, Any]
             for k in set(train_results[key]) | set(test_results[key])
         }
     
-    # Combine lists and counters
-    combined['combined_protein_count'] = train_results['protein_count'] + test_results['protein_count']
-    print(combined['combined_protein_count'])
+    # Combine lists
     combined['all_raw_importances'] = train_results['all_raw_importances'] + test_results['all_raw_importances']
     combined['all_percent_importances'] = train_results['all_percent_importances'] + test_results['all_percent_importances']
-    combined['all_top_proteins'] = train_results['all_top_proteins'] + test_results['all_top_proteins']
     
     return combined
 
 
-def _divide_dict_values(dict1: Dict, dict2: Dict) -> Dict:
-    """Divide values of dict2 by dict1 for matching keys."""
+def _divide_dict_by_scalar(dictionary: Dict, scalar: Union[int, float]) -> Dict:
+    """Divide all values in a dictionary by a scalar."""
     result = {}
-    for key in dict1:
-        if key in dict2 and isinstance(dict1[key], (int, float)) and isinstance(dict2[key], (int, float)):
-            if dict1[key] != 0:
-                result[key] = dict2[key] / dict1[key]
-            else:
-                result[key] = None
+    for key, value in dictionary.items():
+        if isinstance(value, (int, float, np.integer, np.floating)) and scalar != 0:
+            result[key] = float(value) / scalar
         else:
             result[key] = None
     return result
+
+
+def create_heatmap_from_csv(csv_file_path: str, output_filename: str = None, 
+                           figsize: Tuple[int, int] = (20, 12), 
+                           cmap: str = 'RdBu_r', top_n: int = 100) -> None:
+    """
+    Create a heatmap from a saved percent_importances CSV file showing top N most 
+    positively important proteins on average per person.
+    
+    Parameters
+    ----------
+    csv_file_path : str
+        Path to the CSV file containing percent importances
+    output_filename : str, optional
+        Filename to save the heatmap. If None, displays the plot
+    figsize : Tuple[int, int], optional
+        Figure size for the heatmap (default: (20, 12))
+    cmap : str, optional
+        Colormap for the heatmap (default: 'RdBu_r')
+    top_n : int, optional
+        Number of top proteins to show (default: 100)
+    """
+    # Read the CSV file
+    df = pd.read_csv(csv_file_path, index_col=0)
+    
+    # Sort by Mutation column
+    df_sorted = df.sort_values('Mutation')
+    
+    # Get columns that end with "|CSF"
+    csf_columns = [col for col in df_sorted.columns if col.endswith('|CSF')]
+    
+    if not csf_columns:
+        print("No columns ending with '|CSF' found in the CSV file.")
+        return
+    
+    # Extract the CSF columns data
+    csf_data = df_sorted[csf_columns]
+    
+    # Calculate average importance per protein across all samples
+    protein_averages = csf_data.mean()
+    
+    # Get top N most positively important proteins (highest average values)
+    top_proteins = protein_averages.nlargest(top_n).index.tolist()
+    
+    # Filter data to only include top proteins
+    top_csf_data = csf_data[top_proteins]
+    
+    # Create the heatmap
+    plt.figure(figsize=figsize, dpi=300)
+    
+    # Create heatmap with seaborn
+    sns.heatmap(top_csf_data.T,  # Transpose so proteins are on y-axis, samples on x-axis
+                cmap=cmap,
+                center=0,  # Center the colormap at 0
+                cbar_kws={'label': 'Importance Score'},
+                xticklabels=False,  # Hide x-axis labels for readability
+                yticklabels=True)
+    
+    # Customize the plot
+    plt.title(f'Top {top_n} Most Positively Important CSF Proteins\nSorted by Mutation\n({len(top_proteins)} proteins, {len(df_sorted)} samples)', 
+              fontsize=16, pad=20)
+    plt.xlabel('Samples (sorted by Mutation)', fontsize=14)
+    plt.ylabel('CSF Proteins (ranked by average importance)', fontsize=14)
+    
+    # Rotate y-axis labels for better readability
+    plt.yticks(rotation=0, fontsize=8)
+    
+    # Add mutation labels as text annotations on x-axis
+    mutation_counts = df_sorted['Mutation'].value_counts().sort_index()
+    mutation_positions = []
+    current_pos = 0
+    
+    for mutation, count in mutation_counts.items():
+        mutation_positions.append(current_pos + count // 2)
+        current_pos += count
+    
+    # Add mutation labels
+    for i, (mutation, pos) in enumerate(zip(mutation_counts.index, mutation_positions)):
+        plt.text(pos, -0.5, mutation, ha='center', va='top', 
+                fontsize=10, fontweight='bold',
+                bbox=dict(boxstyle="round,pad=0.3", facecolor='lightgray', alpha=0.7))
+    
+    plt.tight_layout()
+    
+    # Save or show the plot
+    if output_filename:
+        plt.savefig(output_filename, dpi=300, bbox_inches='tight')
+        print(f"Heatmap saved as {output_filename}")
+    else:
+        plt.show()
+    
+    # Print summary statistics
+    print(f"\nHeatmap Summary:")
+    print(f"- Total samples: {len(df_sorted)}")
+    print(f"- Total CSF proteins available: {len(csf_columns)}")
+    print(f"- Top {top_n} proteins shown: {len(top_proteins)}")
+    print(f"- Mutations: {', '.join(mutation_counts.index)}")
+    print(f"- Mutation distribution: {dict(mutation_counts)}")
+    
+    # Print top 10 proteins by average importance
+    print(f"\nTop 10 proteins by average importance:")
+    for i, (protein, avg_importance) in enumerate(protein_averages.nlargest(10).items(), 1):
+        print(f"{i:2d}. {protein}: {avg_importance:.6f}")
     
