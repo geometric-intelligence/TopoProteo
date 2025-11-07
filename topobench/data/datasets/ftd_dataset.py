@@ -147,7 +147,7 @@ class FTDDataset(InMemoryDataset):
         self.root = root
         self.split = split
         self.kfold = config.kfold
-        assert self.split in ["train", "val"]
+        assert self.split in ["train", "val", "test"]
 
         assert config.sex in SEXES
         assert config.modality in MODALITIES
@@ -167,9 +167,12 @@ class FTDDataset(InMemoryDataset):
         self.mutation_str = f"mutation_{','.join(config.mutation)}"
         self.modality_str = f"{config.modality}"
         self.sex_str = f"sex_{','.join(config.sex)}"
-        self.hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}_histogram.jpg"
-        self.orig_hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}_orig_histogram.jpg"
-    
+        if self.kfold:
+            self.hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}_histogram.jpg"
+            self.orig_hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}_orig_histogram.jpg"
+        else:
+            self.hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_two_pass_{config.two_pass}_histogram.jpg"
+            self.orig_hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_two_pass_{config.two_pass}_orig_histogram.jpg"
         super(FTDDataset, self).__init__(
             root, transform=None, pre_transform=None
         )
@@ -234,6 +237,7 @@ class FTDDataset(InMemoryDataset):
             files = [
                 f"{self.experiment_id}_random_state_{self.config.random_state}_two_pass_{self.config.two_pass}_train.pt",
                 f"{self.experiment_id}_random_state_{self.config.random_state}_two_pass_{self.config.two_pass}_val.pt",
+                f"{self.experiment_id}_random_state_{self.config.random_state}_two_pass_{self.config.two_pass}_test.pt",
             ]
         print("Processed file names:", files)
         return files
@@ -346,44 +350,112 @@ class FTDDataset(InMemoryDataset):
             val_age = train_val_age[val_index]
 
         else:
-            # Just consider train and test/val splits
+            test_set = True
             train_features = train_val_features
-            val_features = test_features
             train_labels = train_val_labels
-            val_labels = test_labels
             train_sex = train_val_sex
-            val_sex = test_sex
             train_mutation = train_val_mutation
-            val_mutation = test_mutation
             train_age = train_val_age
-            val_age = test_age
+
+            num_bins = 10
+            init_bins = pd.qcut(test_labels, q=num_bins, labels=False, duplicates="drop")
+            (
+                val_features,
+                test_features,
+                val_labels,
+                test_labels,
+                val_sex,
+                test_sex,
+                val_mutation,
+                test_mutation,
+                val_age,
+                test_age,
+            ) = train_test_split(
+                test_features,
+                test_labels,
+                test_sex,
+                test_mutation,
+                test_age,
+                test_size=0.5,
+                random_state=self.config.random_state,
+                stratify=init_bins,
+            )
+            # Just consider train and test/val splits
+            # train_features = train_val_features
+            # val_features = test_features
+            # train_labels = train_val_labels
+            # val_labels = test_labels
+            # train_sex = train_val_sex
+            # val_sex = test_sex
+            # train_mutation = train_val_mutation
+            # val_mutation = test_mutation
+            # train_age = train_val_age
+            # val_age = test_age
 
         # Unpack the return values from load_csv_data
-        (
-            train_features,
-            train_labels,
-            val_features,
-            val_labels,
-            train_sex,
-            val_sex,
-            train_mutation,
-            val_mutation,
-            train_age,
-            val_age,
-            adj_matrix,  # This will be a list
-        ) = self.load_csv_data(
-            self.config,
-            train_features,
-            val_features,
-            train_labels,
-            val_labels,
-            train_sex,
-            val_sex,
-            train_mutation,
-            val_mutation,
-            train_age,
-            val_age,
-        )
+        if test_set:
+            (
+                train_features,
+                train_labels,
+                val_features,
+                val_labels,
+                train_sex,
+                val_sex,
+                train_mutation,
+                val_mutation,
+                train_age,
+                val_age,
+                adj_matrix,  # This will be a list
+                test_features,
+                test_labels,
+                test_sex,
+                test_mutation,
+                test_age,
+            ) = self.load_csv_data(
+                self.config,
+                train_features,
+                val_features,
+                train_labels,
+                val_labels,
+                train_sex,
+                val_sex,
+                train_mutation,
+                val_mutation,
+                train_age,
+                val_age,
+                test_set,
+                test_features,
+                test_labels,
+                test_sex,
+                test_mutation,
+                test_age,
+            )
+        else:
+            (
+                train_features,
+                train_labels,
+                val_features,
+                val_labels,
+                train_sex,
+                val_sex,
+                train_mutation,
+                val_mutation,
+                train_age,
+                val_age,
+                adj_matrix,  # This will be a list
+            ) = self.load_csv_data(
+                self.config,
+                train_features,
+                val_features,
+                train_labels,
+                val_labels,
+                train_sex,
+                val_sex,
+                train_mutation,
+                val_mutation,
+                train_age,
+                val_age,
+            )
 
         train_data_list = []
         val_data_list = []
@@ -414,7 +486,38 @@ class FTDDataset(InMemoryDataset):
         val_path = f"{self.processed_paths[1]}"
         self.save(train_data_list, train_path)
         self.save(val_data_list, val_path)
-        
+
+        if test_set:
+            test_data_list = []
+            # Iterate through test data and use the single adjacency matrix
+            for feature, label, sex, mutation, age in zip(
+                test_features, test_labels, test_sex, test_mutation, test_age   
+            ):
+                data = self.create_graph_data(
+                    feature, label, adj_matrix, sex, mutation, age
+                )
+                test_data_list.append(data)
+            test_path = f"{self.processed_paths[2]}"
+            self.save(test_data_list, test_path)
+
+        # # Save the train and val data lists
+        # train_path = f"{self.processed_paths[0]}"
+        # val_path = f"{self.processed_paths[1]}"
+        # self.save(train_data_list, train_path)
+        # self.save(val_data_list, val_path)
+
+        # if test_set:
+        #     test_data_list = []
+        #     # Iterate through test data and use the single adjacency matrix
+        #     for feature, label, sex, mutation, age in zip(
+        #         test_features, test_labels, test_sex, test_mutation, test_age
+        #     ):
+        #         data = self.create_graph_data(
+        #             feature, label, adj_matrix, sex, mutation, age
+        #         )
+        #         test_data_list.append(data)
+        #     test_path = f"{self.processed_paths[2]}"
+        #     self.save(test_data_list, test_path)
 
     # -----------------------------FUNCTIONS TO GET LABELS---------------------------------#
     def load_y_vals(self, filtered_data):
@@ -511,8 +614,8 @@ class FTDDataset(InMemoryDataset):
         filtered_did_col = filtered_data[did_col]
         filtered_gene_col = filtered_data[gene_col]
 
-        features = np.array(top_proteins)
-        labels = np.array(y_vals)
+        features = np.array(top_proteins, dtype=np.float32)
+        labels = np.array(y_vals, dtype=np.float32)
 
         return (
             features,
@@ -538,6 +641,12 @@ class FTDDataset(InMemoryDataset):
         val_mutation,
         train_age,
         val_age,
+        test_set=False,
+        test_features=None,
+        test_labels=None,
+        test_sex=None,
+        test_mutation=None,
+        test_age=None
     ):
         if config.y_val in Y_VALS_TO_NORMALIZE:
             train_labels_norm, train_mean, train_std = log_transform(
@@ -550,30 +659,55 @@ class FTDDataset(InMemoryDataset):
                 self.experiment_id,
                 self.processed_dir,
             )
-            val_labels, val_mean, val_std = log_transform(
+            val_labels_norm, val_mean, val_std = log_transform(
                 train_labels, val_labels
             )
-            # Recombine to plot normalized labels histogram
-            combined_labels = np.concatenate(
-                (train_labels_norm, val_labels), axis=0
-            )
-            hist_path = os.path.join(self.processed_dir, self.hist_path_str)
-            plot_histogram(
-                pd.DataFrame(combined_labels),
-                self.config.y_val,
-                save_to=hist_path,
-            )
+            if test_set:
+                test_labels_norm, test_mean, test_std = log_transform(
+                    train_labels, test_labels
+                )
+                # Plot normalized labels histogram with separate colors for train/val/test
+                hist_path = os.path.join(self.processed_dir, self.hist_path_str)
+                plot_histogram(
+                    [train_labels_norm, val_labels_norm, test_labels_norm],
+                    self.config.y_val,
+                    save_to=hist_path,
+                    data_labels=['train', 'val', 'test']
+                )
+            else:
+                # Plot normalized labels histogram with separate colors for train/val
+                hist_path = os.path.join(self.processed_dir, self.hist_path_str)
+                plot_histogram(
+                    [train_labels_norm, val_labels_norm],
+                    self.config.y_val,
+                    save_to=hist_path,
+                    data_labels=['train', 'val']
+                )
+        else:
+            # If not normalizing, just use the original labels (ensure float32)
+            train_labels_norm = train_labels.astype(np.float32) if isinstance(train_labels, np.ndarray) else train_labels
+            val_labels_norm = val_labels.astype(np.float32) if isinstance(val_labels, np.ndarray) else val_labels
+            if test_set:
+                test_labels_norm = test_labels.astype(np.float32) if isinstance(test_labels, np.ndarray) else test_labels
 
         train_features_for_adj = train_features
         scaler = StandardScaler()
-        train_features = scaler.fit_transform(train_features)
-        val_features = scaler.transform(val_features)
-        train_age = scaler.fit_transform(train_age.reshape(-1, 1))
-        val_age = scaler.transform(val_age.reshape(-1, 1))
-        train_sex = scaler.fit_transform(train_sex.reshape(-1, 1))
-        val_sex = scaler.transform(val_sex.reshape(-1, 1))
-        train_mutation = scaler.fit_transform(train_mutation.reshape(-1, 1))
-        val_mutation = scaler.transform(val_mutation.reshape(-1, 1))
+        train_features = scaler.fit_transform(train_features).astype(np.float32)
+        val_features = scaler.transform(val_features).astype(np.float32)
+        if test_set:
+            test_features = scaler.transform(test_features).astype(np.float32)
+        train_age = scaler.fit_transform(train_age.reshape(-1, 1)).astype(np.float32)
+        val_age = scaler.transform(val_age.reshape(-1, 1)).astype(np.float32)
+        if test_set:
+            test_age = scaler.transform(test_age.reshape(-1, 1)).astype(np.float32)
+        train_sex = scaler.fit_transform(train_sex.reshape(-1, 1)).astype(np.float32)
+        val_sex = scaler.transform(val_sex.reshape(-1, 1)).astype(np.float32)
+        if test_set:
+            test_sex = scaler.transform(test_sex.reshape(-1, 1)).astype(np.float32)
+        train_mutation = scaler.fit_transform(train_mutation.reshape(-1, 1)).astype(np.float32)
+        val_mutation = scaler.transform(val_mutation.reshape(-1, 1)).astype(np.float32)
+        if test_set:
+            test_mutation = scaler.transform(test_mutation.reshape(-1, 1)).astype(np.float32)
 
         train_features = torch.FloatTensor(
             train_features.reshape(-1, train_features.shape[1], 1)
@@ -581,33 +715,57 @@ class FTDDataset(InMemoryDataset):
         val_features = torch.FloatTensor(
             val_features.reshape(-1, val_features.shape[1], 1)
         )
+        if test_set:
+            test_features = torch.FloatTensor(
+                test_features.reshape(-1, test_features.shape[1], 1)
+            )
         train_labels_norm = torch.FloatTensor(train_labels_norm)
-        val_labels = torch.FloatTensor(val_labels)
+        val_labels_norm = torch.FloatTensor(val_labels_norm)
+        if test_set:
+            test_labels_norm = torch.FloatTensor(test_labels_norm)
         train_sex = torch.FloatTensor(train_sex)
         val_sex = torch.FloatTensor(val_sex)
+        if test_set:
+            test_sex = torch.FloatTensor(test_sex)
         train_mutation = torch.FloatTensor(train_mutation)
         val_mutation = torch.FloatTensor(val_mutation)
+        if test_set:
+            test_mutation = torch.FloatTensor(test_mutation)
         train_age = torch.FloatTensor(train_age)
         val_age = torch.FloatTensor(val_age)
+        if test_set:
+            test_age = torch.FloatTensor(test_age)
 
         print(
             "Training features and labels:",
             train_features.shape,
             train_labels_norm.shape,
         )
-        print("Val features and labels:", val_features.shape, val_labels.shape)
         print(
             "Training sex, mutation and age labels shape:",
             train_sex.shape,
             train_mutation.shape,
             train_age.shape,
         )
+        print("Val features and labels:", val_features.shape, val_labels_norm.shape)
         print(
             "Val sex, mutation and age labels shape:",
             val_sex.shape,
             val_mutation.shape,
             val_age.shape,
         )
+        if test_set:
+            print(
+                "Test features and labels:",
+                test_features.shape,
+                test_labels_norm.shape,
+            )
+            print(
+                "Test sex, mutation and age labels shape:",
+                test_sex.shape,
+                test_mutation.shape,
+                test_age.shape,
+            )
         # Calculate adjacency matrix
         if self.kfold:
             adj_path = os.path.join(
@@ -639,19 +797,39 @@ class FTDDataset(InMemoryDataset):
         #         f"adjacency_{config.adj_thresh}_num_nodes_{config.num_nodes}_adjthresh_{config.adj_thresh}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_{config.num_folds}fold_{config.fold}.jpg",
         #     ),
         # )
-        return (
-            train_features,
-            train_labels_norm,
-            val_features,
-            val_labels,
-            train_sex,
-            val_sex,
-            train_mutation,
-            val_mutation,
-            train_age,
-            val_age,
-            adj_matrix,
-        )
+        if test_set:
+            return (
+                train_features,
+                train_labels_norm,
+                val_features,
+                val_labels_norm,
+                train_sex,
+                val_sex,
+                train_mutation,
+                val_mutation,
+                train_age,
+                val_age,
+                adj_matrix,
+                test_features,
+                test_labels_norm,
+                test_sex,
+                test_mutation,
+                test_age,
+            )
+        else:
+            return (
+                train_features,
+                train_labels_norm,
+                val_features,
+                val_labels_norm,
+                train_sex,
+                val_sex,
+                train_mutation,
+                val_mutation,
+                train_age,
+                val_age,
+                adj_matrix,
+            )
 
     def get_adjacency_matrix(self, path, adj_thresh, config, adj_matrix=None):
         """
@@ -785,8 +963,27 @@ def compute_adjacency_matrix(config, dataset, save_to):
 # ----------------------- HELPER FUNCTIONS--------------------------
 
 
-def plot_histogram(data, x_label, save_to):
-    plt.hist(data, bins=30, alpha=0.5)
+def plot_histogram(data, x_label, save_to, data_labels=None):
+    """
+    Plot histogram with support for multiple datasets with different colors.
+    
+    Parameters:
+    - data: Single dataset (DataFrame/array) or list of datasets
+    - x_label: Label for x-axis
+    - save_to: Path to save the plot
+    - data_labels: Optional list of labels for each dataset (e.g., ['train', 'val', 'test'])
+    """
+    if isinstance(data, list):
+        # Multiple datasets - plot with different colors
+        colors = ['blue', 'orange', 'green']
+        for i, (dataset, label) in enumerate(zip(data, data_labels or [''] * len(data))):
+            plt.hist(dataset, bins=30, alpha=0.5, label=label, color=colors[i % len(colors)])
+        if data_labels:
+            plt.legend()
+    else:
+        # Single dataset - original behavior
+        plt.hist(data, bins=30, alpha=0.5)
+    
     plt.xlabel(x_label)
     plt.ylabel("Frequency")
     plt.title(f"Histogram of {x_label}")
@@ -801,6 +998,8 @@ def log_transform(train_data, data, log=False):
     mean = np.mean(train_data)
     std = np.std(train_data)
     standardized_log_data = (data - mean) / std
+    # Ensure float32 dtype to avoid Double/Float mismatch in PyTorch
+    standardized_log_data = standardized_log_data.astype(np.float32)
     return standardized_log_data, mean, std
 
 
