@@ -71,18 +71,18 @@ class ExplainerConfig:
 class PlotConfig:
     """Configuration for plotting parameters."""
     figure_size: Tuple[int, int] = (28, 10)
-    dpi: int = 300
+    dpi: int = 600
     bar_width: float = 0.6
-    top_n: int = 100
+    top_n: int = 25
     font_size: Dict[str, int] = None
     
     def __post_init__(self):
         if self.font_size is None:
             self.font_size = {
-                'title': 24,
-                'label': 18,
-                'tick': 14,
-                'annotation': 6
+                'title': 48,
+                'label': 44,
+                'tick': 32,
+                'annotation': 12
             }
 
 class ModelLoader:
@@ -253,6 +253,35 @@ class Plotter:
     
     def __init__(self, config: PlotConfig = None):
         self.config = config or PlotConfig()
+        # Set font to DejaVu Sans (similar to Arial, readily available on Linux)
+        self._set_font_family()
+    
+    def _set_font_family(self):
+        """Set font family with fallback options.
+        
+        Uses DejaVu Sans as primary font (very similar to Arial and readily available).
+        Falls back to Arial if available, then to system sans-serif.
+        """
+        import matplotlib.font_manager as fm
+        
+        # Check available fonts (case-insensitive check)
+        available_fonts = [f.name.lower() for f in fm.fontManager.ttflist]
+        
+        # Prefer DejaVu Sans (similar to Arial, typically available on Linux)
+        # Then Arial if available, then system default
+        if 'dejavu sans' in available_fonts:
+            font_family = 'DejaVu Sans'
+            font_list = ['DejaVu Sans', 'Arial', 'sans-serif']
+        elif 'arial' in available_fonts:
+            font_family = 'Arial'
+            font_list = ['Arial', 'DejaVu Sans', 'sans-serif']
+        else:
+            # Use sans-serif as fallback (will use system default)
+            font_family = 'sans-serif'
+            font_list = ['sans-serif']
+        
+        plt.rcParams['font.family'] = font_family
+        plt.rcParams['font.sans-serif'] = font_list
     
     def plot_importance_scores(self, explanations: List, labels: List, 
                               filename: str, title: str, ylabel: str, algo: Optional[str] = None) -> None:
@@ -287,51 +316,73 @@ class Plotter:
         
         # Plot highest
         self._plot_single_bar_chart(top_highest, f"Top {top_n} Highest - {title}", 
-                                   x_label, y_label, 'lightcoral', 
+                                   x_label, y_label, '#F5D6CC', 
                                    f"{filename}_highest.png" if filename else None)
         
         # Plot lowest
         self._plot_single_bar_chart(top_lowest, f"Top {top_n} Lowest - {title}", 
-                                   x_label, y_label, 'skyblue', 
+                                   x_label, y_label, '#C0D7DD', 
                                    f"{filename}_lowest.png" if filename else None)
     
     def _plot_single_bar_chart(self, data: Dict, title: str, x_label: str, 
-                              y_label: str, color: str, filename: Optional[str] = None) -> None:
-        """Create a single bar chart."""
-        plt.figure(figsize=self.config.figure_size, dpi=self.config.dpi)
-        plt.bar(data.keys(), data.values(), color=color, width=self.config.bar_width)
-        plt.xlabel(x_label, fontsize=self.config.font_size['label'])
-        plt.ylabel(y_label, fontsize=self.config.font_size['label'])
-        plt.title(title, fontsize=self.config.font_size['title'])
-        plt.xticks(rotation=90, ha='right', fontsize=12)
-        plt.yticks(fontsize=self.config.font_size['tick'])
-        plt.tight_layout()
+                            y_label: str, color: str, filename: Optional[str] = None) -> None:
+        truncated_labels = [key.split('|')[0] for key in data.keys()]
+        y_values = list(data.values())
+        x_positions = range(len(truncated_labels))
         
+        self._set_font_family()
+        fig, ax = plt.subplots(figsize=self.config.figure_size, dpi=self.config.dpi)
+        ax.bar(x_positions, y_values, color=color, width=self.config.bar_width, align='center', 
+               edgecolor='black', linewidth=3)
+        ax.set_xticks(x_positions)
+        ax.set_xticklabels(truncated_labels, rotation=90, ha='center', fontsize=self.config.font_size['tick'])
+        ax.set_xlabel(x_label, fontsize=self.config.font_size['label'])
+        ax.set_ylabel(y_label, fontsize=self.config.font_size['label'])
+        ax.set_title(title, fontsize=self.config.font_size['title'], pad=50)
+        ax.tick_params(axis='y', labelsize=self.config.font_size['tick'])
+        plt.tight_layout(pad=1.0)
+        fig.subplots_adjust(bottom=0.25)
         if filename:
-            plt.savefig(filename)
+            plt.savefig(filename, bbox_inches='tight', dpi=self.config.dpi)
         plt.show()
     
     def plot_top_bar_chart(self, protein_dict: Dict, title: str, x_label: str, 
-                          y_label: str, filename: Optional[str] = None, top_n: int = None) -> None:
+                          y_label: str, filename: Optional[str] = None, top_n: int = None, 
+                          color: Optional[str] = None) -> None:
         """Create a bar chart for top N highest values."""
         top_n = top_n or self.config.top_n
+        
+        # Determine color based on title/content - positive by default, negative if title contains "Negative"
+        if color is None:
+            if 'negative' in title.lower():
+                color = '#C0D7DD'  # Negative color
+            else:
+                color = '#F5D6CC'  # Positive color
         
         # Sort and get top N highest
         sorted_items_desc = dict(sorted(protein_dict.items(), key=lambda item: item[1], reverse=True))
         top_highest = dict(list(sorted_items_desc.items())[:top_n])
         
+        # Truncate protein names at first "|" for display
+        truncated_labels = [key.split('|')[0] for key in top_highest.keys()]
+        
+        # Ensure font is set (handled in __init__, but ensure it's applied)
+        self._set_font_family()
+        
         # Create the plot
-        plt.figure(figsize=self.config.figure_size, dpi=self.config.dpi)
-        plt.bar(top_highest.keys(), top_highest.values(), color='skyblue', width=self.config.bar_width)
-        plt.xlabel(x_label, fontsize=self.config.font_size['label'])
-        plt.ylabel(y_label, fontsize=self.config.font_size['label'])
-        plt.title(f"Top {top_n} - {title}", fontsize=self.config.font_size['title'])
-        plt.xticks(rotation=90, ha='right', fontsize=12)
-        plt.yticks(fontsize=self.config.font_size['tick'])
+        fig, ax = plt.subplots(figsize=self.config.figure_size, dpi=self.config.dpi)
+        ax.bar(truncated_labels, top_highest.values(), color=color, width=self.config.bar_width,
+               edgecolor='black', linewidth=3)
+        ax.set_xlabel(x_label, fontsize=self.config.font_size['label'])
+        ax.set_ylabel(y_label, fontsize=self.config.font_size['label'])
+        ax.set_title(f"Top {top_n} - {title}", fontsize=self.config.font_size['title'], pad=50)
+        ax.tick_params(axis='x', rotation=90, labelsize=self.config.font_size['tick'])
+        ax.tick_params(axis='y', labelsize=self.config.font_size['tick'])
+        plt.setp(ax.get_xticklabels(), rotation=90, ha='right', fontsize=self.config.font_size['tick'])
         plt.tight_layout()
         
         if filename:
-            plt.savefig(f"{filename}_top_{top_n}.png")
+            plt.savefig(f"{filename}_top_{top_n}.png", bbox_inches='tight', dpi=self.config.dpi)
         plt.show()
 
 class ExplainerAnalyzer:
