@@ -187,3 +187,6 @@ wandb/
 
 # test temporary
 .test_tmp/
+
+# csv files
+*.csv
