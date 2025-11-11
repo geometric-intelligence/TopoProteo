@@ -28,13 +28,20 @@ def construct_datasets(config):
         raise
     
     try:
-        test_dataset = FTDDataset(root, config, "val")
+        val_dataset = FTDDataset(root, config, "val")
         print("Test dataset loaded successfully")
     except Exception as e:
         print(f"Error loading test dataset: {str(e)}")
         raise
+
+    try:
+        test_dataset = FTDDataset(root, config, "test")
+        print("Val dataset loaded successfully")
+    except Exception as e:
+        print(f"Error loading val dataset: {str(e)}")
+        raise
     
-    return train_dataset, test_dataset
+    return train_dataset, val_dataset, test_dataset
 
 def get_routes_from_neighborhoods(neighborhoods):
     """Get the routes from the neighborhoods.

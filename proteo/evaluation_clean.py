@@ -203,30 +203,38 @@ class DataProcessor:
         self.root = config.data_dir
         self.random_state = config.random_state
     
-    def load_datasets(self) -> Tuple[Any, Any]:
-        """Load train and test datasets."""
+    def load_datasets(self) -> Tuple[Any, Any, Any]:
+        """Load train, val, and test datasets."""
         return construct_datasets(self.config)
     
     def get_demographics_and_protein_ids(self) -> Tuple[np.ndarray, ...]:
         """Get demographic information (sex, mutation, age, etc.)."""
         train_dataset = FTDDataset(self.root, self.config, "train")
-        _, _, top_protein_columns, filtered_sex_col, filtered_mutation_col, filtered_age_col, filtered_did_col, filtered_gene_col = train_dataset.load_csv_data_pre_pt_files(self.config)
+        _, labels, top_protein_columns, filtered_sex_col, filtered_mutation_col, filtered_age_col, filtered_did_col, filtered_gene_col = train_dataset.load_csv_data_pre_pt_files(self.config)
         
         # Split data
-        train_sex_labels, test_sex_labels, train_mutation_labels, test_mutation_labels, train_age_labels, test_age_labels, train_did_labels, test_did_labels, train_gene_col, test_gene_col = train_test_split(
-            filtered_sex_col, filtered_mutation_col, filtered_age_col, filtered_did_col, filtered_gene_col, 
-            test_size=0.20, random_state=self.random_state
+        num_bins = 10
+        init_bins = pd.qcut(labels, q=num_bins, labels=False, duplicates="drop")
+        train_sex_labels, test_sex_labels, train_mutation_labels, test_mutation_labels, train_age_labels, test_age_labels, train_did_labels, test_did_labels, train_gene_col, test_gene_col, train_labels, test_labels = train_test_split(
+            filtered_sex_col, filtered_mutation_col, filtered_age_col, filtered_did_col, filtered_gene_col, labels,
+            test_size=0.20, random_state=self.random_state, stratify=init_bins
+        )
+
+        init_bins = pd.qcut(test_labels, q=num_bins, labels=False, duplicates="drop")
+        val_sex_labels, test_sex_labels, val_mutation_labels, test_mutation_labels, val_age_labels, test_age_labels, val_did_labels, test_did_labels, val_gene_col, test_gene_col, val_labels, test_labels = train_test_split(
+            test_sex_labels, test_mutation_labels, test_age_labels, test_did_labels, test_gene_col, test_labels,
+            test_size=0.5, random_state=self.random_state, stratify=init_bins
         )
         
         # Combine train and test
-        total_sex_labels = np.concatenate((train_sex_labels, test_sex_labels))
-        total_mutation_labels = np.concatenate((train_mutation_labels, test_mutation_labels))
-        total_age_labels = np.concatenate((train_age_labels, test_age_labels))
-        total_did_labels = np.concatenate((train_did_labels, test_did_labels))
-        total_gene_labels = np.concatenate((train_gene_col, test_gene_col))
+        total_sex_labels = np.concatenate((train_sex_labels, val_sex_labels, test_sex_labels))
+        total_mutation_labels = np.concatenate((train_mutation_labels, val_mutation_labels, test_mutation_labels))
+        total_age_labels = np.concatenate((train_age_labels, val_age_labels, test_age_labels))
+        total_did_labels = np.concatenate((train_did_labels, val_did_labels, test_did_labels))
+        total_gene_labels = np.concatenate((train_gene_col, val_gene_col, test_gene_col))
         
         return np.array(top_protein_columns), (total_sex_labels, total_mutation_labels, total_age_labels, 
-                total_did_labels, train_did_labels, test_did_labels, total_gene_labels)
+                total_did_labels, train_did_labels, val_did_labels, test_did_labels, total_gene_labels)
     
     def get_baseline_data(self) -> Tuple[np.ndarray, np.ndarray]:
         """Get baseline data for explainer."""
@@ -532,7 +540,7 @@ class DataExporter:
         df.insert(0, "SEX", demographics[0])  # total_sex_labels
         df.insert(1, "AGE", demographics[2])   # total_age_labels
         df.insert(2, "Mutation", demographics[1])  # total_mutation_labels
-        df.insert(3, "Gene.Dx", demographics[6])   # total_gene_labels
+        df.insert(3, "Gene.Dx", demographics[7])   # total_gene_labels (index 7: train=4, val=5, test=6, gene=7)
         algo_tag = ""
         if algo:
             safe_algo = re.sub(r"[^A-Za-z0-9._-]+", "_", algo.strip())
@@ -546,7 +554,7 @@ class DataExporter:
 # Main orchestration functions
 def run_explainer_train_and_test(checkpoint_path: str) -> Dict[str, Any]:
     """
-    Main function to run explainer analysis on train and test datasets.
+    Main function to run explainer analysis on train, val, and test datasets.
     
     Parameters
     ----------
@@ -567,12 +575,13 @@ def run_explainer_train_and_test(checkpoint_path: str) -> Dict[str, Any]:
     plotter = Plotter()
     
     # Load data
-    train_dataset, test_dataset = data_processor.load_datasets()
+    train_dataset, val_dataset, test_dataset = data_processor.load_datasets()
     protein_ids, demographics = data_processor.get_demographics_and_protein_ids()
     
     # Setup device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     train_dataset.to(device)
+    val_dataset.to(device)
     test_dataset.to(device)
     
     # Create explainer
@@ -585,10 +594,11 @@ def run_explainer_train_and_test(checkpoint_path: str) -> Dict[str, Any]:
     # Analyze datasets
     model_name = checkpoint_path.split("/")[-1]
     train_results = analyzer.analyze_dataset(train_dataset, protein_ids, demographics[4], f"{model_name}_train")
-    test_results = analyzer.analyze_dataset(test_dataset, protein_ids, demographics[5], f"{model_name}_test")
+    val_results = analyzer.analyze_dataset(val_dataset, protein_ids, demographics[5], f"{model_name}_val")
+    test_results = analyzer.analyze_dataset(test_dataset, protein_ids, demographics[6], f"{model_name}_test")
     
     # Combine results
-    combined_results = _combine_results(train_results, test_results)
+    combined_results = _combine_results(train_results, val_results, test_results)
     
     # Export data
     DataExporter.export_to_csv(combined_results['all_raw_importances'], protein_ids, 
@@ -654,21 +664,26 @@ def create_protein_plots(combined_results: Dict[str, Any], protein_ids: np.ndarr
 
 
 # Utility functions
-def _combine_results(train_results: Dict[str, Any], test_results: Dict[str, Any]) -> Dict[str, Any]:
-    """Combine train and test results."""
+def _combine_results(train_results: Dict[str, Any], val_results: Dict[str, Any], test_results: Dict[str, Any]) -> Dict[str, Any]:
+    """Combine train, val, and test results."""
     combined = {}
     
     # Combine dictionaries
     for key in ['sum_node_importance_raw', 'sum_node_importance_percent', 
                 'positive_percent_by_protein', 'negative_percent_by_protein']:
+        all_keys = set(train_results[key]) | set(val_results[key]) | set(test_results[key])
         combined[f'combined_{key}'] = {
-            k: train_results[key].get(k, 0) + test_results[key].get(k, 0)
-            for k in set(train_results[key]) | set(test_results[key])
+            k: train_results[key].get(k, 0) + val_results[key].get(k, 0) + test_results[key].get(k, 0)
+            for k in all_keys
         }
     
     # Combine lists
-    combined['all_raw_importances'] = train_results['all_raw_importances'] + test_results['all_raw_importances']
-    combined['all_percent_importances'] = train_results['all_percent_importances'] + test_results['all_percent_importances']
+    combined['all_raw_importances'] = (train_results['all_raw_importances'] + 
+                                      val_results['all_raw_importances'] + 
+                                      test_results['all_raw_importances'])
+    combined['all_percent_importances'] = (train_results['all_percent_importances'] + 
+                                          val_results['all_percent_importances'] + 
+                                          test_results['all_percent_importances'])
     
     return combined
 
