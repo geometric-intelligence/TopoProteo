@@ -268,7 +268,7 @@ def generate_table(df, save_csv=False, csv_filename="proteo_results.csv"):
         .reset_index()
     )
     # Remove grouped rows with n_folds < 3 for models 'mlp' and 'gcn'
-    mask = ~(grouped["n_folds"] < 2)
+    mask = ~(grouped["n_folds"] < 5)
     grouped = grouped[mask].reset_index(drop=True)
     print("▶ After grouping, grouped.shape =", grouped.shape)
 
