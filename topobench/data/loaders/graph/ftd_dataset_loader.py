@@ -72,7 +72,8 @@ class FTDDatasetLoader(AbstractLoader):
 
     def _load_splits(self) -> None:
         """Load the dataset splits for the specified dataset."""
-        for split in ["train", "val", "val"]:
+        splits = ["train", "val", "test"] if not self.parameters.get("kfold") else ["train", "val", "val"]
+        for split in splits:
             self.datasets.append(
                 FTDDataset(
                     root=str(self.root_data_dir),
