@@ -1,6 +1,5 @@
 from typing import Optional, Tuple, Union
 
-import gc
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -189,8 +188,6 @@ class GATv4(nn.Module):
             x, att1 = self.convs[0](x, edge_index, return_attention_weights=True)
         else:
             x = self.convs[0](x, edge_index)
-        gc.collect()  # Clear memory from previous operations
-        torch.cuda.empty_cache()
         
         # [bs*nodes, hidden_channels[0]*heads[0]], Apply the gatconv layer
         x = self.ACT_MAP[self.act](
@@ -200,9 +197,6 @@ class GATv4(nn.Module):
         x1 = x1.squeeze(-1)  # [bs*nodes]
         x1, _ = to_dense_batch(x1, batch=batch)  # [bs, nodes]
 
-        gc.collect()  # Clear memory from previous operations
-        torch.cuda.empty_cache()
-        
         # Apply second GAT layer and pooling
         x = F.dropout(x, p=self.dropout, training=self.training)  # apply dropout if we are training
         if return_attention_weights:
@@ -210,16 +204,10 @@ class GATv4(nn.Module):
         else:
             x = self.convs[1](x, edge_index)
         
-        gc.collect()  # Clear memory from previous operations
-        torch.cuda.empty_cache()
-        
         x = self.ACT_MAP[self.act](x)  # [bs*nodes, hidden_channels[1]*heads[1]]
         x2 = self.pools[1](x)  # [bs*nodes, 1]
         x2 = x2.squeeze(-1)  # [bs*nodes]
         x2, _ = to_dense_batch(x2, batch=batch)  # [bs, nodes]
-        
-        gc.collect()  # Clear memory from previous operations
-        torch.cuda.empty_cache()
 
         # Apply layer normalization to each individual graph to have mean 0, std 1
         if self.use_layer_norm:

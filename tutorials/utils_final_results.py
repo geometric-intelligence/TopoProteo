@@ -154,7 +154,7 @@ def load_model_checkpoint(cfg, checkpoint_dir):
     model.load_state_dict(checkpoint["state_dict"], strict=False)
     return model
 
-def load_dataset(adj_metric, adj_thresh, kfold=True, num_folds=5, fold=0):
+def load_dataset(adj_metric, adj_thresh, kfold=True, num_folds=5, fold=0, y_val="nfl", two_pass=False, num_nodes=7258):
     """
     Load the FTD dataset with specified params.
     
@@ -181,6 +181,9 @@ def load_dataset(adj_metric, adj_thresh, kfold=True, num_folds=5, fold=0):
             f"dataset.loader.parameters.kfold={kfold}",
             f"dataset.loader.parameters.num_folds={num_folds}",
             f"dataset.loader.parameters.fold={fold}",
+            f"dataset.loader.parameters.y_val={y_val}",
+            f"dataset.loader.parameters.two_pass={two_pass}",
+            f"dataset.loader.parameters.num_nodes={num_nodes}",
         ],
         return_hydra_config=True
     )
