@@ -136,6 +136,10 @@ class TBModel(LightningModule):
 
         # Metric
         model_out = self.loss(model_out=model_out, batch=batch)
+
+        # Add batch to model_out for evaluator access to target normalizer stats
+        model_out["batch"] = batch
+
         self.evaluator.update(model_out)
 
         return model_out
@@ -159,9 +163,10 @@ class TBModel(LightningModule):
         model_out = self.model_step(batch)
 
         # Update and log metrics
+        loss_value = model_out["loss"].item()
         self.log(
             "train/loss",
-            model_out["loss"],
+            loss_value,
             on_step=False,
             on_epoch=True,
             prog_bar=True,
@@ -185,9 +190,10 @@ class TBModel(LightningModule):
         model_out = self.model_step(batch)
 
         # Log Loss
+        loss_value = model_out["loss"].item()
         self.log(
             "val/loss",
-            model_out["loss"],
+            loss_value,
             on_step=False,
             on_epoch=True,
             prog_bar=True,
@@ -208,9 +214,10 @@ class TBModel(LightningModule):
         model_out = self.model_step(batch)
 
         # Log loss
+        loss_value = model_out["loss"].item()
         self.log(
             "test/loss",
-            model_out["loss"],
+            loss_value,
             on_step=False,
             on_epoch=True,
             prog_bar=True,
@@ -232,17 +239,17 @@ class TBModel(LightningModule):
         dict
             Dictionary containing the updated model output.
         """
-        if self.task_level == "node":
-            # Get the correct mask
-            if self.state_str == "Training":
-                mask = batch.train_mask
-            elif self.state_str == "Validation":
-                mask = batch.val_mask
-            elif self.state_str == "Test":
-                mask = batch.test_mask
-            else:
-                raise ValueError("Invalid state_str")
+        # Get the correct mask
+        if self.state_str == "Training":
+            mask = batch.train_mask
+        elif self.state_str == "Validation":
+            mask = batch.val_mask
+        elif self.state_str == "Test":
+            mask = batch.test_mask
+        else:
+            raise ValueError("Invalid state_str")
 
+        if self.task_level == "node":
             # Keep only train data points
             for key, val in model_out.items():
                 if key in ["logits", "labels"]:
@@ -259,6 +266,8 @@ class TBModel(LightningModule):
             The mode of the model, either "train", "val", or "test" (default: None).
         """
         metrics_dict = self.evaluator.compute()
+
+        # Log current metrics
         for key in metrics_dict:
             self.log(
                 f"{mode}/{key}",
@@ -273,8 +282,8 @@ class TBModel(LightningModule):
     def on_validation_epoch_start(self) -> None:
         r"""Hook called when a validation epoch begins.
 
-        According pytorch lightning documentation this hook is called at the
-        beginning of the validation epoch.
+        According pytorch lightning documentation this hook is called at the beginning of the
+        validation epoch.
 
         https://lightning.ai/docs/pytorch/stable/common/lightning_module.html#hooks
 
@@ -309,7 +318,6 @@ class TBModel(LightningModule):
         This hook is used to log the test metrics.
         """
         self.log_metrics(mode="test")
-        print()
 
     def on_train_epoch_start(self) -> None:
         r"""Lightning hook that is called when a train epoch begins.
