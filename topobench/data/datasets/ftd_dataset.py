@@ -378,7 +378,7 @@ class FTDDataset(InMemoryDataset):
                 test_age,
                 test_size=0.5,
                 random_state=self.config.random_state,
-                stratify=init_bins,
+                stratify=None,
             )
             # Just consider train and test/val splits
             # train_features = train_val_features
