@@ -141,7 +141,7 @@ def load_results_dataframe(wandb_username, wandb_project, original_units=True, m
             model    = cfg.get("model.model_name",   None)
             fold     = cfg.get("dataset.loader.parameters.fold",    None)
             checkpoint = run.summary.get("checkpoint",None)
-            
+            best_epoch_checkpoint = run.summary.get("best_epoch/checkpoint",None)
 
             # If any of these is None, we might want to skip as well:
             if (dataset is None) or (model is None) or (fold is None):
@@ -158,6 +158,7 @@ def load_results_dataframe(wandb_username, wandb_project, original_units=True, m
                 "val_mae":  val_mae,
                 "test_mae": test_mae,
                 "checkpoint": checkpoint,
+                "best_epoch/checkpoint": best_epoch_checkpoint,
             }
             row.update(hyperparams)
             records.append(row)
