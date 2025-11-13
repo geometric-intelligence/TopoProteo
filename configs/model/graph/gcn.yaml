@@ -36,9 +36,9 @@ readout:
   out_channels: ${dataset.parameters.num_classes}
   task_level: ${dataset.parameters.task_level}
   pooling_type: sum
-
   in_channels: ${model.backbone_wrapper.out_channels}
   num_nodes: ${oc.select:dataset.loader.parameters.num_nodes,null}
+  use_features: true
   use_feature_encoder: true 
   which_layer: ['sex', 'mutation', 'age']
   fc_dim: [128, 64, 32]
