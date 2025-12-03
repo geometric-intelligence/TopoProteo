@@ -220,10 +220,9 @@ class DataProcessor:
             test_size=0.20, random_state=self.random_state, stratify=init_bins
         )
 
-        init_bins = pd.qcut(test_labels, q=num_bins, labels=False, duplicates="drop")
         val_sex_labels, test_sex_labels, val_mutation_labels, test_mutation_labels, val_age_labels, test_age_labels, val_did_labels, test_did_labels, val_gene_col, test_gene_col, val_labels, test_labels = train_test_split(
             test_sex_labels, test_mutation_labels, test_age_labels, test_did_labels, test_gene_col, test_labels,
-            test_size=0.5, random_state=self.random_state, stratify=init_bins
+            test_size=0.5, random_state=self.random_state, stratify=None
         )
         
         # Combine train and test

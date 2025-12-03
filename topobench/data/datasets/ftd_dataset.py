@@ -357,8 +357,6 @@ class FTDDataset(InMemoryDataset):
             train_mutation = train_val_mutation
             train_age = train_val_age
 
-            num_bins = 10
-            init_bins = pd.qcut(test_labels, q=num_bins, labels=False, duplicates="drop")
             (
                 val_features,
                 test_features,
