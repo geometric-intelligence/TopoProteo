@@ -357,6 +357,9 @@ class FTDDataset(InMemoryDataset):
             train_mutation = train_val_mutation
             train_age = train_val_age
 
+            num_bins = 10
+            init_bins = pd.qcut(test_labels, q=num_bins, labels=False, duplicates="drop")
+
             (
                 val_features,
                 test_features,
@@ -376,7 +379,7 @@ class FTDDataset(InMemoryDataset):
                 test_age,
                 test_size=0.5,
                 random_state=self.config.random_state,
-                stratify=None,
+                stratify=init_bins,
             )
             # Just consider train and test/val splits
             # train_features = train_val_features
