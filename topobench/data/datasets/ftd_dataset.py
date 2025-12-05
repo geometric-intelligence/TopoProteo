@@ -319,6 +319,7 @@ class FTDDataset(InMemoryDataset):
         )
 
         if self.kfold:
+            test_set = False
             # Perform k-fold splitting on the train set
             assert self.config.fold < self.config.num_folds, (
                 f"Invalid fold index {self.config.fold}, should be lower than the number of folds {self.config.num_folds}"
