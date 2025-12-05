@@ -1,0 +1,65 @@
+# Dataset loader config
+loader:
+  _target_: topobench.data.loaders.graph.sporadic_ftd_dataset_loader.SporadicFTDDatasetLoader
+  parameters: 
+    data_domain: graph
+    data_type: proteomics
+    data_name: SporadicFTD
+    # Dataset
+    dataset_name: "sporadic_ftd"  # Sporadic FTD dataset used as OOD test set
+    raw_file_name: "cleanDat.Soma.CSFneat.macwide_allftdannotations_merged.csv"
+    error_protein_file_name: "bimodal_aptamers_for_removal.xlsx"
+    two_pass_error_protein_file_name: "cleanDat.Soma.CSF.Blood.PC.Age.Sex.Reg.2pass.filtered.5SDWinsor.csv"
+    # Y Value ("carrier", "nfl", "disease_age", "global_cog_slope", "executive_function", "memory", "clinical_dementia_rating", "cog_z_score", "clinical_dementia_rating_global", "clinical_dementia_rating_binary")
+    # Must match the FTD dataset config for proper scaler/adjacency matrix loading
+    y_val: "cog_z_score"
+    # Plasma or CSF
+    modality: "csf"
+    # FTD mutation list (used ONLY for matching FTD experiment ID to load scalers/adjacency)
+    # Sporadic FTD has no mutations - this is just to identify which FTD experiment to use
+    ftd_mutation: ['GRN', 'MAPT','C9orf72','CTL']  
+    # ['M'], ['F'],['M', 'F'] 
+    sex: ['M', 'F']
+    num_nodes: 3667  # Must match FTD dataset num_nodes
+    adj_metric: "wgcna"  # Must match FTD dataset adj_metric
+    adj_thresh: 0.976  # Must match FTD dataset adj_thresh
+    split: "test"  # Sporadic dataset is always used as test set
+    # Only used for WGCNA analysis, not dataset creation:
+    wgcna_minModuleSize: 10
+    wgcna_mergeCutHeight: 0.25
+    # k-fold evaluation (must match FTD dataset)
+    kfold: false
+    num_folds: 5
+    fold: 0
+    use_weights: False
+    random_state: 42
+    data_dir: ${paths.data_dir}/SporadicFTD
+    # Path to FTD dataset root directory (for loading scalers and adjacency matrix)
+    ftd_root: ${paths.data_dir}/FTD
+    two_pass: True  # Must match FTD dataset two_pass setting
+
+# Dataset parameters
+parameters:
+  num_features: 1
+  num_classes: 1
+  task: regression
+  loss_type: mse
+  monitor_metric: mse
+  task_level: graph
+  # features_to_keep: ['age', 'sex', 'mutation']
+
+#splits
+split_params:
+  learning_setting: inductive
+  data_split_dir: ${paths.data_dir}/data_splits
+  data_seed: 0
+  split_type: 'fixed' #'k-fold' # either "k-fold" or "random" strategies
+  k: 5 # for "k-fold" Cross-Validation
+  train_prop: 0.5 # for "random" strategy splitting
+
+# Dataloader parameters
+dataloader_params:
+  batch_size: 16
+  num_workers: 0
+  pin_memory: False
+

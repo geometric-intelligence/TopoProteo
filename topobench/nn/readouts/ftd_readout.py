@@ -40,7 +40,7 @@ class FTDReadOut(AbstractZeroCellReadOut):
         self.out_channels = out_channels  # 1
         self.use_features = use_features
         self.use_feature_encoder = use_feature_encoder
-        self.fc_input_dim = self.graph_encoder_dim[-1] + self.feature_encoder_dim * 3 if self.use_features else self.graph_encoder_dim[-1]
+        self.fc_input_dim = self.graph_encoder_dim[-1] + self.feature_encoder_dim * len(self.which_layer) if self.use_features else self.graph_encoder_dim[-1]
         self.readout_layers = self.build_readout_layers()
         if self.use_features:
             self.feature_encoder = self.build_feature_encoder()

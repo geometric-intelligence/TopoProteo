@@ -49,6 +49,45 @@ train: True
 # lightning chooses best weights based on the metric specified in checkpoint callback
 test: True
 
+# evaluate on OOD test set (e.g., sporadic FTD) after training
+# requires ood_dataset config to be specified
+test_ood: False
+
+# OOD dataset config (e.g., sporadic FTD)
+# Should match the training dataset config parameters (y_val, modality, etc.) 
+# to load the correct scalers and adjacency matrix
+ood_dataset: null
+# Example:
+# ood_dataset:
+#   loader:
+#     _target_: topobench.data.loaders.graph.sporadic_ftd_dataset_loader.SporadicFTDDatasetLoader
+#     parameters:
+#       data_domain: graph
+#       data_type: proteomics
+#       data_name: SporadicFTD
+#       dataset_name: "sporadic_ftd"
+#       raw_file_name: "cleanDat.Soma.CSFneat.macwide_allftdannotations_merged.csv"
+#       error_protein_file_name: "bimodal_aptamers_for_removal.xlsx"
+#       two_pass_error_protein_file_name: "cleanDat.Soma.CSF.Blood.PC.Age.Sex.Reg.2pass.filtered.5SDWinsor.csv"
+#       y_val: "global_cog_slope"  # Must match training dataset
+#       modality: "csf"  # Must match training dataset
+#       ftd_mutation: ['GRN', 'MAPT','C9orf72','CTL']  # For matching FTD experiment ID
+#       sex: ['M', 'F']  # Must match training dataset
+#       num_nodes: 3667  # Must match training dataset
+#       adj_metric: "wgcna"  # Must match training dataset
+#       adj_thresh: 0.976  # Must match training dataset
+#       kfold: false  # Must match training dataset
+#       num_folds: 5
+#       fold: 0
+#       random_state: 42  # Must match training dataset
+#       data_dir: ${paths.data_dir}/SporadicFTD
+#       ftd_root: ${paths.data_dir}/FTD
+#       two_pass: True  # Must match training dataset
+#   dataloader_params:
+#     batch_size: 16
+#     num_workers: 0
+#     pin_memory: False
+
 # simply provide checkpoint path to resume training
 ckpt_path: null
 
