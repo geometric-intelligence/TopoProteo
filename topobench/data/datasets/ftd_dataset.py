@@ -320,6 +320,7 @@ class FTDDataset(InMemoryDataset):
         )
 
         if self.kfold:
+            test_set = False
             # Perform k-fold splitting on the train set
             assert self.config.fold < self.config.num_folds, (
                 f"Invalid fold index {self.config.fold}, should be lower than the number of folds {self.config.num_folds}"
@@ -357,6 +358,9 @@ class FTDDataset(InMemoryDataset):
             train_sex = train_val_sex
             train_mutation = train_val_mutation
             train_age = train_val_age
+
+            # num_bins = 10
+            # init_bins = pd.qcut(test_labels, q=num_bins, labels=False, duplicates="drop")
 
             (
                 val_features,
