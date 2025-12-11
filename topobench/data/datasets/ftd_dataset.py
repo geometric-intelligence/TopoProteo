@@ -168,28 +168,27 @@ class FTDDataset(InMemoryDataset):
         self.mutation_str = f"mutation_{','.join(config.mutation)}"
         self.modality_str = f"{config.modality}"
         self.sex_str = f"sex_{','.join(config.sex)}"
+        # Check if batch_normalization is enabled (default False)
+        self.batch_normalization = getattr(config, 'batch_normalization', False)
+        self.batch_norm_str = "_batch_normalization" if self.batch_normalization else ""
         if self.kfold:
-            self.hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}_histogram.jpg"
-            self.orig_hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}_orig_histogram.jpg"
+            self.hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}{self.batch_norm_str}_histogram.jpg"
+            self.orig_hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}{self.batch_norm_str}_orig_histogram.jpg"
         else:
-            self.hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_two_pass_{config.two_pass}_histogram.jpg"
-            self.orig_hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_two_pass_{config.two_pass}_orig_histogram.jpg"
+            self.hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_two_pass_{config.two_pass}{self.batch_norm_str}_histogram.jpg"
+            self.orig_hist_path_str = f"{self.config.y_val}_{self.config.sex}_{self.config.mutation}_{self.config.modality}_random_state_{config.random_state}_two_pass_{config.two_pass}{self.batch_norm_str}_orig_histogram.jpg"
         super(FTDDataset, self).__init__(
             root, transform=None, pre_transform=None
-        )
-        self.adj_path = os.path.join(
-            self.processed_dir,
-            f"adjacency_num_nodes_{config.num_nodes}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_two_pass_{config.two_pass}.csv",
         )
         self.feature_dim = 1  # protein concentration is a scalar, ie, dim 1
         self.label_dim = LABEL_DIM_MAP[self.config.y_val]
             
         if self.kfold:
-            config_tag = f"{self.experiment_id}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}"
-            adj_config_tag = f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}"
+            config_tag = f"{self.experiment_id}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}{self.batch_norm_str}"
+            adj_config_tag = f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}{self.batch_norm_str}"
         else:
-            config_tag = f"{self.experiment_id}_random_state_{self.config.random_state}_two_pass_{config.two_pass}"
-            adj_config_tag = f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}_two_pass_{config.two_pass}"
+            config_tag = f"{self.experiment_id}_random_state_{self.config.random_state}_two_pass_{config.two_pass}{self.batch_norm_str}"
+            adj_config_tag = f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}_two_pass_{config.two_pass}{self.batch_norm_str}"
         self.config_tag = config_tag  
         path = os.path.join(
             self.processed_dir,
@@ -229,16 +228,17 @@ class FTDDataset(InMemoryDataset):
         https://github.com/pyg-team/pytorch_geometric/blob/master/torch_geometric/data/dataset.py
         """
         self.experiment_id = f"{self.name}_{self.y_val_str}_{self.adj_metric}_{self.adj_str}_{self.num_nodes_str}_{self.mutation_str}_{self.modality_str}_{self.sex_str}"
+        batch_norm_str = "_batch_normalization" if getattr(self.config, 'batch_normalization', False) else ""
         if self.kfold:
             files = [
-                f"{self.experiment_id}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{self.config.two_pass}_train.pt",
-                f"{self.experiment_id}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{self.config.two_pass}_val.pt",
+                f"{self.experiment_id}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{self.config.two_pass}{batch_norm_str}_train.pt",
+                f"{self.experiment_id}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{self.config.two_pass}{batch_norm_str}_val.pt",
             ]
         else:
             files = [
-                f"{self.experiment_id}_random_state_{self.config.random_state}_two_pass_{self.config.two_pass}_train.pt",
-                f"{self.experiment_id}_random_state_{self.config.random_state}_two_pass_{self.config.two_pass}_val.pt",
-                f"{self.experiment_id}_random_state_{self.config.random_state}_two_pass_{self.config.two_pass}_test.pt",
+                f"{self.experiment_id}_random_state_{self.config.random_state}_two_pass_{self.config.two_pass}{batch_norm_str}_train.pt",
+                f"{self.experiment_id}_random_state_{self.config.random_state}_two_pass_{self.config.two_pass}{batch_norm_str}_val.pt",
+                f"{self.experiment_id}_random_state_{self.config.random_state}_two_pass_{self.config.two_pass}{batch_norm_str}_test.pt",
             ]
         print("Processed file names:", files)
         return files
@@ -359,8 +359,8 @@ class FTDDataset(InMemoryDataset):
             train_mutation = train_val_mutation
             train_age = train_val_age
 
-            # num_bins = 10
-            # init_bins = pd.qcut(test_labels, q=num_bins, labels=False, duplicates="drop")
+            num_bins = 10
+            init_bins = pd.qcut(test_labels, q=num_bins, labels=False, duplicates="drop")
 
             (
                 val_features,
@@ -381,7 +381,7 @@ class FTDDataset(InMemoryDataset):
                 test_age,
                 test_size=0.5,
                 random_state=self.config.random_state,
-                stratify=None,
+                stratify=init_bins,
             )
             # Just consider train and test/val splits
             # train_features = train_val_features
@@ -621,6 +621,15 @@ class FTDDataset(InMemoryDataset):
 
         features = np.array(top_proteins, dtype=np.float32)
         labels = np.array(y_vals, dtype=np.float32)
+        
+        # Z-score normalize features and labels using CTL subjects if batch_normalization is enabled
+        if getattr(self.config, 'batch_normalization', False):
+            features = zscore_normalize_by_ctl(features, filtered_mutation_col, mutation_col_name=mutation_col)
+            # Normalize labels using CTL statistics
+            # Reshape labels to 2D for the function (n_samples, 1)
+            labels_2d = labels.reshape(-1, 1)
+            labels_normalized_2d = zscore_normalize_by_ctl(labels_2d, filtered_mutation_col, mutation_col_name=mutation_col)
+            labels = labels_normalized_2d.reshape(-1)  # Reshape back to 1D
 
         return (
             features,
@@ -787,15 +796,16 @@ class FTDDataset(InMemoryDataset):
                 test_age.shape,
             )
         # Calculate adjacency matrix
+        batch_norm_str = "_batch_normalization" if getattr(config, 'batch_normalization', False) else ""
         if self.kfold:
             adj_path = os.path.join(
                 self.processed_dir,
-                f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}.csv",
+                f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}_{self.config.num_folds}fold_{self.config.fold}_two_pass_{config.two_pass}{batch_norm_str}.csv",
             )
         else:
             adj_path = os.path.join(
                 self.processed_dir,
-                f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}_two_pass_{config.two_pass}.csv",
+                f"adjacency_num_nodes_{config.num_nodes}_{self.adj_metric}_mutation_{config.mutation}_{config.modality}_sex_{config.sex}_random_state_{self.config.random_state}_two_pass_{config.two_pass}{batch_norm_str}.csv",
             )
             
         self.adj_path = adj_path
@@ -1032,6 +1042,57 @@ def reverse_log_transform(standardized_log_data, mean, std, log=False):
     return data
 
 
+def zscore_normalize_by_ctl(features, mutation_col, mutation_col_name="Mutation"):
+    """
+    Z-score normalize features using mean and std from CTL (control) subjects.
+    
+    Parameters:
+    -----------
+    features : np.ndarray
+        Feature matrix of shape (n_samples, n_features)
+    mutation_col : pd.Series or np.ndarray
+        Series or array containing mutation labels for each sample
+    mutation_col_name : str
+        Name of the mutation column (default: "Mutation")
+    
+    Returns:
+    --------
+    normalized_features : np.ndarray
+        Z-score normalized features using CTL statistics
+    """
+    # Convert mutation_col to numpy array if it's a pandas Series
+    if isinstance(mutation_col, pd.Series):
+        mutation_array = mutation_col.values
+    else:
+        mutation_array = mutation_col
+    
+    # Identify CTL subjects
+    ctl_mask = mutation_array == "CTL"
+    n_ctl = ctl_mask.sum()
+    
+    if n_ctl == 0:
+        print("Warning: No CTL subjects found for normalization. Returning original features.")
+        return features
+    
+    print(f"Normalizing features using {n_ctl} CTL subjects")
+    
+    # Compute mean and std from CTL subjects for each feature
+    ctl_features = features[ctl_mask]
+    ctl_mean = np.mean(ctl_features, axis=0, keepdims=True)
+    ctl_std = np.std(ctl_features, axis=0, keepdims=True)
+    
+    # Avoid division by zero (if std is 0, set to 1 to avoid division by zero)
+    ctl_std = np.where(ctl_std > 0, ctl_std, 1.0)
+    
+    # Normalize all features using CTL statistics
+    normalized_features = (features - ctl_mean) / ctl_std
+    
+    # Ensure float32 dtype
+    normalized_features = normalized_features.astype(np.float32)
+    
+    return normalized_features
+
+
 def save_mean_std(mean, std, config, experiment_id, processed_dir):
     if config.kfold:
         file_name = f"{experiment_id}_train_random_state_{config.random_state}_{config.num_folds}fold_{config.fold}.json"
@@ -1049,10 +1110,11 @@ def save_mean_std(mean, std, config, experiment_id, processed_dir):
 
 def save_scalers(feature_scaler, age_scaler, sex_scaler, mutation_scaler, config, experiment_id, processed_dir):
     """Save all scalers to disk using joblib."""
+    batch_norm_str = "_batch_normalization" if getattr(config, 'batch_normalization', False) else ""
     if config.kfold:
-        base_name = f"{experiment_id}_train_random_state_{config.random_state}_{config.num_folds}fold_{config.fold}_two_pass_{config.two_pass}"
+        base_name = f"{experiment_id}_train_random_state_{config.random_state}_{config.num_folds}fold_{config.fold}_two_pass_{config.two_pass}{batch_norm_str}"
     else:
-        base_name = f"{experiment_id}_train_random_state_{config.random_state}_two_pass_{config.two_pass}"
+        base_name = f"{experiment_id}_train_random_state_{config.random_state}_two_pass_{config.two_pass}{batch_norm_str}"
     
     scalers = {
         'feature_scaler': feature_scaler,
@@ -1069,10 +1131,11 @@ def save_scalers(feature_scaler, age_scaler, sex_scaler, mutation_scaler, config
 
 def load_scalers(config, experiment_id, processed_dir):
     """Load all scalers from disk using joblib."""
+    batch_norm_str = "_batch_normalization" if getattr(config, 'batch_normalization', False) else ""
     if config.kfold:
-        base_name = f"{experiment_id}_train_random_state_{config.random_state}_{config.num_folds}fold_{config.fold}_two_pass_{config.two_pass}"
+        base_name = f"{experiment_id}_train_random_state_{config.random_state}_{config.num_folds}fold_{config.fold}_two_pass_{config.two_pass}{batch_norm_str}"
     else:
-        base_name = f"{experiment_id}_train_random_state_{config.random_state}_two_pass_{config.two_pass}"
+        base_name = f"{experiment_id}_train_random_state_{config.random_state}_two_pass_{config.two_pass}{batch_norm_str}"
     
     scaler_path = os.path.join(processed_dir, f"{base_name}_scalers.joblib")
     if not os.path.exists(scaler_path):
@@ -1085,10 +1148,11 @@ def load_scalers(config, experiment_id, processed_dir):
 
 def save_protein_columns(protein_columns, config, experiment_id, processed_dir):
     """Save protein column order to disk."""
+    batch_norm_str = "_batch_normalization" if getattr(config, 'batch_normalization', False) else ""
     if config.kfold:
-        base_name = f"{experiment_id}_train_random_state_{config.random_state}_{config.num_folds}fold_{config.fold}_two_pass_{config.two_pass}"
+        base_name = f"{experiment_id}_train_random_state_{config.random_state}_{config.num_folds}fold_{config.fold}_two_pass_{config.two_pass}{batch_norm_str}"
     else:
-        base_name = f"{experiment_id}_train_random_state_{config.random_state}_two_pass_{config.two_pass}"
+        base_name = f"{experiment_id}_train_random_state_{config.random_state}_two_pass_{config.two_pass}{batch_norm_str}"
     
     columns_path = os.path.join(processed_dir, f"{base_name}_protein_columns.joblib")
     joblib.dump(protein_columns, columns_path)
@@ -1098,10 +1162,11 @@ def save_protein_columns(protein_columns, config, experiment_id, processed_dir):
 
 def load_protein_columns(config, experiment_id, processed_dir):
     """Load protein column order from disk."""
+    batch_norm_str = "_batch_normalization" if getattr(config, 'batch_normalization', False) else ""
     if config.kfold:
-        base_name = f"{experiment_id}_train_random_state_{config.random_state}_{config.num_folds}fold_{config.fold}_two_pass_{config.two_pass}"
+        base_name = f"{experiment_id}_train_random_state_{config.random_state}_{config.num_folds}fold_{config.fold}_two_pass_{config.two_pass}{batch_norm_str}"
     else:
-        base_name = f"{experiment_id}_train_random_state_{config.random_state}_two_pass_{config.two_pass}"
+        base_name = f"{experiment_id}_train_random_state_{config.random_state}_two_pass_{config.two_pass}{batch_norm_str}"
     
     columns_path = os.path.join(processed_dir, f"{base_name}_protein_columns.joblib")
     if not os.path.exists(columns_path):

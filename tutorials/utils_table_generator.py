@@ -118,13 +118,13 @@ def load_results_dataframe(wandb_username, wandb_project, original_units=True, m
             # Attempt to extract metrics—skip if missing
             if ("test/"+metric not in run.summary) or ("test/"+metric not in run.summary):
                 continue
-            # "dataset.loader.parameters.data_name", "model.backbone._target_", "dataset.split_params.data_seed"
-            # Get mean and std used for normalization
-            mean, std = get_mean_std(cfg)
-            assert mean is not None, f"Mean is None for run {run.id}"
-            assert std is not None, f"Std is None for run {run.id}"
             
             if original_units:
+                # "dataset.loader.parameters.data_name", "model.backbone._target_", "dataset.split_params.data_seed"
+                # Get mean and std used for normalization
+                mean, std = get_mean_std(cfg)
+                assert mean is not None, f"Mean is None for run {run.id}"
+                assert std is not None, f"Std is None for run {run.id}"
                 # Convert validation and test metrics back to original units
                 if metric == "mse":
                     val_mae  = np.sqrt(run.summary["test/"+metric]) * std 
