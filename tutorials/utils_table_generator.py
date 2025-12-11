@@ -201,6 +201,22 @@ def generate_table(df, save_csv=False, csv_filename="proteo_results.csv"):
     csv_filename : str, optional
         If provided, save the grouped results to this CSV filename (adding "grouped_").
     """
+    # Filter to only keep runs with ReLU activation function
+    activation_cols = ["model.readout.fc_act"]
+    activation_filter = None
+    for col in activation_cols:
+        if col in df.columns:
+            if activation_filter is None:
+                activation_filter = (df[col] == "relu")
+            else:
+                activation_filter = activation_filter | (df[col] == "relu")
+    
+    if activation_filter is not None:
+        df = df[activation_filter].copy()
+        print(f"▶ Filtered to only ReLU activation, df.shape = {df.shape}")
+    else:
+        print(f"⚠ Warning: No activation columns found in dataframe")
+    
     # Filter to only keep runs with adj_thresh = 0.5
     # adj_thresh_col = "dataset.loader.parameters.adj_thresh"
     # if adj_thresh_col in df.columns:
@@ -210,8 +226,14 @@ def generate_table(df, save_csv=False, csv_filename="proteo_results.csv"):
     #     print(f"⚠ Warning: Column '{adj_thresh_col}' not found in datafrasme")
     
     # Remove checkpoint column, not wanted here
-    df = df.drop(columns=['checkpoint'])
-
+    try:
+        df = df.drop(columns=['best_epoch/checkpoint', 'AvgTime/train_batch_mean',
+        'AvgTime/train_batch_std', 'AvgTime/train_epoch_mean',
+        'AvgTime/train_epoch_std', 'AvgTime/val_batch_mean',
+        'AvgTime/val_batch_std', 'AvgTime/val_epoch_mean',
+        'AvgTime/val_epoch_std'])
+    except KeyError:
+        df = df.drop(columns=['checkpoint'])
     # ── C) ENSURE ALL CELLS ARE HASHABLE FIRST ────────────────────────────────────
     def ensure_hashable(x):
         try:
