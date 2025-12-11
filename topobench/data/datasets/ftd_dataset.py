@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import PyWGCNA
 import torch
+import joblib
 from scipy.stats import chi2_contingency, kendalltau, ks_2samp, ttest_ind
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -431,6 +432,7 @@ class FTDDataset(InMemoryDataset):
                 test_sex,
                 test_mutation,
                 test_age,
+                protein_columns,
             )
         else:
             (
@@ -457,6 +459,7 @@ class FTDDataset(InMemoryDataset):
                 val_mutation,
                 train_age,
                 val_age,
+                protein_columns=protein_columns,
             )
 
         train_data_list = []
@@ -648,7 +651,8 @@ class FTDDataset(InMemoryDataset):
         test_labels=None,
         test_sex=None,
         test_mutation=None,
-        test_age=None
+        test_age=None,
+        protein_columns=None,
     ):
         if config.y_val in Y_VALS_TO_NORMALIZE:
             train_labels_norm, train_mean, train_std = log_transform(
@@ -693,23 +697,37 @@ class FTDDataset(InMemoryDataset):
                 test_labels_norm = test_labels.astype(np.float32) if isinstance(test_labels, np.ndarray) else test_labels
 
         train_features_for_adj = train_features
-        scaler = StandardScaler()
-        train_features = scaler.fit_transform(train_features).astype(np.float32)
-        val_features = scaler.transform(val_features).astype(np.float32)
+        # Create separate scalers for each feature type
+        feature_scaler = StandardScaler()
+        train_features = feature_scaler.fit_transform(train_features).astype(np.float32)
+        val_features = feature_scaler.transform(val_features).astype(np.float32)
         if test_set:
-            test_features = scaler.transform(test_features).astype(np.float32)
-        train_age = scaler.fit_transform(train_age.reshape(-1, 1)).astype(np.float32)
-        val_age = scaler.transform(val_age.reshape(-1, 1)).astype(np.float32)
+            test_features = feature_scaler.transform(test_features).astype(np.float32)
+        
+        age_scaler = StandardScaler()
+        train_age = age_scaler.fit_transform(train_age.reshape(-1, 1)).astype(np.float32)
+        val_age = age_scaler.transform(val_age.reshape(-1, 1)).astype(np.float32)
         if test_set:
-            test_age = scaler.transform(test_age.reshape(-1, 1)).astype(np.float32)
-        train_sex = scaler.fit_transform(train_sex.reshape(-1, 1)).astype(np.float32)
-        val_sex = scaler.transform(val_sex.reshape(-1, 1)).astype(np.float32)
+            test_age = age_scaler.transform(test_age.reshape(-1, 1)).astype(np.float32)
+        
+        sex_scaler = StandardScaler()
+        train_sex = sex_scaler.fit_transform(train_sex.reshape(-1, 1)).astype(np.float32)
+        val_sex = sex_scaler.transform(val_sex.reshape(-1, 1)).astype(np.float32)
         if test_set:
-            test_sex = scaler.transform(test_sex.reshape(-1, 1)).astype(np.float32)
-        train_mutation = scaler.fit_transform(train_mutation.reshape(-1, 1)).astype(np.float32)
-        val_mutation = scaler.transform(val_mutation.reshape(-1, 1)).astype(np.float32)
+            test_sex = sex_scaler.transform(test_sex.reshape(-1, 1)).astype(np.float32)
+        
+        mutation_scaler = StandardScaler()
+        train_mutation = mutation_scaler.fit_transform(train_mutation.reshape(-1, 1)).astype(np.float32)
+        val_mutation = mutation_scaler.transform(val_mutation.reshape(-1, 1)).astype(np.float32)
         if test_set:
-            test_mutation = scaler.transform(test_mutation.reshape(-1, 1)).astype(np.float32)
+            test_mutation = mutation_scaler.transform(test_mutation.reshape(-1, 1)).astype(np.float32)
+        
+        # Save scalers for use with external datasets
+        save_scalers(feature_scaler, age_scaler, sex_scaler, mutation_scaler, config, self.experiment_id, self.processed_dir)
+        
+        # Save protein column order for use with external datasets
+        if protein_columns is not None:
+            save_protein_columns(protein_columns, config, self.experiment_id, self.processed_dir)
 
         train_features = torch.FloatTensor(
             train_features.reshape(-1, train_features.shape[1], 1)
@@ -1027,3 +1045,68 @@ def save_mean_std(mean, std, config, experiment_id, processed_dir):
         f.write(f"mean: {mean}\n")
         f.write(f"std: {std}\n")
     print(f"Mean and std saved to: {file_path}")
+
+
+def save_scalers(feature_scaler, age_scaler, sex_scaler, mutation_scaler, config, experiment_id, processed_dir):
+    """Save all scalers to disk using joblib."""
+    if config.kfold:
+        base_name = f"{experiment_id}_train_random_state_{config.random_state}_{config.num_folds}fold_{config.fold}_two_pass_{config.two_pass}"
+    else:
+        base_name = f"{experiment_id}_train_random_state_{config.random_state}_two_pass_{config.two_pass}"
+    
+    scalers = {
+        'feature_scaler': feature_scaler,
+        'age_scaler': age_scaler,
+        'sex_scaler': sex_scaler,
+        'mutation_scaler': mutation_scaler,
+    }
+    
+    scaler_path = os.path.join(processed_dir, f"{base_name}_scalers.joblib")
+    joblib.dump(scalers, scaler_path)
+    print(f"Scalers saved to: {scaler_path}")
+    return scaler_path
+
+
+def load_scalers(config, experiment_id, processed_dir):
+    """Load all scalers from disk using joblib."""
+    if config.kfold:
+        base_name = f"{experiment_id}_train_random_state_{config.random_state}_{config.num_folds}fold_{config.fold}_two_pass_{config.two_pass}"
+    else:
+        base_name = f"{experiment_id}_train_random_state_{config.random_state}_two_pass_{config.two_pass}"
+    
+    scaler_path = os.path.join(processed_dir, f"{base_name}_scalers.joblib")
+    if not os.path.exists(scaler_path):
+        raise FileNotFoundError(f"Scalers not found at: {scaler_path}. Please process FTD dataset first.")
+    
+    scalers = joblib.load(scaler_path)
+    print(f"Scalers loaded from: {scaler_path}")
+    return scalers
+
+
+def save_protein_columns(protein_columns, config, experiment_id, processed_dir):
+    """Save protein column order to disk."""
+    if config.kfold:
+        base_name = f"{experiment_id}_train_random_state_{config.random_state}_{config.num_folds}fold_{config.fold}_two_pass_{config.two_pass}"
+    else:
+        base_name = f"{experiment_id}_train_random_state_{config.random_state}_two_pass_{config.two_pass}"
+    
+    columns_path = os.path.join(processed_dir, f"{base_name}_protein_columns.joblib")
+    joblib.dump(protein_columns, columns_path)
+    print(f"Protein columns saved to: {columns_path}")
+    return columns_path
+
+
+def load_protein_columns(config, experiment_id, processed_dir):
+    """Load protein column order from disk."""
+    if config.kfold:
+        base_name = f"{experiment_id}_train_random_state_{config.random_state}_{config.num_folds}fold_{config.fold}_two_pass_{config.two_pass}"
+    else:
+        base_name = f"{experiment_id}_train_random_state_{config.random_state}_two_pass_{config.two_pass}"
+    
+    columns_path = os.path.join(processed_dir, f"{base_name}_protein_columns.joblib")
+    if not os.path.exists(columns_path):
+        raise FileNotFoundError(f"Protein columns not found at: {columns_path}. Please process FTD dataset first.")
+    
+    protein_columns = joblib.load(columns_path)
+    print(f"Protein columns loaded from: {columns_path}")
+    return protein_columns
